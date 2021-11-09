@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>VA 傾聴サービス - ログイン</title>
+    <script type="text/javascript" src="js/youid.js"></script>
+    <script>
+        function loginKeicho() {
+			const uid = document.querySelector("#uid").value;
+			// 音声録音するかの引数
+			let voicerec;
+			if(document.querySelector("#voicerec").checked){
+				voicerec = "yes";
+			}else{
+				voicerec = "no";
+			}
+            // 画像撮影するかの引数
+            let imgtak;
+            if (document.querySelector("#imgtak").checked) {
+                imgtak = "yes";
+            } else {
+                imgtak = "no";
+            }
+            // 静聴モードで開始するかの引数
+            let seicho;
+            if (document.querySelector("#seicho").checked) {
+                seicho = "yes";
+            } else {
+                seicho = "no";
+            }
+            getPersonInfo(uid)
+                .then(person => {
+                    console.log(person);
+                    location.href = "keicho.html?uid=" + uid + "&voicerec=" + voicerec + "&imgtak=" + imgtak + "&seicho=" + seicho;
+                })
+                .catch(err => {
+                    console.log("error: no user exists for " + uid);
+                    document.querySelector("#err").textContent = "無効なIDです";
+                });
+        }
+    </script>
+
+</head>
+
+<body>
+    <h1>ヴァーチャルエージェント・傾聴サービス</h1>
+    <h2>事前準備</h2>
+    <h3>1 ソフトウェアのインストール</h3>
+
+    <a href="install_manual.html">こちら</a>を参考に，下記の事前準備をします．
+    <ul>
+        <li>localhostにMMDAgentをインストール・起動します</li>
+        <li>localhostにTomcatをインストールし，Axis2，MMDAgentProxy.aarをデプロイします</li>
+        <li><a href="http://localhost:8080/axis2/services/MMDAgentProxyService/doMotion?motion=bye">メイちゃんが手を振る</a>かどうかテスト
+        </li>
+    </ul>
+    <h3>2 You-IDの取得</h3>
+    <ul>
+        <li>VAとの対話を行うには，利用者の識別子（You-ID）が必要です．</li>
+        <li>You-IDを未登録または忘れた人は<a href="https://wsapp.cs.kobe-u.ac.jp/YouId/" target="_blank">こちらから取得</a>してください</li>
+
+    </ul>
+    <h2>傾聴画面にログインする</h2>
+    <div id="message"> You-IDを入力してログインしてください．
+        <span id="err" style="color:red;"></span>
+    </div>
+    <br />
+    <form action="" id="loginform">
+        <label for="uid">You-ID:</label>
+        <input type="text" size=40 id="uid" name="uid" />
+        <input type="button" value="ログイン" onclick="loginKeicho()" />
+		<input type="reset" value="クリア" /><br>
+		<input type="checkbox" id="voicerec">会話時の音声を録音する<br>
+        <input type="checkbox" id="imgtak">会話時の写真を撮影する<br>
+        <input type="checkbox" id="seicho">静聴モードで開始する
+    </form>
+
+    <hr>
+    <i>(c) 2020, Nakamura Lab., Kobe University</i>
+</body>
+
+</html>

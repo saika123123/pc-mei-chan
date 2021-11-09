@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>VA 傾聴サービス - インストールマニュアル</title>
+</head>
+
+<body style="padding:30px;width:80%" }>
+
+    <h1>VA 傾聴サービス - インストールマニュアル</h1>
+    <hr>
+    <h2>はじめに</h2>
+    <p>
+        VA傾聴サービスは，MMDAgentというソフトウェアとChrome Webブラウザを連携させ， 傾聴サービスを実現するものです．
+    </p>
+    <p>
+        Chromeだけでも動作可能ですが，MMDAgentを連携させる場合には，お手元のPCに下記の実行環境を構築する必要があります．
+    </p>
+    <ul>
+        <li>Windows10のPC</li>
+        <li>Java 実行環境</li>
+        <li>Apache Tomcat Webサーバ</li>
+        <li>MMDAgent ToolKit (神戸大学版)</li>
+    </ul>
+
+    <h2>Java実行環境のインストール</h2>
+    <ol>
+        <li><a href="https://www.kkaneko.jp/tools/win/openjdk.html">こちら</a>を参考に，お手元のWindows PCにJava環境 (JDK14)をインストールしてください．</li>
+        <li>上記リンク内の説明にあるように，環境変数JAVA_HOMEの設定と，PathへのJavaの追加も忘れずに行ってください</li>
+    </ol>
+
+    <h2>Apache Tomcatのインストール</h2>
+    <ol>
+        <li><a href="http://www27.cs.kobe-u.ac.jp/~masa-n/mmd/apache-tomcat-9.0.37-windows-x64-mmd.zip">こちら</a>からzipファイルをダウンロードしてください．</li>
+        <li>zipファイルを解凍して，展開されたtomcatフォルダをCドライブ直下にコピーしてください</li>
+        <ul>
+            <li>C:\tomcatの下にbin, conf, lib, ... となるように配備する</li>
+        </ul>
+        <li>エクスプローラで，C:\tomcat\binを開き，<b>startup.bat</b>をダブルクリックで実行してください．</li>
+        <li>新しくウィンドウが開き，実行ログが表示されます．最後に，<b>サーバーの起動 [nnnn]ms</b>と出ればOKです．</li>
+    </ol>
+    <h2>MMDAgentのインストール</h2>
+    <ol>
+        <li><a href="http://www27.cs.kobe-u.ac.jp/~masa-n/mmd/MMDAgent.zip">こちら</a>からzipファイルをダウンロードしてください．</li>
+        <li>zipファイルを解凍して，展開されたMMDAgentフォルダをデスクトップに移動してください</li>
+        <li>エクスプローラで，MMDAgentフォルダの中のMMDAgent_Meiフォルダを開きます</li>
+        <li><b>MMDAgent_Example.mdf</b>を右クリック→プログラムから開く</li>
+        <li>「このファイルを開く方法を選んでください」→「その他のアプリ」→最下部までスクロール→「このPCから探す」</li>
+        <li><b>デスクトップ\MMDAgent\MMDAgent_win32-1.4\MMDAgent.exe</b>を選択して，開く</li>
+        <li>メイちゃんが起動したら成功です．</li>
+    </ol>
+    <h2>テストする</h2>
+    <ol>
+        <li><a href="http://localhost:8080/axis2/services/MMDAgentProxyService/doMotion?motion=bye">こちらをクリック</a>してメイちゃんが手を振るか確認します</li>
+        <li><a href="http://localhost:8080/axis2/services/MMDAgentProxyService/startSpeech?text=こんにちは">こちらをクリック</a>してメイちゃんが「こんにちは」としゃべるか確認します</li>
+    </ol>
+
+    <p>
+        <a href="index.html">戻る</a>
+    </p>
+
+
+</body>
+
+</html>

@@ -1,0 +1,302 @@
+body {
+  background-color: #cce3f7;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #428bca;
+  border-color: #285e8e;
+}
+
+/*画像の横幅は固定(必要に応じて階層を持たせる？)*/
+
+img {
+  max-width: 230px;
+  /*横幅230に固定*/
+  height: auto;
+}
+
+.h0 {
+  font-size: 60px;
+}
+
+.big {
+  font-size: 60px;
+}
+
+.normal {
+  font-size: 32px;
+}
+
+.small {
+  font-size: 18px;
+}
+
+.btn-big,
+.btn-group-big > .btn {
+  font-size: 60px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top-width: 8px;
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-bottom-width: 8px;
+  margin-left: 32px;
+  margin-right: 32px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.btn-medium,
+.btn-group-normal > .btn {
+  font-size: 45px;
+  padding-left: 60px;
+  padding-right: 30px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top-width: 8px;
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-bottom-width: 8px;
+  margin-left: 26px;
+  margin-right: 26px;
+  margin-top: 20px;
+  margin-bottom: 14px;
+}
+
+.btn-normal,
+.btn-group-normal > .btn {
+  font-size: 45px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top-width: 8px;
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-bottom-width: 8px;
+  margin-left: 26px;
+  margin-right: 26px;
+  margin-top: 20px;
+  margin-bottom: 14px;
+}
+
+.btn-small,
+.btn-group-small > .btn {
+  font-size: 30px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top-width: 8px;
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-bottom-width: 8px;
+  margin-left: 32px;
+  margin-right: 32px;
+  margin-top: 35px;
+  margin-bottom: 45px;
+}
+
+.btn-skype,
+.btn-group-small > .btn {
+  font-size: 30px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top-width: 8px;
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-bottom-width: 8px;
+  margin-left: 240px;
+  margin-right: 32px;
+  margin-top: 35px;
+  margin-bottom: 45px;
+}
+
+.bubble {
+  position: relative;
+  padding: 1em;
+  border-radius: 15px;
+  background-color: #ffffff;
+  float: left;
+  max-width: 60%;
+}
+
+.bubble:after {
+  position: absolute;
+  content: " ";
+  height: 0;
+  width: 0;
+}
+
+.bubble-half-bottom:after {
+  top: 100%;
+  left: 5%;
+  border-top: 25px solid #ffffff;
+  border-right: 25px solid transparent;
+  content: " ";
+  clear: both;
+  display: block;
+}
+
+.bubble-right {
+  position: relative;
+  padding: 1em;
+  border-radius: 15px;
+  background-color: #20cc2e;
+  float: right;
+  max-width: 60%;
+}
+
+.bubble-right:after {
+  position: absolute;
+  content: " ";
+  height: 0;
+  width: 0;
+}
+
+.bubble-right-half-bottom:after {
+  top: 100%;
+  right: 5%;
+  border-top: 25px solid #20cc2e;
+  border-left: 25px solid transparent;
+  clear: both;
+}
+
+.Youtube {
+  position: relative;
+  margin-top: 60px;
+  margin-bottom: 1.2em;
+  padding-top: 69px;
+  padding-bottom: 50%;
+  overflow: hidden;
+}
+
+.Youtube iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.container {
+  display: block;
+  margin: 60px 5px 60px 5px;
+}
+
+.container::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.timestamp {
+  bottom: 0;
+  font-size: 12px;
+  text-align: right;
+}
+
+iframe {
+  max-width: 100%;
+  transform-origin: 0 0;
+  transform: scale(1);
+}
+
+/*下のサイトから持ってきたもの
+  http://irohacross.net/2013/02/css3_icon_um.html
+  CSSで花びらを実現
+
+*/
+
+.ume {
+  list-style-type: none;
+  padding: 0 15px 0 12px;
+  margin: 10px 0 10px 10px;
+  width: 33px;
+  height: 30px;
+  top: -8px;
+  position: relative;
+}
+
+.ume:before {
+  /****花弁の作成****/
+  content: "";
+  display: block;
+  border: solid 6px #aa4c8f;
+  border-radius: 100%;
+  -moz-border-radius: 100%;
+  -webkit-border-radius: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-shadow: -10px 6px 0 0 #aa4c8f, 10px 6px 0 0 #aa4c8f, -6px 16px 0 0 #aa4c8f,
+    6px 16px 0 0 #aa4c8f, 0px 8.5px 0 0 #aa4c8f;
+}
+
+.ume:after {
+  /****雄蕊の作成****/
+  z-index: 1;
+  content: "";
+  display: block;
+  border: solid 1px #ffffff;
+  border-radius: 100%;
+  -moz-border-radius: 100%;
+  -webkit-border-radius: 100%;
+  position: absolute;
+  left: 5px;
+  top: 11px;
+  box-shadow: -5px 3px 0 0 #ffffff, 5px 3px 0 0 #ffffff, -3px 7px 0 0 #ffffff,
+    3px 7px 0 0 #ffffff;
+}
+
+.logBox {
+  background: -webkit-linear-gradient(top, #fff 0%, #f0f0f0 100%);
+  background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
+  border: 1px solid #ccc;
+  border-top: 4px solid #1c66fe;
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 1) inset;
+  margin: 2em 0;
+  padding: 2em;
+}
+
+.timestamp {
+  bottom: 0;
+  font-size: 12px;
+  text-align: right;
+}
+
+hr {
+  border-top: 3px double #bbb;
+}
+
+.contents {
+  font-size: x-large;
+}
+
+.help {
+  text-decoration: underline;
+  color: #0000ff;
+}
+
+#videostm {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 320px;
+  height: 240px;
+  visibility: hidden;
+}
+
+#imgcvs {
+  position: fixed;
+  bottom: 240px;
+  right: 0;
+  width: 320px;
+  height: 240px;
+  visibility: hidden;
+}
