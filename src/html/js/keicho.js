@@ -115,6 +115,16 @@ async function initialize() {
         todoUid = todoPreference.preferences.uid;
     }
 
+    // Garminのユーザ情報をセットする + 昨日の全データをMongoDBにPOSTする
+    garminPreference = await getGarminPreference(uid).catch(function () { garminFlag = false });
+    if (garminFlag) {
+        garminEml = garminPreference.preferences.eml;
+        garminPwd = garminPreference.preferences.pwd;
+        await postNewGarminData(getDate("昨日"), garminCategories);
+    }
+
+    start_scenario(6);
+
     // ユーザ情報の確認
     console.log(person);
     console.log(preference);
@@ -290,6 +300,34 @@ async function start_scenario(num) {
             return;
         case 1:
             await miku_say(person.nickname + "さん，おはようございます", "greeting");
+            if (garminFlag) {
+                ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
+                if (/いいえ/.test(ans)) {
+                    await keicho("では，今朝の体調やご気分について，よかったら話してください", "self_introduction");
+                } else {
+                    await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
+                    await sleep(60 * 1000);
+                    let flag = false;
+                    flag = await postNewGarminData(getDate("今日"), ["sleep"]);
+                    if (flag) {
+                        await checkSleep();
+                        await keicho(person.nickname + "さん自身は，休めた実感はありますか？", "self_introduction");
+                        return;
+                    } else {
+                        await miku_say("睡眠データを取得できませんでした", "normal");
+                        // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
+                        // if (/はい/.test(ans)) {
+                        //     await end_keicho("30分後にもう一度実行します．", "bye");
+                        //     doneAt[num] = null;
+                        //     setTimeout(start_scenario(num), 30 * 60 * 1000);
+                        //     return;
+                        // } else {
+                            await keicho("今朝の体調やご気分について，よかったら話してください", "self_introduction");
+                            return;
+                        // }
+                    }
+                }
+            }
             await keicho("今朝のご気分はいかがですか？", "self_introduction");
             return;
         case 2:
@@ -332,6 +370,35 @@ async function start_scenario(num) {
             return;
         case 6:
             await miku_say(person.nickname + "さん，今日も一日お疲れさまでした．", "greeting");
+            if (garminFlag) {
+                ans = await miku_ask("今日の健康データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
+                if (/いいえ/.test(ans)) {
+                    await keicho("では，今日一日で感じたことや行ったことについて，よかったら話してください", "self_introduction");
+                    return;
+                } else {
+                    await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
+                    await sleep(60 * 1000);
+                    let flag = false;
+                    flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
+                    if (flag) {
+                        await garmin();
+                        await keicho("その時間にやっていたことや，感じたことなどを，私に話して下さい", "self_introduction");
+                    } else {
+                        await miku_say("健康データを取得できませんでした", "normal");
+                        // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
+                        // if (/はい/.test(ans)) {
+                        //     await end_keicho("30分後にもう一度実行します．", "bye");
+                        //     doneAt[num] = null;
+                        //     setTimeout(start_scenario(num), 30 * 60 * 1000);
+                        //     console.log("set time out");
+                        //     return;
+                        // } else {
+                            await keicho("今日感じたことや行ったことについて，よかったら話してください", "self_introduction");
+                            return;
+                        // }
+                    }
+                }
+            }
             await keicho("今日，" + person.nickname + "さんが感じたことや行ったことなど，よかったら私に教えてください", "self_introduction");
             return;
     }
@@ -743,4 +810,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
     return answer;
 }
+
+// sleep関数を実装
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

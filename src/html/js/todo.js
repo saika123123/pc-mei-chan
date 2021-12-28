@@ -12,6 +12,9 @@ let todoPreference = null;
 // ToDoサービスと連携しているかのフラグ
 let todoFlag = true;
 
+// ToDoサービスのユーザID
+let todoUid = null;
+
 // 何日以上前のToDoをリマインドするか
 const date = 7;
 

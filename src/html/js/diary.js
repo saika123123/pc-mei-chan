@@ -79,14 +79,14 @@ function getDate(answer) {
     if (/日/.test(answer)) {
         if (/今日/.test(answer)) {
             date = now.getDate();
-        } else if (/昨日/.test(answer)) {
-            date = now.getDate() - 1;
         } else if (/一昨日/.test(answer)) {
             date = now.getDate() - 2;
-        } else if (/明日/.test(answer)) {
-            date = now.getDate() + 1;
+        } else if (/昨日/.test(answer)) {
+            date = now.getDate() - 1;
         } else if (/明後日/.test(answer)) {
             date = now.getDate() + 2;
+        } else if (/明日/.test(answer)) {
+            date = now.getDate() + 1;
         } else if (/日前/.test(answer)) {
             const ago = answer.match(/(\d+)日前/)[1];
             date = now.getDate() - parseInt(ago);
