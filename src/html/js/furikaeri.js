@@ -170,12 +170,12 @@ async function furikaeri() {
 }
 
 // 連携しているサービス一覧に振り返りサービスを追加
-apps.push({
-    name: "振り返りサービス",
-    keyword: "振り返り",
-    description: "過去の対話ログの振り返り",
-    func: async function() {await furikaeri();},
-});
+// apps.push({
+//     name: "振り返りサービス",
+//     keyword: "振り返り",
+//     description: "過去の対話ログの振り返り",
+//     func: async function() {await furikaeri();},
+// });
 
 /**
  * DateをStringに変換する
