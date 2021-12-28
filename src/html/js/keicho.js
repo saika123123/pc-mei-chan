@@ -123,8 +123,6 @@ async function initialize() {
         await postNewGarminData(getDate("昨日"), garminCategories);
     }
 
-    start_scenario(6);
-
     // ユーザ情報の確認
     console.log(person);
     console.log(preference);
