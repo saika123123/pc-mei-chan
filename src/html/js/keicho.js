@@ -572,7 +572,9 @@ async function menu() {
         str = str + "<div>【" + app.name + "】</div> <div>・キーワード：「" + app.keyword + "」</div> <div>・機能：「" + app.description + "」</div>";
     }
     await miku_say("私ができることの一覧を表示します", "greeting");
+    scrollYPostionPushFlag = true;
     post_text(str);
+    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 800);}, 4000);
 }
 
 /**

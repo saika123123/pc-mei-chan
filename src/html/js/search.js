@@ -8,7 +8,7 @@ apps.push({
     name: "検索サービス",
     keyword: "検索",
     description: "検索結果の取得",
-    func: async function() {await search();},
+    func: async function () { await search(); },
 });
 
 /**
@@ -46,6 +46,7 @@ async function search() {
         return;
     }
     let result = await getCustomSearchAPI(keyword).catch(function () { flag = false; });
+    await sleep(1000);
     let list = result.data.items;
     if (!flag) {
         await miku_say("検索結果を取得できませんでした", "normal");
@@ -68,9 +69,11 @@ async function search() {
         await miku_say("検索結果を取得できませんでした", "normal");
         return;
     }
+    scrollYPostionPushFlag = true;
     post_comment(str, SPEAKER.AGENT);
     let num = -1;
     while (num < 0) {
+        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750); }, 5000);
         let ans = await miku_ask("見たいページの番号を教えて下さい (番号 / やめる)", false, "guide_normal");
         if (/5|五/.test(ans)) {
             if (list.length > 4) {
@@ -98,6 +101,8 @@ async function search() {
     let pageURL = list[num].link;
     num++;
     await miku_say(num + "番のページを表示します", "normal");
+    scrollYPostionPushFlag = true;
     post_page(pageURL);
+    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750);}, 4000);
     return;
 }
