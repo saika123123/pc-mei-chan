@@ -122,7 +122,11 @@ function getDate(answer) {
 // その日のログがあるか判定する
 async function checkDiary(date) {
     let dateStr = formatDate(date, 'yyyy-MM-dd');
-    res = await getMessageListByDate(uid, dateStr).catch(error => { furikaeri_error(error) });
+    res = await getMessageListByDate(uid, dateStr).catch(error => {
+        furikaeri_error(error);
+        return false;
+    });
+    sleep(1000);
     console.log(res);
     if (res.length > 0) {
         return true;
@@ -159,11 +163,14 @@ async function diary() {
         if (date) break;
     }
 
-    if (await checkDiary(date)) {
+    // if (await checkDiary(date)) {
+    if (true) {
         const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/tsubuyaki-diary/diary.html?uid=" + uid + "&date=" + formatDate(date, 'yyyy-MM-dd');
         await miku_say("その日の日記を表示します", "normal");
         console.log(formatDate(date, 'yyyy年MM月dd日'));
+        scrollYPostionPushFlag = true;
         post_page(url);
+        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750); }, 4000);
     } else {
         await miku_say("その日のつぶやきはありませんでした", "normal");
     }

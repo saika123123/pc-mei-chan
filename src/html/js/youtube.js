@@ -173,9 +173,11 @@ async function youtube() {
         await miku_say("該当する動画を取得できませんでした", "normal");
         return;
     }
+    scrollYPostionPushFlag = true;
     post_comment(str, SPEAKER.AGENT);
     let num = -1;
     while (num < 0) {
+        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 5000);
         let ans = await miku_ask("見たい動画の番号を教えて下さい (番号 / やめる)", false, "guide_normal");
         if (/5|五/.test(ans)) {
             if (list.length > 4) {
@@ -203,25 +205,26 @@ async function youtube() {
     let videoID = list[num].id;
     num++;
     await miku_say(num + "番の動画を再生します", "normal");
-    // start_youtube();
     scrollYPostionPushFlag = true;
     post_video(videoID);
-    youtubeFlag = true;
-    seichoFlag = true;
-    document.body.style.backgroundColor = "rgb(100, 100, 100)";
-    setTimeout(function () { window.scrollTo(0, scrollYPostion - 150); }, 5000);
-    console.log("視聴開始");
+    // setTimeout(function () { window.scrollTo(0, scrollYPostion - 150); }, 5000);
+    start_youtube();
+    // youtubeFlag = true;
+    // seichoFlag = true;
+    // document.body.style.backgroundColor = "rgb(100, 100, 100)";
+    // setTimeout(function () { window.scrollTo(0, scrollYPostion - 150); }, 5000);
+    // console.log("視聴開始");
 
-    while (true) {
-        answer = await miku_ask();
-        if (/^やめる$|^止める$/.test(answer)) {
-            seichoFlag = false;
-            youtubeFlag = false;
-            ytplayer.stopVideo();
-            motion = "greeting";
-            document.body.style.backgroundColor = "#cce3f7";
-            console.log("視聴終了");
-            break;
-        }
-    }
+    // while (true) {
+    //     answer = await miku_ask();
+    //     if (/^やめる$|^止める$/.test(answer)) {
+    //         seichoFlag = false;
+    //         youtubeFlag = false;
+    //         ytplayer.stopVideo();
+    //         motion = "greeting";
+    //         document.body.style.backgroundColor = "#cce3f7";
+    //         console.log("視聴終了");
+    //         break;
+    //     }
+    // }
 }
