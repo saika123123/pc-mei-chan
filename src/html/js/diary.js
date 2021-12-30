@@ -164,14 +164,13 @@ async function diary() {
     }
 
     // if (await checkDiary(date)) {
-    if (true) {
-        const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/tsubuyaki-diary/diary.html?uid=" + uid + "&date=" + formatDate(date, 'yyyy-MM-dd');
-        await miku_say("その日の日記を表示します", "normal");
-        console.log(formatDate(date, 'yyyy年MM月dd日'));
-        scrollYPostionPushFlag = true;
-        post_page(url);
-        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750); }, 4000);
-    } else {
-        await miku_say("その日のつぶやきはありませんでした", "normal");
-    }
+    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/tsubuyaki-diary/diary.html?uid=" + uid + "&date=" + formatDate(date, 'yyyy-MM-dd');
+    await miku_say("その日の日記を表示します", "normal");
+    console.log(formatDate(date, 'yyyy年MM月dd日'));
+    scrollYPostionPushFlag = true;
+    post_page(url);
+    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750); }, 4000);
+    // } else {
+    //     await miku_say("その日のつぶやきはありませんでした", "normal");
+    // }
 }

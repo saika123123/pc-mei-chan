@@ -177,7 +177,7 @@ async function youtube() {
     post_comment(str, SPEAKER.AGENT);
     let num = -1;
     while (num < 0) {
-        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 5000);
+        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750); }, 5000);
         let ans = await miku_ask("見たい動画の番号を教えて下さい (番号 / やめる)", false, "guide_normal");
         if (/5|五/.test(ans)) {
             if (list.length > 4) {
