@@ -305,14 +305,14 @@ class SpeechToText {
 		f.speech.onerror = function () {
 			if (f.stat != null) f.stat.innerHTML = "【音声認識エラー】";
 			f.running = false;
-			//            if (f.repeat == true) {
-			console.log("Restarting stt..");
-			self.reset();
-			//            }
 			if (voicerec == true) {
 				// 音声録音終了
 				stopRecord();
 			}
+			// if (f.repeat == true) {
+			console.log("Restarting stt..");
+			self.reset();
+			// }
 		};
 		f.speech.onsoundend = function () {
 			if (f.stat != null) f.stat.innerHTML = "【音声認識終了】";
@@ -451,7 +451,7 @@ class SpeechToText {
 	isRunning() {
 		return this.fields.running;
 	}
-	
+
 	//--------------------------------------------------------
-	
+
 }
