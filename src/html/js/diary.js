@@ -169,7 +169,7 @@ async function diary() {
     console.log(formatDate(date, 'yyyy年MM月dd日'));
     scrollYPostionPushFlag = true;
     post_page(url);
-    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 750); }, 4000);
+    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
     // } else {
     //     await miku_say("その日のつぶやきはありませんでした", "normal");
     // }
