@@ -408,7 +408,7 @@ async function calendar() {
                         await miku_say("その月のカレンダーを表示します", "greeting").then(async () => {
                             scrollYPostionPushFlag = true;
                             post_calendar(date, events);
-                            setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 800); }, 3000);
+                            setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 3000);
                         });
                     });
                     break;

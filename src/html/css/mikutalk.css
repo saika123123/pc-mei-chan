@@ -123,7 +123,7 @@ img {
   border-radius: 15px;
   background-color: #ffffff;
   float: left;
-  max-width: 60%;
+  max-width: 88%;
 }
 
 .bubble:after {
@@ -149,7 +149,7 @@ img {
   border-radius: 15px;
   background-color: #20cc2e;
   float: right;
-  max-width: 60%;
+  max-width: 88%;
 }
 
 .bubble-right:after {

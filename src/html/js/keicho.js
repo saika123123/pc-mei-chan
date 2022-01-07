@@ -574,7 +574,7 @@ async function menu() {
     await miku_say("私ができることの一覧を表示します", "greeting");
     scrollYPostionPushFlag = true;
     post_text(str);
-    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 800);}, 4000);
+    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);
 }
 
 /**
