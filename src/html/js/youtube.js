@@ -67,7 +67,6 @@ async function start_youtube() {
     console.log("傾聴中断");
     $("#status").html("");
     youtubeFlag = true;
-    serviceFlag = false;
     talking = false;
     put_stop_youtube_button();
 }
@@ -77,7 +76,11 @@ async function start_youtube() {
  */
 async function end_youtube() {
     youtubeFlag = false;
+    serviceFlag = false;
     ytplayer.stopVideo();
+    talking = true;
+    console.log("傾聴再開");
+    $("#status").html("");
     keicho("傾聴モードに戻ります", "self_introduction");
 }
 
@@ -98,8 +101,8 @@ async function post_video(videoID) {
         ytplayer = new YT.Player(
             "youtube" + youtubeID,
             {
-                width: 1120,
-                height: 630,
+                width: 700,
+                height: 400,
                 id: youtubeID,
                 videoId: videoID,
                 // playerVars: { 'controls': 1 },
