@@ -210,7 +210,7 @@ async function youtube() {
     await miku_say(num + "番の動画を再生します", "normal");
     scrollYPostionPushFlag = true;
     post_video(videoID);
-    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 200); }, 1000);
+    setTimeout(function () { window.scrollTo(0, scrollYPostion + 50); }, 1000);
     start_youtube();
     // youtubeFlag = true;
     // seichoFlag = true;
