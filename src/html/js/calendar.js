@@ -392,7 +392,7 @@ async function calendar() {
                 date = getMonth(ans);
                 if (date != null) {
                     let events = await getFullEvents();
-                    events = await sortEvent(events).then(async () => {
+                    events = await sortEvent(events).then(() => {
                         /*
                         if (Object.keys(events).length == 0) {
                             await miku_say("該当する予定はありません", "guide_normal");
@@ -405,11 +405,11 @@ async function calendar() {
                             post_comment(str, SPEAKER.AGENT);
                         }
                         */
-                        await miku_say("その月のカレンダーを表示します", "greeting").then(async () => {
+                        // await miku_say("その月のカレンダーを表示します", "greeting").then(async () => {
                             scrollYPostionPushFlag = true;
                             post_calendar(date, events);
                             setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 3000);
-                        });
+                        // });
                     });
                     break;
                 }
