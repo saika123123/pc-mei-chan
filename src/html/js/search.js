@@ -100,7 +100,7 @@ async function search() {
     console.log(list[num]);
     let pageURL = list[num].link;
     num++;
-    await miku_say(num + "番のページを表示します", "normal");
+    // await miku_say(num + "番のページを表示します", "normal");
     scrollYPostionPushFlag = true;
     post_page(pageURL);
     setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);

@@ -165,7 +165,7 @@ async function diary() {
 
     // if (await checkDiary(date)) {
     const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/tsubuyaki-diary/diary.html?uid=" + uid + "&date=" + formatDate(date, 'yyyy-MM-dd');
-    await miku_say("その日の日記を表示します", "normal");
+    // await miku_say("その日の日記を表示します", "normal");
     console.log(formatDate(date, 'yyyy年MM月dd日'));
     scrollYPostionPushFlag = true;
     post_page(url);
