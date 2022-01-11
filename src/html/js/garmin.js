@@ -207,6 +207,9 @@ function shapeGarminData(dataArr, eml, category) {
         let date = new Date(arr[0].startGMT).getTime() + (9 * 60 * 60 * 1000);
         let dateStr = formatDate(new Date(date), "yyyy-MM-dd");
         for (let data of arr) {
+            if (data.steps == 0) {
+                continue;
+            }
             sum += data.steps;
             let timestamp = new Date(data.startGMT).getTime() + (9 * 60 * 60 * 1000);
             let datetime = formatDate(new Date(timestamp), "yyyy-MM-dd HH:mm:ss");
@@ -246,9 +249,9 @@ function shapeGarminData(dataArr, eml, category) {
         };
         shapedDataArr.unshift(obj);
     } else if (category === "sleep") {
-        arr = dataArr.sleepLevels;
+        arr = dataArr.dailySleepDTO;
         let obj = {
-            "id": "urn:ngsi-ld:" + category + ":" + dataArr.calendarDate,
+            "id": "urn:ngsi-ld:" + category + ":" + arr.calendarDate,
             "type": category,
             "user": {
                 "type": "String",
@@ -256,38 +259,39 @@ function shapeGarminData(dataArr, eml, category) {
             },
             "datetime": {
                 "type": "String",
-                "value": dataArr.calendarDate
+                "value": arr.calendarDate
             },
             "start": {
                 "type": "String",
-                "value": formatDate(new Date(dataArr.sleepStartTimestampLocal), "yyyy-MM-dd HH:mm:ss")
+                "value": formatDate(new Date(arr.sleepStartTimestampLocal), "yyyy-MM-dd HH:mm:ss")
             },
             "end": {
                 "type": "String",
-                "value": formatDate(new Date(dataArr.sleepEndTimestampLocal), "yyyy-MM-dd HH:mm:ss")
+                "value": formatDate(new Date(arr.sleepEndTimestampLocal), "yyyy-MM-dd HH:mm:ss")
             },
             "sleep_seconds": {
                 "type": "Integer",
-                "value": dataArr.sleepTimeSeconds
+                "value": arr.sleepTimeSeconds
             },
             "deep_sleep_seconds": {
                 "type": "Integer",
-                "value": dataArr.deepSleepSeconds
+                "value": arr.deepSleepSeconds
             },
             "light_sleep_seconds": {
                 "type": "Integer",
-                "value": dataArr.lightSleepSeconds
+                "value": arr.lightSleepSeconds
             },
             "rem_sleep_seconds": {
                 "type": "Integer",
-                "value": dataArr.remSleepSeconds
+                "value": arr.remSleepSeconds
             },
             "awake_sleep_seconds": {
                 "type": "Integer",
-                "value": dataArr.awakeSleepSeconds
+                "value": arr.awakeSleepSeconds
             }
         };
         shapedDataArr.push(obj);
+        arr = dataArr.sleepLevels;
         for (let data of arr) {
             let start = new Date(data.startGMT).getTime();
             let end = new Date(data.endGMT).getTime();
