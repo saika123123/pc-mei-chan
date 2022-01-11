@@ -184,6 +184,9 @@ async function processEvent(message) {
             case "present": //在イベント検知
                 if (!talking) {
                     const hour = now.getHours();
+                    if (hour - drift < 5) { // 時間外なら反応しない
+                        return;
+                    }
                     let num;
                     switch (hour - drift) { //個人の時差分だけ現在時刻を戻す
                         case 6:
@@ -320,8 +323,8 @@ async function start_scenario(num) {
                         //     setTimeout(start_scenario(num), 30 * 60 * 1000);
                         //     return;
                         // } else {
-                            await keicho("今朝の体調やご気分について，よかったら話してください", "self_introduction");
-                            return;
+                        await keicho("今朝の体調やご気分について，よかったら話してください", "self_introduction");
+                        return;
                         // }
                     }
                 }
@@ -391,8 +394,8 @@ async function start_scenario(num) {
                         //     console.log("set time out");
                         //     return;
                         // } else {
-                            await keicho("今日感じたことや行ったことについて，よかったら話してください", "self_introduction");
-                            return;
+                        await keicho("今日感じたことや行ったことについて，よかったら話してください", "self_introduction");
+                        return;
                         // }
                     }
                 }
@@ -574,7 +577,7 @@ async function menu() {
     await miku_say("私ができることの一覧を表示します", "greeting");
     scrollYPostionPushFlag = true;
     post_text(str);
-    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);
+    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
 }
 
 /**
