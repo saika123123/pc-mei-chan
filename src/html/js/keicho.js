@@ -184,9 +184,6 @@ async function processEvent(message) {
             case "present": //在イベント検知
                 if (!talking) {
                     const hour = now.getHours();
-                    if (hour - drift < 5) { // 時間外なら反応しない
-                        return;
-                    }
                     let num;
                     switch (hour - drift) { //個人の時差分だけ現在時刻を戻す
                         case 6:
@@ -220,7 +217,10 @@ async function processEvent(message) {
                             num = 6;
                             break;
                         default:
-                            num = 0;
+                            //時間外は何もしないように変更 2022-01-11 by masa-n
+                            return;
+                            // num = 0;
+
                     }
                     start_scenario(num);
                 } else {
