@@ -217,7 +217,9 @@ async function processEvent(message) {
                             num = 6;
                             break;
                         default:
-                            num = 0;
+                            //時間外は何もしないように変更 2022-01-11 by masa-n
+                            return;
+                            // num = 0;
                     }
                     start_scenario(num);
                 } else {
