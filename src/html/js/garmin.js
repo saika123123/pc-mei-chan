@@ -104,7 +104,7 @@ function shapeGarminData(dataArr, eml, category) {
         arr = dataArr.stressValuesArray;
         for (let i = 0; i < arr.length; i++) {
             let value = arr[i][1];
-            if (value < min) {
+            if (value < min && value >= 0) {
                 min = value;
             }
             let timestamp = arr[i][0];
