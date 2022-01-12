@@ -53,9 +53,6 @@ let serviceFlag = false;
 // 静聴モードかどうか
 let seichoFlag = false;
 
-// 音声認識開始時刻
-let audioStartTime = null;
-
 // Web socketを再起動
 var stompFailureCallback = function (error) {
     console.log('STOMP: ' + error);
