@@ -219,7 +219,7 @@ async function processEvent(message) {
                         default:
                             //時間外は何もしないように変更 2022-01-11 by masa-n
                             return;
-                            // num = 0;
+                        // num = 0;
                     }
                     start_scenario(num);
                 } else {
@@ -791,6 +791,15 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
     await miku_say(str, motion);
 
+    // 傾聴中，2分間発話が無ければ強制終了
+    if (!serviceFlag && !seichoFlag) {
+        setTimeout(function () {
+            if (!answer) {
+                end_keicho("またいつでもお話ししてくださいね");
+            }
+        }, 2 * 60 * 1000);
+    }
+
     var promise = new Promise((resolve, reject) => {
         if (stt != null) {
             //音声認識オブジェクトをいったん開放
@@ -804,9 +813,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     //console.log("Waiting answer for " + str);
     var answer = await promise;
     //console.log("Done: " + str);
-    if (!youtubeFlag) {
-        post_keicho(answer, SPEAKER.USER, person);
-    }
+    post_keicho(answer, SPEAKER.USER, person);
     //確認する
     if (confirm) await miku_say("答えは「" + answer + "」ですね");
 
