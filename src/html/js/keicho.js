@@ -322,8 +322,8 @@ async function start_scenario(num) {
                         //     setTimeout(start_scenario(num), 30 * 60 * 1000);
                         //     return;
                         // } else {
-                            await keicho("今朝の体調やご気分について，よかったら話してください", "self_introduction");
-                            return;
+                        await keicho("今朝の体調やご気分について，よかったら話してください", "self_introduction");
+                        return;
                         // }
                     }
                 }
@@ -393,8 +393,8 @@ async function start_scenario(num) {
                         //     console.log("set time out");
                         //     return;
                         // } else {
-                            await keicho("今日感じたことや行ったことについて，よかったら話してください", "self_introduction");
-                            return;
+                        await keicho("今日感じたことや行ったことについて，よかったら話してください", "self_introduction");
+                        return;
                         // }
                     }
                 }
@@ -576,7 +576,7 @@ async function menu() {
     await miku_say("私ができることの一覧を表示します", "greeting");
     scrollYPostionPushFlag = true;
     post_text(str);
-    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);
+    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
 }
 
 /**
