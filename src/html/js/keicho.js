@@ -161,8 +161,13 @@ async function initialize() {
         //開始ボタンを配置
         put_start_button();
         // カレンダーのリマインド
-        setInterval("remindCalendarEvent()", 60 * 1000);
+        await calCheckEvt();
     }
+}
+
+// コールバック関数
+function callback(fc) {
+    setTimeout(fc, 60 * 1000);
 }
 
 //メッセージを処理する
@@ -779,6 +784,9 @@ async function miku_say(str, motion = "smile") {
  * @param {*} motion 質問時のモーション
  */
 async function miku_ask(str, confirm = false, motion = "smile") {
+    var answer = null;
+    await miku_say(str, motion);
+
     // 追記
     // 音声データのインデックスをインクリメント
     if (voicerec == true) {
@@ -789,16 +797,12 @@ async function miku_ask(str, confirm = false, motion = "smile") {
         imgDataIndex++;
     }
 
-    await miku_say(str, motion);
-
-    // 傾聴中，2分間発話が無ければ強制終了
-    if (!serviceFlag && !seichoFlag) {
-        setTimeout(function () {
-            if (!answer) {
-                end_keicho("またいつでもお話ししてくださいね");
-            }
-        }, 2 * 60 * 1000);
-    }
+    // 2分間発話が無ければ強制終了
+    setTimeout(function () {
+        if (!answer) {
+            end_keicho("またいつでもお話ししてくださいね");
+        }
+    }, 2 * 60 * 1000);
 
     var promise = new Promise((resolve, reject) => {
         if (stt != null) {
@@ -811,7 +815,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
         stt.start();
     });
     //console.log("Waiting answer for " + str);
-    var answer = await promise;
+    answer = await promise;
     //console.log("Done: " + str);
     post_keicho(answer, SPEAKER.USER, person);
     //確認する
