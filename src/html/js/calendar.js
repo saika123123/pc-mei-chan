@@ -406,9 +406,9 @@ async function calendar() {
                         }
                         */
                         // await miku_say("その月のカレンダーを表示します", "greeting").then(async () => {
-                            scrollYPostionPushFlag = true;
-                            post_calendar(date, events);
-                            setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 3000);
+                        scrollYPostionPushFlag = true;
+                        post_calendar(date, events);
+                        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 3000);
                         // });
                     });
                     break;
@@ -524,28 +524,34 @@ async function calendar() {
  * イベントをリマインドする
  * @param events 
  */
-async function remindCalendarEvent() {
-    if (serviceFlag) return;
-    let now = new Date();
-    let events = await getEvents(now, now);
-    for (let event of events) {
-        eventTime = new Date(event.start.dateTime).getTime();
-        if (eventTime > now.getTime() && eventTime < now.getTime() + 10 * 60 * 1000) {
-            if (!remindedCalendarEvents.includes(event.id)) {
-                console.log("remind");
-                remindedCalendarEvents.push(event.id);
-                if (talking) {
-                    await miku_say("まもなく「" + event.summary + "」の時間です", "greeting");
-                } else {
-                    talking = true;
-                    $("#status").html("");
-                    await miku_say("まもなく「" + event.summary + "」の時間です", "greeting");
-                    end_keicho();
+function calCheckEvt() {
+    var buggyObject = {
+        callAgain: async function () {
+            let now = new Date();
+            let events = await getEvents(now, now);
+            for (let event of events) {
+                let eventTime = new Date(event.start.dateTime).getTime();
+                if (eventTime > now.getTime() && eventTime < now.getTime() + 10 * 60 * 1000) {
+                    if (!remindedCalendarEvents.includes(event.id)) {
+                        console.log("remind");
+                        remindedCalendarEvents.push(event.id);
+                        if (talking) {
+                            await miku_say("まもなく「" + event.summary + "」の時間です", "greeting");
+                        } else {
+                            talking = true;
+                            $("#status").html("");
+                            await miku_say("まもなく「" + event.summary + "」の時間です", "greeting");
+                            end_keicho();
+                        }
+                        return;
+                    }
                 }
-                return;
             }
         }
-    }
+    };
+    buggyObject.callAgain();
+    buggyObject = null;
+    callback(calCheckEvt);
 }
 
 /* ---------- 以下コピペ ---------- */
