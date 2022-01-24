@@ -263,11 +263,11 @@ function shapeGarminData(dataArr, eml, category) {
             },
             "start": {
                 "type": "String",
-                "value": formatDate(new Date(arr.sleepStartTimestampLocal), "yyyy-MM-dd HH:mm:ss")
+                "value": formatDate(new Date(arr.sleepStartTimestampGMT), "yyyy-MM-dd HH:mm:ss")
             },
             "end": {
                 "type": "String",
-                "value": formatDate(new Date(arr.sleepEndTimestampLocal), "yyyy-MM-dd HH:mm:ss")
+                "value": formatDate(new Date(arr.sleepEndTimestampGMT), "yyyy-MM-dd HH:mm:ss")
             },
             "sleep_seconds": {
                 "type": "Integer",
