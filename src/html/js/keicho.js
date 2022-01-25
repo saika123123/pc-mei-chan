@@ -53,6 +53,9 @@ let serviceFlag = false;
 // 静聴モードかどうか
 let seichoFlag = false;
 
+// garminの睡眠シナリオを実行したかどうか
+let garminSleepFlag = false;
+
 // Web socketを再起動
 var stompFailureCallback = function (error) {
     console.log('STOMP: ' + error);
@@ -306,9 +309,11 @@ async function start_scenario(num) {
         case 1:
             await miku_say(person.nickname + "さん，おはようございます", "greeting");
             if (garminFlag) {
+                garminSleepFlag = true;
                 ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
                 if (/いいえ/.test(ans)) {
-                    await keicho("では，今朝の体調やご気分について，よかったら話してください", "self_introduction");
+                    await keicho("では，今朝の体調や気分について，よかったら話してください", "self_introduction");
+                    return;
                 } else {
                     await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
                     await sleep(60 * 1000);
@@ -316,7 +321,9 @@ async function start_scenario(num) {
                     flag = await postNewGarminData(getDate("今日"), ["sleep"]);
                     if (flag) {
                         await checkSleep();
-                        await keicho(person.nickname + "さん自身は，休めた実感はありますか？", "self_introduction");
+                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？", "self_introduction");
+                        await miku_say("教えていただいてありがとうございます！");
+                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
                         return;
                     } else {
                         await miku_say("睡眠データを取得できませんでした", "normal");
@@ -327,7 +334,7 @@ async function start_scenario(num) {
                         //     setTimeout(start_scenario(num), 30 * 60 * 1000);
                         //     return;
                         // } else {
-                        await keicho("今朝の体調やご気分について，よかったら話してください", "self_introduction");
+                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
                         return;
                         // }
                     }
@@ -336,6 +343,29 @@ async function start_scenario(num) {
             await keicho("今朝のご気分はいかがですか？", "self_introduction");
             return;
         case 2:
+            if (garminFlag && !garminSleepFlag) {
+                ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
+                if (/いいえ/.test(ans)) {
+                    await keicho("では，今朝の体調や気分について，よかったら話してください", "self_introduction");
+                    return;
+                } else {
+                    await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
+                    await sleep(60 * 1000);
+                    let flag = false;
+                    flag = await postNewGarminData(getDate("今日"), ["sleep"]);
+                    if (flag) {
+                        await checkSleep();
+                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？", "self_introduction");
+                        await miku_say("教えていただいてありがとうございます！");
+                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
+                        return;
+                    } else {
+                        await miku_say("睡眠データを取得できませんでした", "normal");
+                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
+                        return;
+                    }
+                }
+            }
             if (todoFlag) {
                 await remindToDo();
                 await keicho("今日の予定を教えていただけませんか？", "self_introduction");
@@ -378,7 +408,7 @@ async function start_scenario(num) {
             if (garminFlag) {
                 ans = await miku_ask("今日の健康データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
                 if (/いいえ/.test(ans)) {
-                    await keicho("では，今日一日で感じたことや行ったことについて，よかったら話してください", "self_introduction");
+                    await keicho("では，今日一日で感じたことや行ったことについて，よければ私に話してください", "self_introduction");
                     return;
                 } else {
                     await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
@@ -387,7 +417,7 @@ async function start_scenario(num) {
                     flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
                     if (flag) {
                         await garmin();
-                        await keicho("その時間にやっていたことや，感じたことなどを，私に話して下さい", "self_introduction");
+                        await keicho("その時間にやっていたことや，感じたことなどを，よければ私に話して下さい", "self_introduction");
                     } else {
                         await miku_say("健康データを取得できませんでした", "normal");
                         // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
@@ -398,7 +428,7 @@ async function start_scenario(num) {
                         //     console.log("set time out");
                         //     return;
                         // } else {
-                        await keicho("今日感じたことや行ったことについて，よかったら話してください", "self_introduction");
+                        await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
                         return;
                         // }
                     }
