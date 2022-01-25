@@ -418,6 +418,7 @@ async function start_scenario(num) {
                     if (flag) {
                         await garmin();
                         await keicho("その時間にやっていたことや，感じたことなどを，よければ私に話して下さい", "self_introduction");
+                        return;
                     } else {
                         await miku_say("健康データを取得できませんでした", "normal");
                         // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");

@@ -418,7 +418,7 @@ function getGarminPreference(uid) {
 async function garmin() {
     let date = getDate("今日");
     await miku_say("今日の健康状況を振り返ります", "normal");
-    for (let garminCategory of garminCategories) {
+    for (let garminCategory of ["stress", "heartrate", "step"]) {
         let dataArr = await getGarminData(garminEml, date, garminCategory);
         sleep(5 * 1000);
         if (dataArr == null || dataArr.length == 0) {
