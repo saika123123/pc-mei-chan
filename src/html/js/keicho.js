@@ -830,7 +830,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
     // 2分間発話が無ければ強制終了
     setTimeout(function () {
-        if (!answer) {
+        if (!answer && talking) {
             end_keicho("またいつでもお話ししてくださいね");
         }
     }, 2 * 60 * 1000);
