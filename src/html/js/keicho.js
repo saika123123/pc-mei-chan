@@ -321,7 +321,7 @@ async function start_scenario(num) {
                     flag = await postNewGarminData(getDate("今日"), ["sleep"]);
                     if (flag) {
                         await checkSleep();
-                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？", "self_introduction");
+                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？");
                         await miku_say("教えていただいてありがとうございます！");
                         await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
                         return;
@@ -355,7 +355,7 @@ async function start_scenario(num) {
                     flag = await postNewGarminData(getDate("今日"), ["sleep"]);
                     if (flag) {
                         await checkSleep();
-                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？", "self_introduction");
+                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？");
                         await miku_say("教えていただいてありがとうございます！");
                         await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
                         return;
