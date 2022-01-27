@@ -190,7 +190,7 @@ async function processEvent(message) {
         let drift = preference.preferences.drift || 0;
         switch (attr.event) {
             case "present": //在イベント検知
-                if (!talking) {
+                if (!talking && !serviceFlag) {
                     const hour = now.getHours();
                     let num;
                     switch (hour - drift) { //個人の時差分だけ現在時刻を戻す
