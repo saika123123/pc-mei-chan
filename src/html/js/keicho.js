@@ -301,18 +301,18 @@ async function start_scenario(num) {
             if (seichoFlag) {
                 await keicho("", "self_introduction");
             } else {
-                ans = getGreeting(person.nickname);
-                await miku_say(ans, "greeting");
+                // ans = getGreeting(person.nickname);
+                // await miku_say(ans, "greeting");
                 await keicho("私になんでも話してください", "self_introduction");
             }
             return;
         case 1:
             await miku_say(person.nickname + "さん，おはようございます", "greeting");
             if (garminFlag) {
-                garminSleepFlag = true;
                 ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
+                garminSleepFlag = true;
                 if (/いいえ/.test(ans)) {
-                    await keicho("では，今朝の体調や気分について，よかったら話してください", "self_introduction");
+                    await keicho("では，今朝の体調や気分について，よければ話してください", "self_introduction");
                     return;
                 } else {
                     await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
@@ -323,7 +323,7 @@ async function start_scenario(num) {
                         await checkSleep();
                         await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？");
                         await miku_say("教えていただいてありがとうございます！");
-                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
+                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
                         return;
                     } else {
                         await miku_say("睡眠データを取得できませんでした", "normal");
@@ -334,7 +334,7 @@ async function start_scenario(num) {
                         //     setTimeout(start_scenario(num), 30 * 60 * 1000);
                         //     return;
                         // } else {
-                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
+                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
                         return;
                         // }
                     }
@@ -346,7 +346,7 @@ async function start_scenario(num) {
             if (garminFlag && !garminSleepFlag) {
                 ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
                 if (/いいえ/.test(ans)) {
-                    await keicho("では，今朝の体調や気分について，よかったら話してください", "self_introduction");
+                    await keicho("では，今朝の体調や気分について，よければ話してください", "self_introduction");
                     return;
                 } else {
                     await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
@@ -357,11 +357,11 @@ async function start_scenario(num) {
                         await checkSleep();
                         await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？");
                         await miku_say("教えていただいてありがとうございます！");
-                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
+                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
                         return;
                     } else {
                         await miku_say("睡眠データを取得できませんでした", "normal");
-                        await keicho("今朝の体調や気分について，よかったら話してください", "self_introduction");
+                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
                         return;
                     }
                 }
@@ -417,7 +417,7 @@ async function start_scenario(num) {
                     flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
                     if (flag) {
                         await garmin();
-                        await keicho("その時間にやっていたことや，感じたことなどを，よければ私に話して下さい", "self_introduction");
+                        await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
                         return;
                     } else {
                         await miku_say("健康データを取得できませんでした", "normal");
@@ -444,9 +444,14 @@ async function start_scenario(num) {
  * 傾聴を修了し，後片付けをする
  */
 async function end_keicho(str, motion = "bye") {
+    // 傾聴中でないなら何もしない
+    if(!talking) return;
+
+    // YouTube再生中なら動画を止める
     if (youtubeFlag) {
         ytplayer.stopVideo();
     }
+
     if (stt) {
         stt.stop();
         stt = null;
@@ -830,7 +835,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
     // 2分間発話が無ければ強制終了
     setTimeout(function () {
-        if (!answer && talking) {
+        if (!answer) {
             end_keicho("またいつでもお話ししてくださいね");
         }
     }, 2 * 60 * 1000);
@@ -850,7 +855,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     //console.log("Done: " + str);
     post_keicho(answer, SPEAKER.USER, person);
     //確認する
-    if (confirm) await miku_say("答えは「" + answer + "」ですね");
+    // if (confirm) await miku_say("答えは「" + answer + "」ですね");
 
     return answer;
 }
