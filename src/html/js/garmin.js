@@ -439,6 +439,8 @@ async function garmin() {
             }
             if (stressFlag) {
                 await miku_say("今日の" + timeStr + "頃に，大きなストレスを感じていたようです", "normal");
+                await miku_ask("その時間にやっていたことや，感じたことなどを教えて下さい");
+                await miku_say("教えていただいてありがとうございます！");
             }
         } else if (garminCategory == "heartrate") {
             let heartrateData = dataArr.slice(1);
@@ -454,6 +456,8 @@ async function garmin() {
             }
             if (heartrateFlag) {
                 await miku_say("今日の" + timeStr + "頃に，心拍数が高くなっていたようです", "normal");
+                await miku_ask("その時間にやっていたことや，感じたことなどを教えて下さい");
+                await miku_say("教えていただいてありがとうございます！");
             }
         } else if (garminCategory == "step") {
             let stepData = dataArr[0];
