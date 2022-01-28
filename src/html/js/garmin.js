@@ -418,14 +418,18 @@ function getGarminPreference(uid) {
 async function garmin() {
     let date = getDate("今日");
     await miku_say("今日の健康状況を振り返ります", "normal");
+    let garminScenarioFlag = false;
     for (let garminCategory of ["stress", "heartrate", "step"]) {
         let dataArr = await getGarminData(garminEml, date, garminCategory);
         sleep(5 * 1000);
         if (dataArr == null || dataArr.length == 0) {
-            await miku_say("健康データを取得できませんでした", "normal");
+            if (!garminScenarioFlag) {
+                await miku_say("健康データを取得できませんでした", "normal");
+            }
             return;
         }
         if (garminCategory == "stress") {
+            garminScenarioFlag = true;
             let stressData = dataArr.slice(1);
             let maxValue = 75;
             let timeStr = "";
