@@ -441,6 +441,8 @@ async function garmin() {
                 await miku_say("今日の" + timeStr + "頃に，大きなストレスを感じていたようです", "normal");
                 await miku_ask("その時間にやっていたことや，感じたことなどを教えて下さい");
                 await miku_say("教えていただいてありがとうございます！");
+            } else {
+                await miku_say("今日はあまりストレスを感じていなかったようです", "normal");
             }
         } else if (garminCategory == "heartrate") {
             let heartrateData = dataArr.slice(1);
@@ -458,6 +460,8 @@ async function garmin() {
                 await miku_say("今日の" + timeStr + "頃に，心拍数が高くなっていたようです", "normal");
                 await miku_ask("その時間にやっていたことや，感じたことなどを教えて下さい");
                 await miku_say("教えていただいてありがとうございます！");
+            } else {
+                await miku_say("今日一日，心拍数の異常は検知されませんでした", "normal");
             }
         } else if (garminCategory == "step") {
             let stepData = dataArr[0];
@@ -480,9 +484,8 @@ async function checkSleep() {
         return;
     }
     let sleepData = dataArr.slice(0, 1)
-    let sleepTime = sleepData.sleep_seconds;
-    let deepSleepTime = sleepData.deep_sleep_seconds;
-    let awakeSleepTime = sleepData.awake_sleep_seconds
+    let sleepTime = sleepData.sleep_seconds.value;
+    let deepSleepTime = sleepData.deep_sleep_seconds.value;
     if (sleepTime > (6 * 60 * 60)) {
         if (deepSleepTime > (1 * 60 * 60)) {
             await miku_say("昨日はよく眠れて，身体もしっかり休まったようです！", "normal");
@@ -490,7 +493,7 @@ async function checkSleep() {
             await miku_say("昨日はよく眠れたようです！", "normal");
         }
     } else {
-        if (awakeSleepTime < (1 * 60 * 60)) {
+        if (deepSleepTime < (1 * 60 * 60)) {
             await miku_say("昨日はあまり眠れなかったようです", "normal");
         } else {
             await miku_say("昨日はあまり眠れず，身体もほとんど休まらなかったようです", "normal");
