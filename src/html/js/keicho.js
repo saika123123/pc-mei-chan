@@ -413,14 +413,15 @@ async function start_scenario(num) {
                 } else {
                     await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
                     await sleep(60 * 1000);
-                    let flag = false;
-                    flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
-                    if (flag) {
+                    // let flag = false;
+                    // flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
+                    await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
+                    // if (flag) {
                         await garmin();
                         await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
                         return;
-                    } else {
-                        await miku_say("健康データを取得できませんでした", "normal");
+                    // } else {
+                        // await miku_say("健康データを取得できませんでした", "normal");
                         // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
                         // if (/はい/.test(ans)) {
                         //     await end_keicho("30分後にもう一度実行します．", "bye");
@@ -429,10 +430,10 @@ async function start_scenario(num) {
                         //     console.log("set time out");
                         //     return;
                         // } else {
-                        await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
-                        return;
+                        // await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
+                        // return;
                         // }
-                    }
+                    // }
                 }
             }
             await keicho("今日，" + person.nickname + "さんが感じたことや行ったことなど，よかったら私に教えてください", "self_introduction");
