@@ -123,7 +123,7 @@ async function initialize() {
     if (garminFlag) {
         garminEml = garminPreference.preferences.eml;
         garminPwd = garminPreference.preferences.pwd;
-        if (garminEml == null || garminPwd == null) {
+        if (garminEml != null && garminPwd != null) {
             await postNewGarminData(getDate("昨日"), garminCategories);
         }
 
