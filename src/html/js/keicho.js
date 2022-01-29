@@ -114,12 +114,18 @@ async function initialize() {
 
     // ToDoサービスのユーザ情報をセット
     todoPreference = await getToDoPreference(uid).catch(function () { todoFlag = false });
+    if (todoPreference.preferences.uid == null) {
+        todoFlag = false;
+    }
     if (todoFlag) {
         todoUid = todoPreference.preferences.uid;
     }
 
     // Garminのユーザ情報をセットする + 昨日の全データをMongoDBにPOSTする
     garminPreference = await getGarminPreference(uid).catch(function () { garminFlag = false });
+    if (garminPreference.preferences.eml == null || garminPreference.preferences.pwd == null) {
+        garminFlag = false;
+    }
     if (garminFlag) {
         garminEml = garminPreference.preferences.eml;
         garminPwd = garminPreference.preferences.pwd;
@@ -417,22 +423,22 @@ async function start_scenario(num) {
                     // flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
                     await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
                     // if (flag) {
-                        await garmin();
-                        await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
-                        return;
+                    await garmin();
+                    await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
+                    return;
                     // } else {
-                        // await miku_say("健康データを取得できませんでした", "normal");
-                        // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
-                        // if (/はい/.test(ans)) {
-                        //     await end_keicho("30分後にもう一度実行します．", "bye");
-                        //     doneAt[num] = null;
-                        //     setTimeout(start_scenario(num), 30 * 60 * 1000);
-                        //     console.log("set time out");
-                        //     return;
-                        // } else {
-                        // await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
-                        // return;
-                        // }
+                    // await miku_say("健康データを取得できませんでした", "normal");
+                    // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
+                    // if (/はい/.test(ans)) {
+                    //     await end_keicho("30分後にもう一度実行します．", "bye");
+                    //     doneAt[num] = null;
+                    //     setTimeout(start_scenario(num), 30 * 60 * 1000);
+                    //     console.log("set time out");
+                    //     return;
+                    // } else {
+                    // await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
+                    // return;
+                    // }
                     // }
                 }
             }
@@ -446,7 +452,7 @@ async function start_scenario(num) {
  */
 async function end_keicho(str, motion = "bye") {
     // 傾聴中でないなら何もしない
-    if(!talking) return;
+    if (!talking) return;
 
     // YouTube再生中なら動画を止める
     if (youtubeFlag) {
@@ -501,7 +507,7 @@ async function keicho(str, motion) {
         // 静聴モード
         if (seichoFlag) {
             if (answer.length < 20) {
-                if (/終わり|終了|またね|バイバイ|おやすみ/.test(answer)) {
+                if (/終わり/.test(answer)) {
                     await end_keicho("", "bye");
                     return;
                 } else if (/傾聴モード|慶弔モード/.test(answer)) {
@@ -517,7 +523,7 @@ async function keicho(str, motion) {
 
         // キーワードの判定
         if (answer.length < 20) {
-            if (/終わり|終了|またね|バイバイ|おやすみ/.test(answer)) {
+            if (/終わり/.test(answer)) {
                 //await miku_say("ありがとうございました．", "smile");
                 await end_keicho(person.nickname + "さん,またお話ししてくださいね", "bye");
                 return;
@@ -821,7 +827,6 @@ async function miku_say(str, motion = "smile") {
  * @param {*} motion 質問時のモーション
  */
 async function miku_ask(str, confirm = false, motion = "smile") {
-    var answer = null;
     await miku_say(str, motion);
 
     // 追記
@@ -834,12 +839,14 @@ async function miku_ask(str, confirm = false, motion = "smile") {
         imgDataIndex++;
     }
 
+    let fnc = function () {
+        console.log("強制終了")
+        end_keicho("またいつでもお話ししてくださいね");
+    };
+
     // 2分間発話が無ければ強制終了
-    setTimeout(function () {
-        if (!answer) {
-            end_keicho("またいつでもお話ししてくださいね");
-        }
-    }, 2 * 60 * 1000);
+    let timerID = setTimeout(fnc, 2 * 60 * 1000);
+    console.log(timerID);
 
     var promise = new Promise((resolve, reject) => {
         if (stt != null) {
@@ -852,12 +859,13 @@ async function miku_ask(str, confirm = false, motion = "smile") {
         stt.start();
     });
     //console.log("Waiting answer for " + str);
-    answer = await promise;
+    var answer = await promise;
     //console.log("Done: " + str);
     post_keicho(answer, SPEAKER.USER, person);
     //確認する
     // if (confirm) await miku_say("答えは「" + answer + "」ですね");
-
+    clearTimeout(timerID);
+    console.log("clear: " + timerID);
     return answer;
 }
 
