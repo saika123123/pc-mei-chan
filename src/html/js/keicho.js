@@ -114,22 +114,19 @@ async function initialize() {
 
     // ToDoサービスのユーザ情報をセット
     todoPreference = await getToDoPreference(uid).catch(function () { todoFlag = false });
-    if (todoPreference.preferences.uid == null) {
-        todoFlag = false;
-    }
     if (todoFlag) {
         todoUid = todoPreference.preferences.uid;
     }
 
     // Garminのユーザ情報をセットする + 昨日の全データをMongoDBにPOSTする
     garminPreference = await getGarminPreference(uid).catch(function () { garminFlag = false });
-    if (garminPreference.preferences.eml == null || garminPreference.preferences.pwd == null) {
-        garminFlag = false;
-    }
     if (garminFlag) {
         garminEml = garminPreference.preferences.eml;
         garminPwd = garminPreference.preferences.pwd;
-        await postNewGarminData(getDate("昨日"), garminCategories);
+        if (garminEml != null && garminPwd != null) {
+            await postNewGarminData(getDate("昨日"), garminCategories);
+        }
+
     }
 
     // ユーザ情報の確認
@@ -846,7 +843,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
     // 2分間発話が無ければ強制終了
     let timerID = setTimeout(fnc, 2 * 60 * 1000);
-    console.log(timerID);
+    console.log("set timer: " + timerID);
 
     var promise = new Promise((resolve, reject) => {
         if (stt != null) {
