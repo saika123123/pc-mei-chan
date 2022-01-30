@@ -487,7 +487,7 @@ async function checkSleep() {
         await miku_say("睡眠データを取得できませんでした", "normal");
         return;
     }
-    let sleepData = dataArr.slice(0, 1)
+    let sleepData = dataArr[0];
     let sleepTime = sleepData.sleep_seconds.value;
     let deepSleepTime = sleepData.deep_sleep_seconds.value;
     if (sleepTime > (6 * 60 * 60)) {
