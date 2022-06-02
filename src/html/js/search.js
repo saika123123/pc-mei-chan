@@ -3,14 +3,6 @@
  * Web検索に関するクラス
  */
 
-// 連携しているサービス一覧に検索サービスを追加
-apps.push({
-    name: "検索サービス",
-    keyword: "検索",
-    description: "検索結果の取得",
-    func: async function () { await search(); },
-});
-
 /**
  * APIを実行し,検索結果を取得する
  * @param keyword // 検索するキーワード

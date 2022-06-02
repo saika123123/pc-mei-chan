@@ -3,31 +3,27 @@
  * garminでのヘルスケアに関するクラス
  */
 
-// Garminのユーザ設定への参照
-let garminPreference = null;
-
 // Garminと連携しているかのフラグ
-let garminFlag = true;
+let garminFlag = false;
 
-// Garminのeml
-let garminEml = null;
+// Garminの睡眠シナリオを実行したかどうかのフラグ
+garminSleepFlag = false;
 
-// Garminのpwd
-let garminPwd = null;
-
-// Garminのcategory
-let garminCategories = ["stress", "heartrate", "step", "sleep"];
+// 連携しているサービス一覧に健康管理サービスを追加
+if (garminFlag) {
+    setService("健康管理サービス", "健康管理", "過去の健康データの振り返り", garmin());
+}
 
 /**
- * APIを実行し,Garminの生データを取得する
+ * APIを実行し,SSSからデータを取得する
  */
-async function getGarminRawData(eml, pwd, date, category) {
-    let dateStr = formatDate(date, "yyyy-MM-dd");
-    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/garmin-api/eml=" + eml + "/pwd=" + pwd + "/date=" + dateStr + "/data=" + category;
+async function getGarminData(date, type) {
+    const url = "https://wsapp.cs.kobe-u.ac.jp/StressSensingService/api/" + type + "/" + uid + "/" + date;
     return fetch(url)
         .then(async (response) => {
             //レスポンスコードをチェック
             if (response.status == 200) {
+                console.log(response);
                 let result = await response.json();
                 console.log(result);
                 return result;
@@ -42,465 +38,137 @@ async function getGarminRawData(eml, pwd, date, category) {
 }
 
 /**
- * APIを実行し,MongoDBからデータを取得する
+ * Garminの該当データが新しいかどうかを判定する
  */
-async function getGarminData(eml, date, category) {
-    let dateStr = formatDate(date, "yyyy-MM-dd");
-    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/garmin-api/get/eml=" + eml + "/date=" + dateStr + "/data=" + category;
-    return fetch(url)
-        .then(async (response) => {
-            //レスポンスコードをチェック
-            if (response.status == 200) {
-                let result = await response.json();
-                console.log(result);
-                return result;
-            } else {
-                throw new Error(response);
-            }
-        })
-        .catch(err => {
-            console.log("Failed to fetch " + url, err);
-            throw new Error(err);
-        });
-}
-
-/**
- * APIを実行し,GarminのデータをMongoDBにPostする
- * @param dataArr Postするデータの配列
- */
-async function postGarminData(dataArr) {
-    let url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/garmin-api/post";
-    let json = JSON.stringify(dataArr);
-    return new Promise((resolve, reject) => {
-        fetch(url, {
-            headers: {
-                'Content-type': 'application/json',
-            },
-            method: "POST",
-            body: json,
-            mode: 'cors',
-        })
-            .then(response => response.json())
-            .then(json => {
-                console.log(json);
-                return resolve(json);
-            })
-            .catch(e => {
-                console.error(e);
-                return reject(e);
-            });
-    });
-}
-
-/**
- * データをMongoDBに登録する形に整形する
- * @param dataArr 整形するデータ
- */
-function shapeGarminData(dataArr, eml, category) {
-    let arr = [];
-    let shapedDataArr = [];
-    if (category === "stress") {
-        let min = 100;
-        arr = dataArr.stressValuesArray;
-        for (let i = 0; i < arr.length; i++) {
-            let value = arr[i][1];
-            if (value < min && value >= 0) {
-                min = value;
-            }
-            let timestamp = arr[i][0];
-            let datetime = formatDate(new Date(timestamp), "yyyy-MM-dd HH:mm:ss");
-            let tem = {
-                "id": "urn:ngsi-ld:" + category + ":" + timestamp,
-                "type": category,
-                "user": {
-                    "type": "String",
-                    "value": eml
-                },
-                "datetime": {
-                    "type": "String",
-                    "value": datetime
-                },
-                "stress": {
-                    "type": "Integer",
-                    "value": value
-                }
-            };
-            shapedDataArr.push(tem);
+async function checkGarminDataTime(type) {
+    let date = new Date();
+    let dateStr = formatDate(date, 'yyyy-MM-dd');
+    let dataArr = await getGarminData(dateStr, type);
+    if (dataArr._id != null) {
+        if(type == "sleeps") {
+            return dataArr;
         }
-        let obj = {
-            "id": "urn:ngsi-ld:" + category + ":" + dataArr.calendarDate,
-            "type": category,
-            "user": {
-                "type": "String",
-                "value": eml
-            },
-            "datetime": {
-                "type": "String",
-                "value": dataArr.calendarDate
-            },
-            "max_stress_level": {
-                "type": "Integer",
-                "value": dataArr.maxStressLevel
-            },
-            "min_stress_level": {
-                "type": "Integer",
-                "value": min
-            },
-            "avg_stress_level": {
-                "type": "Integer",
-                "value": dataArr.avgStressLevel
-            }
-        };
-        shapedDataArr.unshift(obj);
-    } else if (category === "heartrate") {
-        arr = dataArr.heartRateValues;
-        let obj = {
-            "id": "urn:ngsi-ld:" + category + ":" + dataArr.calendarDate,
-            "type": category,
-            "user": {
-                "type": "String",
-                "value": eml
-            },
-            "datetime": {
-                "type": "String",
-                "value": dataArr.calendarDate
-            },
-            "max_heartrate": {
-                "type": "Integer",
-                "value": dataArr.maxHeartRate
-            },
-            "min_heartrate": {
-                "type": "Integer",
-                "value": dataArr.minHeartRate
-            },
-            "avg_heartrate": {
-                "type": "Integer",
-                "value": dataArr.lastSevenDaysAvgRestingHeartRate
-            }
-        };
-        shapedDataArr.push(obj);
-        for (let i = 0; i < arr.length; i++) {
-            let value = arr[i][1];
-            let timestamp = arr[i][0];
-            let datetime = formatDate(new Date(timestamp), "yyyy-MM-dd HH:mm:ss");
-            let tem = {
-                "id": "urn:ngsi-ld:" + category + ":" + timestamp,
-                "type": category,
-                "user": {
-                    "type": "String",
-                    "value": eml
-                },
-                "datetime": {
-                    "type": "String",
-                    "value": datetime
-                },
-                "heartrate": {
-                    "type": "Integer",
-                    "value": value
-                }
-            };
-            shapedDataArr.push(tem);
-        }
-    } else if (category === "step") {
-        arr = dataArr;
-        let sum = 0;
-        let date = new Date(arr[0].startGMT).getTime() + (9 * 60 * 60 * 1000);
-        let dateStr = formatDate(new Date(date), "yyyy-MM-dd");
-        for (let data of arr) {
-            if (data.steps == 0) {
-                continue;
-            }
-            sum += data.steps;
-            let timestamp = new Date(data.startGMT).getTime() + (9 * 60 * 60 * 1000);
-            let datetime = formatDate(new Date(timestamp), "yyyy-MM-dd HH:mm:ss");
-            let tem = {
-                "id": "urn:ngsi-ld:" + category + ":" + timestamp,
-                "type": category,
-                "user": {
-                    "type": "String",
-                    "value": eml
-                },
-                "datetime": {
-                    "type": "String",
-                    "value": datetime
-                },
-                "step": {
-                    "type": "Integer",
-                    "value": data.steps
-                }
-            };
-            shapedDataArr.push(tem);
-        }
-        let obj = {
-            "id": "urn:ngsi-ld:" + category + ":" + dateStr,
-            "type": category,
-            "user": {
-                "type": "String",
-                "value": eml
-            },
-            "datetime": {
-                "type": "String",
-                "value": dateStr
-            },
-            "steps": {
-                "type": "Integer",
-                "value": sum
-            }
-        };
-        shapedDataArr.unshift(obj);
-    } else if (category === "sleep") {
-        arr = dataArr.dailySleepDTO;
-        let obj = {
-            "id": "urn:ngsi-ld:" + category + ":" + arr.calendarDate,
-            "type": category,
-            "user": {
-                "type": "String",
-                "value": eml
-            },
-            "datetime": {
-                "type": "String",
-                "value": arr.calendarDate
-            },
-            "start": {
-                "type": "String",
-                "value": formatDate(new Date(arr.sleepStartTimestampGMT), "yyyy-MM-dd HH:mm:ss")
-            },
-            "end": {
-                "type": "String",
-                "value": formatDate(new Date(arr.sleepEndTimestampGMT), "yyyy-MM-dd HH:mm:ss")
-            },
-            "sleep_seconds": {
-                "type": "Integer",
-                "value": arr.sleepTimeSeconds
-            },
-            "deep_sleep_seconds": {
-                "type": "Integer",
-                "value": arr.deepSleepSeconds
-            },
-            "light_sleep_seconds": {
-                "type": "Integer",
-                "value": arr.lightSleepSeconds
-            },
-            "rem_sleep_seconds": {
-                "type": "Integer",
-                "value": arr.remSleepSeconds
-            },
-            "awake_sleep_seconds": {
-                "type": "Integer",
-                "value": arr.awakeSleepSeconds
-            }
-        };
-        shapedDataArr.push(obj);
-        arr = dataArr.sleepLevels;
-        for (let data of arr) {
-            let start = new Date(data.startGMT).getTime();
-            let end = new Date(data.endGMT).getTime();
-            let value = data.activityLevel;
-            for (let j = 0; j < (end - start) / (60 * 1000); j++) {
-                let timestamp = start + (9 * 60 * 60 * 1000) + (j * 60 * 1000);
-                let datetime = formatDate(new Date(timestamp), "yyyy-MM-dd HH:mm:ss");
-                let tem = {
-                    "id": "urn:ngsi-ld:" + category + ":" + timestamp,
-                    "type": category,
-                    "user": {
-                        "type": "String",
-                        "value": eml
-                    },
-                    "datetime": {
-                        "type": "String",
-                        "value": datetime
-                    },
-                    "sleep": {
-                        "type": "Integer",
-                        "value": value
-                    }
-                };
-                shapedDataArr.push(tem);
-            }
+        if ((date.getTime() - 60 * 60 * 1000) <= new Date(dataArr.uploadTime).getTime()) {
+            return dataArr;
         }
     }
-    console.log(shapedDataArr);
-    if (arr == null || arr.length == 0) {
-        return [];
-    }
-    return shapedDataArr;
+    return [];
 }
 
-/**
- * Garminのデータから，未登録のデータを取得する
- * @param dataArr Garminのデータ
- * @param prevDataArr MongoDBから取得したデータ
- */
-function getNewGarminData(dataArr, prevDataArr) {
-    let num = prevDataArr.length;
-    return dataArr.slice(num);
-}
-
-/**
- * 指定した日付のGarminの未登録データをMongoDBに登録する
- * @param date
- */
-async function postNewGarminData(date, categories) {
-    console.log("Check Garmin Data at " + date);
-    try {
-        for (let garminCategory of categories) {
-            console.log(garminCategory);
-            let rawDataArr = await getGarminRawData(garminEml, garminPwd, date, garminCategory);
-            sleep(5 * 1000);
-            if (rawDataArr.length == 0) {
-                console.log("No Garmin Raw Data");
-                return false;
-            }
-            if (rawDataArr.error == "WebApplicationException" || rawDataArr.error == "ForbiddenException" || (garminCategory == "heartrate" && rawDataArr.heartRateValueDescriptors == null)) {
-                console.log("Garmin ERROR : Too many requests");
-                return false;
-            }
-            console.log("Get Garmin Raw Data");
-            let dataArr = await shapeGarminData(rawDataArr, garminEml, garminCategory);
-            sleep(5 * 1000);
-            if (dataArr.length == 0) {
-                console.log("No Shaped Garmin Data");
-                return false;
-            }
-            console.log("Shaped Garmin Data");
-            let prevDataArr = await getGarminData(garminEml, date, garminCategory);
-            sleep(5 * 1000);
-            if (prevDataArr.length == 0) {
-                console.log("No Garmin Data in Mongo DB");
-                await postGarminData(dataArr);
-                console.log("Post: " + garminCategory);
-            } else {
-                console.log("Get Garmin Data from Mongo DB");
-                let newDataArr = getNewGarminData(dataArr, prevDataArr);
-                sleep(5 * 1000);
-                if (newDataArr.length == 0) {
-                    console.log("No Garmin New Data");
-                } else {
-                    console.log("Get New Garmin Data");
-                    await postGarminData(newDataArr);
-                    console.log("Post: " + garminCategory);
-                }
-            }
-        }
-    } catch (err) {
-        console.log("Error");
-        return false;
-    }
-    console.log("Post All New Garmin Data");
-    return true;
-}
-
-/**
- * You-IDサービスからGarminのプリファレンスを取得する
- * 
- * @param uid  ユーザID
- * @return Garminのユーザ設定 (eml, pwd)
- */
-function getGarminPreference(uid) {
-    const url = youid_endpoint + "/prefs/" + uid + "/garmin";
-    return fetch(url)
-        .then(response => {
-            //レスポンスコードをチェック
-            if (response.status == 200) {
-                return response.json();
-            } else {
-                throw new Error(response);
-            }
-        })
-        .catch(err => {
-            console.log("Failed to fetch " + url, err);
-            throw new Error(err);
-        });
-}
 
 /*--------------- 以下対話シナリオ ---------------*/
+async function garminDaily(dataArr) {
+    await miku_say("合計歩数は" + dataArr.steps + "歩です", "normal");
+    if (dataArr.steps > 8000) {
+        await miku_say("すばらしいですね！", "normal");
+    }
+    await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
+    await miku_say("安静時心拍数は" + dataArr.restingHeartRateInBeatsPerMinute + "bpmです", "normal");
+    if (dataArr.restingHeartRateInBeatsPerMinute > 85) {
+        await miku_say("少し高いので，気を付けて下さいね", "normal");
+    }
+}
+
+async function garminStress(dataArr) {
+    let max = 0;
+    let timeOffset = "0";
+    console.log(dataArr.timeOffsetStressLevelValues);
+    for (var item in dataArr.timeOffsetStressLevelValues) {
+        if (dataArr.timeOffsetStressLevelValues[item] > max) {
+            max = dataArr.timeOffsetStressLevelValues[item];
+            timeOffset = item;
+        }
+    }
+    if (max > 75) {
+        let hour = Math.floor(Number(timeOffset) / 3600);
+        let min = Math.floor(Number(timeOffset) % 3600 / 60);
+        await miku_say(hour + "時" + min + "分頃に高いストレスを感じていたようです", "normal");
+    } else {
+        await miku_say("あまりストレスを感じていなかったようです", "normal");
+    }
+}
+
+async function garminSleep(dataArr) {
+    let hour = Math.floor(dataArr.durationInSeconds / 3600);
+    let min = Math.floor(dataArr.durationInSeconds % 3600 / 60);
+    await miku_say("睡眠時間は" + hour + "時間" + min + "分です", "normal");
+    if (hour > 6 && (dataArr.deepSleepDurationInSeconds / dataArr.durationInSeconds) > 0.15) {
+        await miku_say("しっかりと休めたようです！", "normal");
+    }
+}
 
 async function garmin() {
-    let date = getDate("今日");
-    await miku_say("今日の健康状況を振り返ります", "normal");
-    let garminScenarioFlag = false;
-    for (let garminCategory of ["stress", "heartrate", "step"]) {
-        let dataArr = await getGarminData(garminEml, date, garminCategory);
-        sleep(5 * 1000);
-        if (dataArr == null || dataArr.length == 0) {
-            if (!garminScenarioFlag) {
-                await miku_say("健康データを取得できませんでした", "normal");
-            }
-            return;
-        }
-        if (garminCategory == "stress") {
-            garminScenarioFlag = true;
-            let stressData = dataArr.slice(1);
-            let maxValue = 75;
-            let timeStr = "";
-            let stressFlag = false;
-            for (let data of stressData) {
-                if (data.stress.value > maxValue) {
-                    maxValue = data.stress.value;
-                    timeStr = (data.datetime.value).substr(11, 2) + "時" + (data.datetime.value).substr(14, 2) + "分";
-                    stressFlag = true;
+    let date;
+    let checkflag = false;
+    while (true) {
+        let answer = await miku_ask("いつの健康データを確認しますか? (日付 / やめる)", false, "guide_normal");
+        if (/やめる/.test(answer)) return;
+        date = getDate(answer);
+        if (date) {
+            let dateStr = formatDate(date, 'yyyy-MM-dd');
+            dataArr = await getGarminData(dateStr, "dailies");
+            if (dataArr._id == null) {
+                if (!checkflag) {
+                    answer = await miku_ask("スマートフォンのガーミンアプリを開いて下さい (はい / いいえ)", "normal");
+                    if (/いいえ/.test(answer)) {
+                        await miku_say("健康データの取得に失敗しました", "normal");
+                        return;
+                    }
+                    checkflag = true;
+                    await miku_say("しばらくお待ちください", "greeting");
+                    await sleep(60 * 1000);
+                }
+                if (dataArr._id == null) {
+                    await miku_say("健康データの取得に失敗しました", "normal");
+                    return;
                 }
             }
-            if (stressFlag) {
-                await miku_say("今日の" + timeStr + "頃に，大きなストレスを感じていたようです", "normal");
-                await miku_ask("その時間にやっていたことや，感じたことなどを教えて下さい");
-                await miku_say("教えていただいてありがとうございます！");
-            } else {
-                await miku_say("今日はあまりストレスを感じていなかったようです", "normal");
+            dataArr = await getGarminData(dateStr, "sleeps");
+            if (dataArr._id != null) {
+                await garminSleep(dataArr);
             }
-        } else if (garminCategory == "heartrate") {
-            let heartrateData = dataArr.slice(1);
-            let maxValue = 120;
-            let timeStr = "";
-            let heartrateFlag = false;
-            for (let data of heartrateData) {
-                if (data.heartrate.value > maxValue) {
-                    maxValue = data.heartrate.value;
-                    timeStr = (data.datetime.value).substr(11, 2) + "時" + (data.datetime.value).substr(14, 2) + "分";
-                    heartrateFlag = true;
-                }
+            dataArr = await getGarminData(dateStr, "dailies");
+            if (dataArr._id != null) {
+                await garminDaily(dataArr);
             }
-            if (heartrateFlag) {
-                await miku_say("今日の" + timeStr + "頃に，心拍数が高くなっていたようです", "normal");
-                await miku_ask("その時間にやっていたことや，感じたことなどを教えて下さい");
-                await miku_say("教えていただいてありがとうございます！");
-            } else {
-                await miku_say("今日一日，心拍数の異常は検知されませんでした", "normal");
-            }
-        } else if (garminCategory == "step") {
-            let stepData = dataArr[0];
-            let value = stepData.steps.value;
-            if (value > 7000) {
-                await miku_say("今日は" + value + "歩も歩いたようですね．すばらしいです！", "normal");
-            } else {
-                await miku_say("今日は" + value + "歩ほど歩いたようです", "normal");
+            dataArr = await getGarminData(dateStr, "stressDetails");
+            if (dataArr._id != null) {
+                await garminStress(dataArr);
             }
         }
     }
 }
 
-async function checkSleep() {
-    let date = getDate("今日");
-    let dataArr = await getGarminData(garminEml, date, "sleep");
-    sleep(5 * 1000);
-    if (dataArr == null || dataArr.length == 0) {
-        await miku_say("睡眠データを取得できませんでした", "normal");
-        return;
-    }
-    let sleepData = dataArr[0];
-    let sleepTime = sleepData.sleep_seconds.value;
-    let deepSleepTime = sleepData.deep_sleep_seconds.value;
-    if (sleepTime > (6 * 60 * 60)) {
-        if (deepSleepTime > (1 * 60 * 60)) {
-            await miku_say("昨日はよく眠れて，身体もしっかり休まったようです！", "normal");
-        } else {
-            await miku_say("昨日はよく眠れたようです！", "normal");
+async function garminScenario(type) {
+    let dataArr = [];
+    // 最新のデータが存在するかを確認
+    dataArr = await checkGarminDataTime(type);
+    if (dataArr._id == null) {
+        ans = await miku_ask("スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
+        if (/いいえ/.test(ans)) {
+            return false;
         }
-    } else {
-        if (deepSleepTime < (1 * 60 * 60)) {
-            await miku_say("昨日はあまり眠れなかったようです", "normal");
-        } else {
-            await miku_say("昨日はあまり眠れず，身体もほとんど休まらなかったようです", "normal");
+        await miku_say("しばらくお待ちください", "greeting");
+        await sleep(60 * 1000);
+        dataArr = await checkGarminDataTime(type)
+        if (dataArr._id == null) {
+            await miku_say("健康データを取得できませんでした", "normal");
+            return false;
         }
     }
+    console.log(dataArr);
+    // 各タイプのデータについてのシナリオ
+    if (type == "dailies") {
+        await garminDaily(dataArr);
+    } else if (type == "stressDetails") {
+        await garminStress(dataArr);
+        ans = await miku_ask("その時何をしていたのか教えていただけませんか？");
+        await miku_say("わかりました，ありがとうございます", "greeting");
+    } else if (type == "sleeps") {
+        await garminSleep(dataArr);
+        garminSleepFlag = true;
+        ans = await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
+        await miku_say("わかりました，ありがとうございます", "greeting");
+    }
+    return true;
 }

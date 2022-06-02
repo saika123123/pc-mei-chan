@@ -15,14 +15,6 @@ let ytPlayer = null;
 // 動画が再生中かどうかのフラグ
 let youtubeFlag = false;
 
-// 連携しているサービス一覧にYouTubeサービスを追加
-apps.push({
-    name: "動画再生サービス",
-    keyword: "YouTube",
-    description: "検索した動画の再生",
-    func: async function () { await youtube(); },
-});
-
 async function getYoutubeAPI(keyword) {
     const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/youtube-api/keyword=" + keyword;
     return fetch(url)

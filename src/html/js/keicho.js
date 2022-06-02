@@ -53,9 +53,6 @@ let serviceFlag = false;
 // 静聴モードかどうか
 let seichoFlag = false;
 
-// garminの睡眠シナリオを実行したかどうか
-let garminSleepFlag = false;
-
 // Web socketを再起動
 var stompFailureCallback = function (error) {
     console.log('STOMP: ' + error);
@@ -118,17 +115,6 @@ async function initialize() {
         todoUid = todoPreference.preferences.uid;
     }
 
-    // Garminのユーザ情報をセットする + 昨日の全データをMongoDBにPOSTする
-    garminPreference = await getGarminPreference(uid).catch(function () { garminFlag = false });
-    if (garminFlag) {
-        garminEml = garminPreference.preferences.eml;
-        garminPwd = garminPreference.preferences.pwd;
-        if (garminEml != null && garminPwd != null) {
-            await postNewGarminData(getDate("昨日"), garminCategories);
-        }
-
-    }
-
     // ユーザ情報の確認
     console.log(person);
     console.log(preference);
@@ -152,6 +138,14 @@ async function initialize() {
     if (preference.preferences.summary) {
         summary = true;
     }
+
+    // Garminと連携するかどうか
+    if (preference.preferences.garmin) {
+        garminFlag = true;
+    }
+
+    // 連携しているサービスをセット
+    setService();
 
     //つけっぱなしのため，1日1回夜中の3時にリロードを仕込む
     refreshAt(3, 0);
@@ -286,7 +280,7 @@ async function start_scenario(num) {
     // 追記
     // 親ディレクトリチェック～音声ファイル(画像ファイル)を保存するディレクトリを作成
     // 音声を録音，または画像を保存する設定になっている時のみ実行する
-    if (voicerec == true) {
+    if (voicerec == true || imgtak == true) {
         audioDataIndex = 0;
         imgDataIndex = 0;
         let pDirectoryCheck = await audioDataParentDirectoryCheck();
@@ -304,76 +298,21 @@ async function start_scenario(num) {
             if (seichoFlag) {
                 await keicho("", "self_introduction");
             } else {
-                // ans = getGreeting(person.nickname);
-                // await miku_say(ans, "greeting");
                 await keicho("私になんでも話してください", "self_introduction");
             }
             return;
         case 1:
             await miku_say(person.nickname + "さん，おはようございます", "greeting");
             if (garminFlag) {
-                ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
-                garminSleepFlag = true;
-                if (/いいえ/.test(ans)) {
-                    await keicho("では，今朝の体調や気分について，よければ話してください", "self_introduction");
-                    return;
-                } else {
-                    await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
-                    await sleep(60 * 1000);
-                    let flag = false;
-                    flag = await postNewGarminData(getDate("今日"), ["sleep"]);
-                    if (flag) {
-                        await checkSleep();
-                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？");
-                        await miku_say("教えていただいてありがとうございます！");
-                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
-                        return;
-                    } else {
-                        await miku_say("睡眠データを取得できませんでした", "normal");
-                        // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
-                        // if (/はい/.test(ans)) {
-                        //     await end_keicho("30分後にもう一度実行します．", "bye");
-                        //     doneAt[num] = null;
-                        //     setTimeout(start_scenario(num), 30 * 60 * 1000);
-                        //     return;
-                        // } else {
-                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
-                        return;
-                        // }
-                    }
-                }
+                await garminScenario("sleeps");
             }
             await keicho("今朝のご気分はいかがですか？", "self_introduction");
             return;
         case 2:
             if (garminFlag && !garminSleepFlag) {
-                ans = await miku_ask("昨夜の睡眠データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
-                if (/いいえ/.test(ans)) {
-                    await keicho("では，今朝の体調や気分について，よければ話してください", "self_introduction");
-                    return;
-                } else {
-                    await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
-                    await sleep(60 * 1000);
-                    let flag = false;
-                    flag = await postNewGarminData(getDate("今日"), ["sleep"]);
-                    if (flag) {
-                        await checkSleep();
-                        await miku_ask(person.nickname + "さん自身は，休めた実感はありますか？");
-                        await miku_say("教えていただいてありがとうございます！");
-                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
-                        return;
-                    } else {
-                        await miku_say("睡眠データを取得できませんでした", "normal");
-                        await keicho("今朝の体調や気分について，よければ話してください", "self_introduction");
-                        return;
-                    }
-                }
-            }
-            if (todoFlag) {
-                await remindToDo();
-                await keicho("今日の予定を教えていただけませんか？", "self_introduction");
-            }
-            else {
+                await garminScenario("sleeps");
+                await keicho("今朝のご気分はいかがですか？", "self_introduction");
+            } else {
                 ans = await miku_ask(person.nickname + "さん，今，なにかお話ししたいことはありますか？（はい／いいえ）");
                 if (/いいえ/.test(ans)) {
                     await end_keicho("わかりました．また気が向いたら，お話しして下さいね", "bye");
@@ -409,37 +348,11 @@ async function start_scenario(num) {
         case 6:
             await miku_say(person.nickname + "さん，今日も一日お疲れさまでした．", "greeting");
             if (garminFlag) {
-                ans = await miku_ask("今日の健康データを送信するために，スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
-                if (/いいえ/.test(ans)) {
-                    await keicho("では，今日一日で感じたことや行ったことについて，よければ私に話してください", "self_introduction");
-                    return;
-                } else {
-                    await miku_say("確認をしているので，1分ほどお待ちください", "greeting");
-                    await sleep(60 * 1000);
-                    // let flag = false;
-                    // flag = await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
-                    await postNewGarminData(getDate("今日"), ["stress", "heartrate", "step"]);
-                    // if (flag) {
-                    await garmin();
-                    await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
-                    return;
-                    // } else {
-                    // await miku_say("健康データを取得できませんでした", "normal");
-                    // ans = await miku_ask("時間をおいて，もう一度実行しますか？ (はい / いいえ)");
-                    // if (/はい/.test(ans)) {
-                    //     await end_keicho("30分後にもう一度実行します．", "bye");
-                    //     doneAt[num] = null;
-                    //     setTimeout(start_scenario(num), 30 * 60 * 1000);
-                    //     console.log("set time out");
-                    //     return;
-                    // } else {
-                    // await keicho("今日感じたことや行ったことについて，よければ私に話してください", "self_introduction");
-                    // return;
-                    // }
-                    // }
+                if (await garminScenario("dailies")) {
+                    await garminScenario("stressDetails");
                 }
             }
-            await keicho("今日，" + person.nickname + "さんが感じたことや行ったことなど，よかったら私に教えてください", "self_introduction");
+            await keicho("今日，" + person.nickname + "さんが感じたことや行ったことなど，よければ私に教えてください", "self_introduction");
             return;
     }
 }
@@ -606,22 +519,6 @@ function get_summaryReply(uid, body) {
                 throw 'status is not 200';
             return response.json();
         });
-}
-
-/**
- * メイちゃんと連携している機能を説明する
- */
-async function menu() {
-    let app;
-    let str = "";
-    str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが聞き取りのみ行うようになる」</div>"; // 静聴モードの説明を追加
-    for (app of apps) {
-        str = str + "<div>【" + app.name + "】</div> <div>・キーワード：「" + app.keyword + "」</div> <div>・機能：「" + app.description + "」</div>";
-    }
-    await miku_say("私ができることの一覧を表示します", "greeting");
-    scrollYPostionPushFlag = true;
-    post_text(str);
-    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
 }
 
 /**
@@ -868,4 +765,3 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
 // sleep関数を実装
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
