@@ -3,14 +3,6 @@
  * つぶやきダイアリーに関するクラス
  */
 
-// 連携しているサービス一覧につぶやきダイアリーを追加
-apps.push({
-    name: "つぶやきダイアリー",
-    keyword: "日記",
-    description: "過去の対話内容の振り返り",
-    func: async function () { await diary(); },
-});
-
 // 発話内容から日付を取得する
 function getDate(answer) {
 

@@ -6,14 +6,6 @@
 // リマインド済みのカレンダーイベント
 let remindedCalendarEvents = [];
 
-// 連携しているサービス一覧に検索サービスを追加
-apps.push({
-    name: "カレンダーサービス",
-    keyword: "カレンダー",
-    description: "予定の確認・作成・削除",
-    func: async function () { await calendar(); },
-});
-
 /**
  * APIを実行し,選択した期間のイベントを取得する
  * @param date // 日時

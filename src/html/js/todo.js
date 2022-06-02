@@ -18,24 +18,6 @@ let todoUid = null;
 // 何日以上前のToDoをリマインドするか
 const date = 7;
 
-if (todoFlag) {
-    // 連携しているサービス一覧にToDo管理サービスを追加
-    apps.push({
-        name: "ToDo管理サービス",
-        keyword: "やることリスト",
-        description: "やることリストの編集",
-        func: async function () { await todo(); },
-    });
-
-    // 連携しているサービス一覧にToDoリマインドサービスを追加
-    apps.push({
-        name: "ToDoリマインドサービス",
-        keyword: "リマインド",
-        description: "進捗のないタスクのリマインド",
-        func: async function () { await remindToDo(); },
-    });
-};
-
 /**
  * uidを用いてToDoサービスのプリファレンスを取得する
  * 
