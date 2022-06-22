@@ -78,7 +78,12 @@ function initWebSocket() {
 
 // h時m分にページをリフレッシュする
 function refreshAt(h, m) {
-    var goTo = function () { location.reload() };
+    var goTo = function () {
+        if (talking) {
+            return setTimeout(goTo, 60 * 1000);
+        }
+        location.reload()
+    };
 
     //現在の時刻を秒数にする
     var now = new Date();
@@ -114,6 +119,11 @@ async function initialize() {
     if (todoFlag) {
         todoUid = todoPreference.preferences.uid;
     }
+    // らくらく動画サービスのユーザ情報をセット
+    rakudoPreference = await getRakudoPreference(uid).catch(function () { rakudoFlag = false });
+    if (rakudoFlag) {
+        rakudoId = rakudoPreference.preferences.id;
+    }
 
     // ユーザ情報の確認
     console.log(person);
@@ -147,8 +157,9 @@ async function initialize() {
     // 連携しているサービスをセット
     setService();
 
-    //つけっぱなしのため，1日1回夜中の3時にリロードを仕込む
-    refreshAt(3, 0);
+    //つけっぱなしのため，1日2回夜中の0時と12時にリロードを仕込む
+    refreshAt(0, 0);
+    refreshAt(12, 0);
 
     // web socket を初期化
     initWebSocket();
@@ -163,6 +174,7 @@ async function initialize() {
         // カレンダーのリマインド
         await calCheckEvt();
     }
+
 }
 
 // コールバック関数
@@ -432,9 +444,12 @@ async function keicho(str, motion) {
         }
 
         // キーワードの判定
+        if (/終わり$/.test(answer)) {
+            await end_keicho(person.nickname + "さん,またお話ししてくださいね", "bye");
+            return;
+        }
         if (answer.length < 20) {
             if (/終わり/.test(answer)) {
-                //await miku_say("ありがとうございました．", "smile");
                 await end_keicho(person.nickname + "さん,またお話ししてくださいね", "bye");
                 return;
             } else if (/静聴モード|成長モード/.test(answer)) {

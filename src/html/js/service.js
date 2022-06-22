@@ -51,4 +51,9 @@ function setService() {
     if (garminFlag) {
         addService("健康管理サービス", "健康管理", "過去の健康データの振り返り", async function () { await garmin(); });
     }
+
+    // らくらく動画サービス
+    if (rakudoFlag) {
+        addService("らくらく動画サービス", "らくらく動画", "らくらく動画サービスの実行", async function () { await rakudo() });
+    }
 }
