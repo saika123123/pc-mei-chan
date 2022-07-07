@@ -45,7 +45,7 @@ async function checkGarminDataTime(type) {
     let dateStr = formatDate(date, 'yyyy-MM-dd');
     let dataArr = await getGarminData(dateStr, type);
     if (dataArr._id != null) {
-        if(type == "sleeps") {
+        if (type == "sleeps") {
             return dataArr;
         }
         if ((date.getTime() - 60 * 60 * 1000) <= new Date(dataArr.uploadTime).getTime()) {
@@ -58,14 +58,14 @@ async function checkGarminDataTime(type) {
 
 /*--------------- 以下対話シナリオ ---------------*/
 async function garminDaily(dataArr) {
-    await miku_say("合計歩数は" + dataArr.steps + "歩です", "normal");
+    await miku_say("今日歩いた歩数は" + dataArr.steps + "歩です", "normal");
     if (dataArr.steps > 8000) {
-        await miku_say("すばらしいですね！", "normal");
+        await miku_say("すばらしいです！", "guide_happy");
     }
     await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
-    await miku_say("安静時心拍数は" + dataArr.restingHeartRateInBeatsPerMinute + "bpmです", "normal");
+    await miku_say("今日の安静時心拍数は" + dataArr.restingHeartRateInBeatsPerMinute + "bpmです", "normal");
     if (dataArr.restingHeartRateInBeatsPerMinute > 85) {
-        await miku_say("少し高いので，気を付けて下さいね", "normal");
+        await miku_say("少し高いので，気を付けて下さいね", "guide_sad");
     }
 }
 
@@ -82,19 +82,72 @@ async function garminStress(dataArr) {
     if (max > 75) {
         let hour = Math.floor(Number(timeOffset) / 3600);
         let min = Math.floor(Number(timeOffset) % 3600 / 60);
-        await miku_say(hour + "時" + min + "分頃に高いストレスを感じていたようです", "normal");
+        await miku_say("今日の" + hour + "時" + min + "分頃に高いストレスを感じていたようです", "guide_sad");
+        await miku_ask("その時何をしていたのか教えていただけませんか？");
+        await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("あまりストレスを感じていなかったようです", "normal");
+        await miku_say("あまりストレスを感じていなかったようです", "guide_happy");
+    }
+    ans = await miku_ask("この対話はセルフケアに役立ちましたか？（はい / いいえ）")
+    if (/はい/.test(ans)) {
+        await miku_say("ありがとうございます", "guide_happy");
+        await miku_ask("何か理由があれば教えていただけませんか？");
+    } else if (/いいえ/.test(ans)) {
+        await miku_say("それは残念です", "guide_sad");
+        await miku_ask("何か理由があれば教えていただけませんか？");
     }
 }
 
 async function garminSleep(dataArr) {
     let hour = Math.floor(dataArr.durationInSeconds / 3600);
     let min = Math.floor(dataArr.durationInSeconds % 3600 / 60);
-    await miku_say("睡眠時間は" + hour + "時間" + min + "分です", "normal");
-    if (hour > 6 && (dataArr.deepSleepDurationInSeconds / dataArr.durationInSeconds) > 0.15) {
-        await miku_say("しっかりと休めたようです！", "normal");
+    await miku_say("今日の睡眠時間は" + hour + "時間" + min + "分です", "normal");
+    if (hour > 6) {
+        await miku_say("しっかりと休めたようです！", "guide_happy");
+        await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
+    } else {
+        await miku_say("あまり休めなかったようですね", "guide_sad");
+        await miku_ask("何か理由があれば教えていただけませんか？");
     }
+    await miku_say("わかりました，ありがとうございます", "greeting");
+    ans = await miku_ask("この対話はセルフケアに役立ちましたか？（はい / いいえ）")
+    if (/はい/.test(ans)) {
+        await miku_say("ありがとうございます", "guide_happy");
+        await miku_ask("何か理由があれば教えていただけませんか？");
+    } else if (/いいえ/.test(ans)) {
+        await miku_say("それは残念です", "guide_sad");
+        await miku_ask("何か理由があれば教えていただけませんか？");
+    }
+}
+
+async function garminScenario(type) {
+    let dataArr = [];
+    // 最新のデータが存在するかを確認
+    dataArr = await checkGarminDataTime(type);
+    if (dataArr._id == null) {
+        let ans = await miku_ask("スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
+        if (/いいえ/.test(ans)) {
+            return false;
+        }
+        await miku_say("しばらくお待ちください", "greeting");
+        await sleep(60 * 1000);
+        dataArr = await checkGarminDataTime(type)
+        if (dataArr._id == null) {
+            await miku_say("健康データを取得できませんでした", "guide_sad");
+            return false;
+        }
+    }
+    console.log(dataArr);
+    // 各タイプのデータについてのシナリオ
+    if (type == "dailies") {
+        await garminDaily(dataArr);
+    } else if (type == "stressDetails") {
+        await garminStress(dataArr);
+    } else if (type == "sleeps") {
+        await garminSleep(dataArr);
+        garminSleepFlag = true;
+    }
+    return true;
 }
 
 async function garmin() {
@@ -111,7 +164,7 @@ async function garmin() {
                 if (!checkflag) {
                     answer = await miku_ask("スマートフォンのガーミンアプリを開いて下さい (はい / いいえ)", "normal");
                     if (/いいえ/.test(answer)) {
-                        await miku_say("健康データの取得に失敗しました", "normal");
+                        await miku_say("健康データの取得に失敗しました", "guide_sad");
                         return;
                     }
                     checkflag = true;
@@ -119,56 +172,98 @@ async function garmin() {
                     await sleep(60 * 1000);
                 }
                 if (dataArr._id == null) {
-                    await miku_say("健康データの取得に失敗しました", "normal");
+                    await miku_say("健康データの取得に失敗しました", "guide_sad");
                     return;
                 }
             }
+            let sleepStr = "";
+            let heartrateStr = "";
+            let stressStr = "";
+            let otherStr = "";
             dataArr = await getGarminData(dateStr, "sleeps");
             if (dataArr._id != null) {
-                await garminSleep(dataArr);
+                // await garminSleep(dataArr);
+                let timestamp = dataArr.startTimeInSeconds - (9 * 60 * 60 * 1000);
+                let date = new Date(timestamp);
+                sleepStr = sleepStr + "<div> ・就寝時間： " + date.getHours() + "時" + date.getMinutes() + "分 </div>";
+                timestamp += dataArr.durationInSeconds * 1000;
+                date = new Date(timestamp);
+                sleepStr = sleepStr + "<div> ・起床時間： " + date.getHours() + "時" + date.getMinutes() + "分 </div>";
+                let hour = Math.floor(dataArr.durationInSeconds / 3600);
+                let min = Math.floor(dataArr.durationInSeconds % 3600 / 60);
+                sleepStr = sleepStr + "<div> ・睡眠時間： " + hour + "時間" + min + "分 </div>";
+                hour = Math.floor(dataArr.deepSleepDurationInSeconds / 3600);
+                min = Math.floor(dataArr.deepSleepDurationInSeconds % 3600 / 60);
+                sleepStr = sleepStr + "<div> ・深い睡眠： " + hour + "時間" + min + "分 </div>";
+                hour = Math.floor(dataArr.lightSleepDurationInSeconds / 3600);
+                min = Math.floor(dataArr.lightSleepDurationInSeconds % 3600 / 60);
+                sleepStr = sleepStr + "<div> ・浅い睡眠： " + hour + "時間" + min + "分 </div>";
+                hour = Math.floor(dataArr.remSleepInSeconds / 3600);
+                min = Math.floor(dataArr.remSleepInSeconds % 3600 / 60);
+                sleepStr = sleepStr + "<div> ・レム睡眠： " + hour + "時間" + min + "分 </div>";
             }
             dataArr = await getGarminData(dateStr, "dailies");
             if (dataArr._id != null) {
-                await garminDaily(dataArr);
+                // await garminDaily(dataArr);
+                heartrateStr = heartrateStr + "<div> ・安静時心拍数： " + dataArr.restingHeartRateInBeatsPerMinute + "bpm </div>";
+                heartrateStr = heartrateStr + "<div> ・最小時心拍数： " + dataArr.minHeartRateInBeatsPerMinute + "bpm </div>";
+                heartrateStr = heartrateStr + "<div> ・最大時心拍数： " + dataArr.maxHeartRateInBeatsPerMinute + "bpm </div>";
+                otherStr = otherStr + "<div> ・合計歩数： " + dataArr.steps + "歩 </div>";
+                otherStr = otherStr + "<div> ・消費カロリー： " + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcal </div>";
+                stressStr = stressStr + "<div> ・平均ストレスレベル： " + dataArr.averageStressLevel + "</div>";
+                stressStr = stressStr + "<div> ・最大ストレスレベル： " + dataArr.maxStressLevel;
             }
             dataArr = await getGarminData(dateStr, "stressDetails");
             if (dataArr._id != null) {
-                await garminStress(dataArr);
+                // await garminStress(dataArr);
+                let max = 0;
+                let timeOffset = "0";
+                for (var item in dataArr.timeOffsetStressLevelValues) {
+                    if (dataArr.timeOffsetStressLevelValues[item] > max) {
+                        max = dataArr.timeOffsetStressLevelValues[item];
+                        timeOffset = item;
+                    }
+                }
+                let hour = Math.floor(Number(timeOffset) / 3600);
+                let min = Math.floor(Number(timeOffset) % 3600 / 60);
+                stressStr = stressStr + " (" + hour + "時" + min + "分) </div>";
+                max = 0;
+                timeOffset = "0";
+                for (var item in dataArr.timeOffsetBodyBatteryValues) {
+                    if (dataArr.timeOffsetBodyBatteryValues[item] > max) {
+                        max = dataArr.timeOffsetBodyBatteryValues[item];
+                        timeOffset = item;
+                    }
+                }
+                let mini = max;
+                for (var item in dataArr.timeOffsetBodyBatteryValues) {
+                    if (Number(item) < Number(timeOffset)) {
+                        continue;
+                    }
+                    if (dataArr.timeOffsetBodyBatteryValues[item] < mini) {
+                        mini = dataArr.timeOffsetBodyBatteryValues[item];
+                    }
+                }
+                otherStr = otherStr + "<div> ・Body Battery： " + max + " → " + mini + "</div>";
             }
+            let str = "";
+            if (sleepStr.length > 0) {
+                // post_text(sleepStr);
+                str = str + "<div> 【睡眠】 </div>" + sleepStr;
+            }
+            if (heartrateStr.length > 0) {
+                // post_text(heartrateStr);
+                str = str + "<div> 【心拍】 </div>" + heartrateStr;
+            }
+            if (stressStr.length > 0) {
+                // post_text(stressStr);
+                str = str + "<div> 【ストレス】 </div>" + stressStr;
+            }
+            if (otherStr.length > 0) {
+                // post_text(otherStr);
+                str = str + "<div> 【その他】 </div>" + otherStr;
+            }
+            post_text(str);
         }
     }
-}
-
-async function garminScenario(type) {
-    let dataArr = [];
-    // 最新のデータが存在するかを確認
-    dataArr = await checkGarminDataTime(type);
-    if (dataArr._id == null) {
-        ans = await miku_ask("スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
-        if (/いいえ/.test(ans)) {
-            return false;
-        }
-        await miku_say("しばらくお待ちください", "greeting");
-        await sleep(60 * 1000);
-        dataArr = await checkGarminDataTime(type)
-        if (dataArr._id == null) {
-            await miku_say("健康データを取得できませんでした", "normal");
-            return false;
-        }
-    }
-    console.log(dataArr);
-    // 各タイプのデータについてのシナリオ
-    if (type == "dailies") {
-        await garminDaily(dataArr);
-    } else if (type == "stressDetails") {
-        await garminStress(dataArr);
-        ans = await miku_ask("その時何をしていたのか教えていただけませんか？");
-        await miku_say("わかりました，ありがとうございます", "greeting");
-    } else if (type == "sleeps") {
-        await garminSleep(dataArr);
-        garminSleepFlag = true;
-        ans = await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
-        await miku_say("わかりました，ありがとうございます", "greeting");
-    }
-    return true;
 }

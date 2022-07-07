@@ -445,12 +445,12 @@ async function keicho(str, motion) {
 
         // キーワードの判定
         if (/終わり$/.test(answer)) {
-            await end_keicho(person.nickname + "さん,またお話ししてくださいね", "bye");
+            await end_keicho("またお話ししてくださいね", "bye");
             return;
         }
         if (answer.length < 20) {
             if (/終わり/.test(answer)) {
-                await end_keicho(person.nickname + "さん,またお話ししてくださいね", "bye");
+                await end_keicho("またお話ししてくださいね", "bye");
                 return;
             } else if (/静聴モード|成長モード/.test(answer)) {
                 seichoFlag = true;
@@ -461,22 +461,30 @@ async function keicho(str, motion) {
                 str = "なんでもお申し付けください";
                 motion = "greeting";
                 continue;
-            } else if ((/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
-                str = getGreeting();
-                continue;
-            } else if (/ありがとう/.test(answer)) {
-                str = "どういたしまして";
-                continue;
-            } else if (/か$/.test(answer)) {
-                //質問には塩対応
-                str = "ごめんなさい，いま傾聴モードなので答えられません";
-                motion = "greeting";
-                continue;
+                // } else if ((/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
+                //     str = getGreeting();
+                //     continue;
+                // } else if (/ありがとう/.test(answer)) {
+                //     str = "どういたしまして";
+                //     continue;
+                // } else if (/か$/.test(answer)) {
+                //     //質問には塩対応
+                //     str = "ごめんなさい，いま傾聴モードなので答えられません";
+                //     motion = "greeting";
+                //     continue;
             } else {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);
                 if (flag) {
-                    str = "傾聴モードに戻ります";
+                    let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
+                    if (/よかった|良かった/.test(ans)) {
+                        await miku_say("ありがとうございます", "guide_happy");
+                        await miku_ask("何か理由があれば教えていただけませんか？");
+                    } else if (/いまいち/.test(ans)) {
+                        await miku_say("それは残念です", "guide_sad");
+                        await miku_ask("何か理由があれば教えていただけませんか？");
+                    }
+                    str = "わかりました，ありがとうございます";
                     motion = "greeting";
                     continue;
                 }
@@ -496,8 +504,14 @@ async function keicho(str, motion) {
             continue;
         }
 
-        //相づち文を取得
-        str = get_aiduchi();
+        //応答を取得
+        str = await getResponse(answer).catch(function () { str = get_aiduchi() });
+
+        // 応答を取得できなかったときは，あいづちを取得
+        if (str.length < 0) {
+            str = get_aiduchi();
+        }
+
     }
     while (talking);
 }
@@ -516,6 +530,69 @@ async function checkKeyword(answer) {
             return true;
         }
     }
+}
+
+/**
+ * ChaplusAPIを実行
+ */
+async function runChaplusApi(ans) {
+    // ChaplusAPIを実行
+    const url = "https://www.chaplus.jp/v1/chat?apikey=62c29145e02e6";
+    const headers = {
+        "Content-Type": "application/json"
+    };
+    const body = JSON.stringify({
+        "utterance": ans,
+        "username": person.nickname,
+        "agentState": {
+            "agentName": "メイ",
+            "age": "27歳",
+            "tone": "normal"
+        }
+    });
+    return fetch(url, {
+        method: 'POST',
+        // headers: headers,
+        body: body,
+        mode: 'cors',
+    })
+        .then((response) => {
+            if (!response.ok) {
+                console.log("Status is not 200");
+                throw new Error(response);
+            }
+            let result = response.json();
+            console.log(result);
+            return result;
+        })
+        .catch(e => {
+            console.error(e);
+            return reject(e);
+        });
+}
+
+/**
+ * 発話に対する応答を取得
+ */
+async function getResponse(ans) {
+    // ChaplusAPIを実行
+    let result = await runChaplusApi(ans);
+
+    // 結果からスコアの高い応答を抽出
+    let responses = [];
+    for (var int in result.responses) {
+        var response = result.responses[int];
+        if (response.score < result.bestResponse.score - 0.1 || response.score < 0.6) {
+            break;
+        }
+        responses.push(response.utterance);
+    }
+
+    // スコアの高い応答からランダムに1つ選択
+    if (responses.length < 1) {
+        return "";
+    }
+    return responses[Math.floor(Math.random() * responses.length)];
 }
 
 /**
