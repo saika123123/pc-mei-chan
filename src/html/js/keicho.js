@@ -475,7 +475,7 @@ async function keicho(str, motion) {
             } else {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);
-                if (flag) {
+                if (flag && !youtubeFlag) {
                     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
                     if (/よかった|良かった/.test(ans)) {
                         await miku_say("ありがとうございます", "guide_happy");
@@ -508,7 +508,7 @@ async function keicho(str, motion) {
         str = await getResponse(answer).catch(function () { str = get_aiduchi() });
 
         // 応答を取得できなかったときは，あいづちを取得
-        if (str.length < 0) {
+        if (str.length < 1) {
             str = get_aiduchi();
         }
 
@@ -582,7 +582,7 @@ async function getResponse(ans) {
     let responses = [];
     for (var int in result.responses) {
         var response = result.responses[int];
-        if (response.score < result.bestResponse.score - 0.1 || response.score < 0.6) {
+        if (response.score < result.bestResponse.score - 0.2 || response.score < 0.6) {
             break;
         }
         responses.push(response.utterance);
@@ -592,7 +592,11 @@ async function getResponse(ans) {
     if (responses.length < 1) {
         return "";
     }
-    return responses[Math.floor(Math.random() * responses.length)];
+    let str = responses[Math.floor(Math.random() * responses.length)];
+    if(str.includes("。")){
+        str = str.substring(0, str.indexOf("。"));
+    }
+    return str;
 }
 
 /**
