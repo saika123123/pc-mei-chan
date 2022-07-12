@@ -71,9 +71,17 @@ async function end_youtube() {
     serviceFlag = false;
     ytplayer.stopVideo();
     talking = true;
+    let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
+    if (/よかった|良かった/.test(ans)) {
+        await miku_say("ありがとうございます", "guide_happy");
+        await miku_ask("何か理由があれば教えていただけませんか？");
+    } else if (/いまいち/.test(ans)) {
+        await miku_say("それは残念です", "guide_sad");
+        await miku_ask("何か理由があれば教えていただけませんか？");
+    }
     console.log("傾聴再開");
     $("#status").html("");
-    keicho("傾聴モードに戻ります", "self_introduction");
+    keicho("わかりました，ありがとうございます", "greeting");
 }
 
 /**
