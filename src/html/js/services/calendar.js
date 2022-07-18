@@ -507,6 +507,7 @@ async function calendar() {
         }
         // サービス終了
         else if (/やめる|止める/.test(ans)) {
+            serviceFlag = false;
             return;
         }
     }

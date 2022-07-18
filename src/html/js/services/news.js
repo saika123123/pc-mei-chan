@@ -1,21 +1,23 @@
 /**
- * search.js
- * Web検索に関するクラス
+ * news.js
+ * ニュースに関するクラス
  */
 
 /**
- * APIを実行し,検索結果を取得する
- * @param keyword // 検索するキーワード
+ * NewsAPIでニュースを取得する
  */
-async function getCustomSearchAPI(keyword) {
-    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/websearch-api/keyword=" + keyword;
-    return fetch(url)
+async function getNews(keyword) {
+    const url = "https://newsapi.org/v2/everything?q=" + keyword + "&language=jp&apiKey=fab5b04b828d4c6dae0f4af0be428487";
+    return fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+    })
         .then(response => {
             //レスポンスコードをチェック
             if (response.status == 200) {
-                let result = response.json();
-                console.log(result);
-                return result;
+                var json = response.json();
+                console.log(json);
+                return json;
             } else {
                 throw new Error(response);
             }
@@ -29,29 +31,29 @@ async function getCustomSearchAPI(keyword) {
 /*--------------- 以下対話シナリオ ---------------*/
 
 /**
- * Webページを検索する
+ * ニュースを検索する
  */
-async function search() {
+async function news() {
     let flag = true;
     let keyword = await miku_ask("検索するキーワードを教えて下さい (キーワード / やめる)", false, "guide_normal");
     if (/^やめる$/.test(keyword)) {
         serviceFlag = false;
         return;
     }
-    let result = await getCustomSearchAPI(keyword).catch(function () { flag = false; });
+    let result = await getNews(keyword).catch(function () { flag = false; });
     await sleep(1000);
-    let list = result.data.items;
     if (!flag) {
         await miku_say("検索結果を取得できませんでした", "normal");
         serviceFlag = false;
         return;
     }
 
+    let list = result.articles;
     let str = "";
     let n = 1;
-    for (const json of list) {
+    for (var article of list) {
         if (n > 5) break;
-        let title = json.title;
+        let title = article.title;
         if (title.length > 32) {
             title = title.slice(0, 31) + "...";
         }
@@ -69,7 +71,7 @@ async function search() {
     let num = -1;
     while (num < 0) {
         setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 5000);
-        let ans = await miku_ask("見たいページの番号を教えて下さい (番号 / やめる)", false, "guide_normal");
+        let ans = await miku_ask("見たいニュースの番号を教えて下さい (番号 / やめる)", false, "guide_normal");
         if (/5|五/.test(ans)) {
             if (list.length > 4) {
                 num = 4;
@@ -94,12 +96,9 @@ async function search() {
         }
     }
     console.log(list[num]);
-    let pageURL = list[num].link;
+    let pageURL = list[num].url;
     num++;
-    // await miku_say(num + "番のページを表示します", "normal");
-    // scrollYPostionPushFlag = true;
     post_page(pageURL);
-    // setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);
     stop_keicho();
     return;
 }

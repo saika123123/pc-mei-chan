@@ -18,7 +18,7 @@ function post_comment(str, speaker) {
             //"class": "bubble bubble-half-bottom small",
             //}).text(str);
         }).html(
-            "<img style='border-radius:50%;width:100px' src='img/mei_normal.png'>" +
+            // "<img style='border-radius:50%;width:100px' src='img/mei_normal.png'>" + str
             str
         );
     } else {
@@ -146,8 +146,8 @@ function post_text(str, speaker) {
         class: "bubble bubble-half-bottom normal",
         id: id,
         src: pageURL,
-        width: 1120,
-        height: 630,
+        width: 1200,
+        height: 600,
     }).text("ページを表示できませんでした");
 
     const bubble = $("<div></div>", {
