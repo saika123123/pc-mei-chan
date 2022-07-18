@@ -174,7 +174,6 @@ async function initialize() {
         // カレンダーのリマインド
         await calCheckEvt();
     }
-
 }
 
 // コールバック関数
@@ -322,21 +321,21 @@ async function start_scenario(num) {
             return;
         case 2:
             if (garminFlag && !garminSleepFlag) {
+                await miku_say(person.nickname + "さん，おはようございます", "greeting");
                 await garminScenario("sleeps");
                 await keicho("今朝のご気分はいかがですか？", "self_introduction");
             } else {
-                ans = await miku_ask(person.nickname + "さん，今，なにかお話ししたいことはありますか？（はい／いいえ）");
-                if (/いいえ/.test(ans)) {
-                    await end_keicho("わかりました．また気が向いたら，お話しして下さいね", "bye");
-                    return;
+                ans = await miku_ask(person.nickname + "さん，朝食は食べましたか？（はい／いいえ）");
+                if (/はい/.test(ans)) {
+                    await miku_ask("何を食べたか教えていただけませんか？");
                 }
-                await keicho("私になんでも話してください", "greeting");
+                await keicho("わかりました，ありがとうございます", "greeting");
             }
             return;
         case 3:
-            ans = await miku_ask(person.nickname + "さん，昼食はすみましたか？（食べました／まだ）");
-            if (/食べました/.test(ans)) {
-                await miku_ask("今日のお昼ご飯は，なにを食べましたか？", false, "guide_happy");
+            ans = await miku_ask(person.nickname + "さん，昼食は食べました？（はい／いいえ）");
+            if (/はい/.test(ans)) {
+                await miku_ask("何を食べたか教えていただけませんか？");
                 await miku_say("教えていただいてありがとうございます！");
             }
             await keicho("午前中はどんなことをしたか，話していただけませんか？", "smile");
@@ -350,9 +349,9 @@ async function start_scenario(num) {
             await keicho(person.nickname + "さんが思っていることを，なんでも話してください", "greeting");
             return;
         case 5:
-            ans = await miku_ask(person.nickname + "さん，夕食はすみましたか？（食べました／まだ）");
-            if (/食べました/.test(ans)) {
-                await miku_ask("今日の晩ごはん，なにを食べましたか？", false, "guide_happy");
+            ans = await miku_ask(person.nickname + "さん，夕食は食べましたか？（はい／いいえ）");
+            if (/はい/.test(ans)) {
+                await miku_ask("何を食べたか教えていただけませんか？");
                 await miku_say("教えていただいてありがとうございます！");
             }
             await keicho("午後はどんなことをしたか，話していただけませんか？", "smile");
@@ -422,8 +421,8 @@ function put_start_button(button_label = "メイちゃんと話す") {
 async function keicho(str, motion) {
 
     do {
-        let answer = await miku_ask(str, false, motion);
         serviceFlag = false;
+        let answer = await miku_ask(str, false, motion);
         motion = get_motion();
 
         // 静聴モード
@@ -475,14 +474,12 @@ async function keicho(str, motion) {
             } else {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);
-                if (flag && !youtubeFlag) {
+                if (flag && !serviceFlag) {
                     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
                     if (/よかった|良かった/.test(ans)) {
-                        await miku_say("ありがとうございます", "guide_happy");
-                        await miku_ask("何か理由があれば教えていただけませんか？");
+                        await miku_ask("ありがとうございます! 何か理由があれば教えていただけませんか？","guide_happy");
                     } else if (/いまいち/.test(ans)) {
-                        await miku_say("それは残念です", "guide_sad");
-                        await miku_ask("何か理由があれば教えていただけませんか？");
+                        await miku_ask("それは残念です. 何か理由があれば教えていただけませんか？","guide_happy");
                     }
                     str = "わかりました，ありがとうございます";
                     motion = "greeting";
@@ -514,22 +511,6 @@ async function keicho(str, motion) {
 
     }
     while (talking);
-}
-
-/**
- * キーワードが含まれているか判定し，対応するサービスを実行する
- */
-async function checkKeyword(answer) {
-    let app = apps;
-    for (app of apps) {
-        let keyword = new RegExp(app.keyword);
-        if (keyword.test(answer)) {
-            console.log("Start Service : " + app.name);
-            serviceFlag = true;
-            await app.func();
-            return true;
-        }
-    }
 }
 
 /**

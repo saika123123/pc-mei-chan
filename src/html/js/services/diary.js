@@ -150,7 +150,10 @@ async function diary() {
     let date;
     while (true) {
         answer = await miku_ask("いつの日記を見たいですか? (日付 / やめる)", false, "guide_normal");
-        if (/やめる/.test(answer)) return;
+        if (/やめる/.test(answer)) {
+            serviceFlag = false;
+            return;
+        }
         date = getDate(answer)
         if (date) break;
     }
@@ -159,9 +162,10 @@ async function diary() {
     const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/tsubuyaki-diary/diary.html?uid=" + uid + "&date=" + formatDate(date, 'yyyy-MM-dd');
     // await miku_say("その日の日記を表示します", "normal");
     console.log(formatDate(date, 'yyyy年MM月dd日'));
-    scrollYPostionPushFlag = true;
+    // scrollYPostionPushFlag = true;
     post_page(url);
-    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
+    // setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
+    stop_keicho();
     // } else {
     //     await miku_say("その日のつぶやきはありませんでした", "normal");
     // }

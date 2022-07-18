@@ -155,7 +155,10 @@ async function garmin() {
     let checkflag = false;
     while (true) {
         let answer = await miku_ask("いつの健康データを確認しますか? (日付 / やめる)", false, "guide_normal");
-        if (/やめる/.test(answer)) return;
+        if (/やめる/.test(answer)) {
+            serviceFlag = false;
+            return;
+        }
         date = getDate(answer);
         if (date) {
             let dateStr = formatDate(date, 'yyyy-MM-dd');
@@ -263,7 +266,9 @@ async function garmin() {
                 // post_text(otherStr);
                 str = str + "<div> 【その他】 </div>" + otherStr;
             }
+            // scrollYPostionPushFlag = true;
             post_text(str);
+            setTimeout(function () { window.scrollBy(0, -500); }, 4500);
         }
     }
 }

@@ -101,8 +101,8 @@ async function post_video(videoID) {
         ytplayer = new YT.Player(
             "youtube" + youtubeID,
             {
-                width: 700,
-                height: 400,
+                width: 1200,
+                height: 600,
                 id: youtubeID,
                 videoId: videoID,
                 // playerVars: { 'controls': 1 },
@@ -201,6 +201,7 @@ async function youtube() {
         } else if (/1|一|市/.test(ans)) {
             num = 0;
         } else if (/^やめる$/.test(ans)) {
+            serviceFlag = false;
             return;
         }
     }

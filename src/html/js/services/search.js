@@ -35,6 +35,7 @@ async function search() {
     let flag = true;
     let keyword = await miku_ask("検索するキーワードを教えて下さい (キーワード / やめる)", false, "guide_normal");
     if (/^やめる$/.test(keyword)) {
+        serviceFlag = false;
         return;
     }
     let result = await getCustomSearchAPI(keyword).catch(function () { flag = false; });
@@ -42,6 +43,7 @@ async function search() {
     let list = result.data.items;
     if (!flag) {
         await miku_say("検索結果を取得できませんでした", "normal");
+        serviceFlag = false;
         return;
     }
 
@@ -59,6 +61,7 @@ async function search() {
     const size = Object.keys(list).length;
     if (size == 0) {
         await miku_say("検索結果を取得できませんでした", "normal");
+        serviceFlag = false;
         return;
     }
     scrollYPostionPushFlag = true;
@@ -86,6 +89,7 @@ async function search() {
         } else if (/1|一|市/.test(ans)) {
             num = 0;
         } else if (/^やめる$/.test(ans)) {
+            serviceFlag = false;
             return;
         }
     }
@@ -93,8 +97,9 @@ async function search() {
     let pageURL = list[num].link;
     num++;
     // await miku_say(num + "番のページを表示します", "normal");
-    scrollYPostionPushFlag = true;
+    // scrollYPostionPushFlag = true;
     post_page(pageURL);
-    setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);
+    // setTimeout(function () {window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680);}, 4000);
+    stop_keicho();
     return;
 }

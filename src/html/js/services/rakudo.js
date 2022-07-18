@@ -42,5 +42,5 @@ async function rakudo() {
     // 別ウィンドウでページを表示
     let url = "http://wsapp.cs.kobe-u.ac.jp/movieplayerservice/movieplayer?randomid=" + rakudoId + "&fset=1&interval=3000";
     window.open(url, "_brank", "width=10000,height=10000");
-    end_keicho();
+    stop_keicho();
 }
