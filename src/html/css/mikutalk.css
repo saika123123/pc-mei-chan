@@ -33,7 +33,7 @@ img {
 }
 
 .btn-big,
-.btn-group-big > .btn {
+.btn-group-big>.btn {
   font-size: 60px;
   padding-left: 30px;
   padding-right: 30px;
@@ -50,7 +50,7 @@ img {
 }
 
 .btn-medium,
-.btn-group-normal > .btn {
+.btn-group-normal>.btn {
   font-size: 45px;
   padding-left: 60px;
   padding-right: 30px;
@@ -67,7 +67,7 @@ img {
 }
 
 .btn-normal,
-.btn-group-normal > .btn {
+.btn-group-normal>.btn {
   font-size: 45px;
   padding-left: 30px;
   padding-right: 30px;
@@ -84,7 +84,7 @@ img {
 }
 
 .btn-small,
-.btn-group-small > .btn {
+.btn-group-small>.btn {
   font-size: 30px;
   padding-left: 30px;
   padding-right: 30px;
@@ -101,7 +101,7 @@ img {
 }
 
 .btn-skype,
-.btn-group-small > .btn {
+.btn-group-small>.btn {
   font-size: 30px;
   padding-left: 30px;
   padding-right: 30px;
@@ -281,6 +281,17 @@ hr {
 .help {
   text-decoration: underline;
   color: #0000ff;
+}
+
+.hint {
+  position: fixed;
+  text-align: center;
+  font-size: 25px;
+  padding: 10px;
+  background-color: #eee;
+  right: 10px;
+  left: 10px;
+  bottom: 10px;
 }
 
 #videostm {
