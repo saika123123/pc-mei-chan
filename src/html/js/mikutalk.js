@@ -159,3 +159,14 @@ function post_text(str, speaker) {
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
 
 };
+
+//ページにヒントを表示
+function post_hint(str) {
+    const contents = $("<div></div>", {
+        class: "hint",
+        id: "hint",
+    }).text(str);
+
+    $("#status").append(contents);
+    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+}

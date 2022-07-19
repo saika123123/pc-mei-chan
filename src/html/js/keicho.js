@@ -411,6 +411,8 @@ function put_start_button(button_label = "メイちゃんと話す") {
     });
     $("#status").append(restart_button);
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+    let hint = "【ヒント】「メニュー」と話しかけると，私ができることの一覧を表示します";
+    post_hint(hint);
 }
 
 /**
@@ -477,9 +479,9 @@ async function keicho(str, motion) {
                 if (flag && !serviceFlag) {
                     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
                     if (/よかった|良かった/.test(ans)) {
-                        await miku_ask("ありがとうございます! 何か理由があれば教えていただけませんか？","guide_happy");
+                        await miku_ask("ありがとうございます! 何か理由があれば教えていただけませんか？", "guide_happy");
                     } else if (/いまいち/.test(ans)) {
-                        await miku_ask("それは残念です. 何か理由があれば教えていただけませんか？","guide_happy");
+                        await miku_ask("それは残念です. 何か理由があれば教えていただけませんか？", "guide_happy");
                     }
                     str = "わかりました，ありがとうございます";
                     motion = "greeting";
@@ -574,7 +576,7 @@ async function getResponse(ans) {
         return "";
     }
     let str = responses[Math.floor(Math.random() * responses.length)];
-    if(str.includes("。")){
+    if (str.includes("。")) {
         str = str.substring(0, str.indexOf("。"));
     }
     return str;

@@ -112,7 +112,7 @@ function setService() {
     addService("検索サービス", "検索", "気になる物事の検索", async function () { await search(); });
 
     // ニュース検索サービス
-    addService("ニュース検索サービス", "ニュース", "ニュースの検索", async function () { await news() });
+    addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
 
     // カレンダーサービス
     addService("カレンダーサービス", "カレンダー", "予定の確認・作成・リマインド", async function () { await calendar(); });
