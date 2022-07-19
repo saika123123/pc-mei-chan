@@ -411,7 +411,7 @@ function put_start_button(button_label = "メイちゃんと話す") {
     });
     $("#status").append(restart_button);
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
-    let hint = "【ヒント】「メニュー」と話しかけると，私ができることの一覧を表示します";
+    let hint = "【ヒント】「メニュー」と話しかけると，できることの一覧を表示します";
     post_hint(hint);
 }
 
