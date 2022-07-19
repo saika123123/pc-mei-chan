@@ -284,14 +284,10 @@ hr {
 }
 
 .hint {
-  position: fixed;
   text-align: center;
   font-size: 25px;
   padding: 10px;
   background-color: #eee;
-  right: 10px;
-  left: 10px;
-  bottom: 10px;
 }
 
 #videostm {
