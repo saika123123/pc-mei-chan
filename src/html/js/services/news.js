@@ -4,10 +4,35 @@
  */
 
 /**
+ * NewsAPIでTOPニュースを取得する
+ */
+async function getTopNews() {
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/news/";
+    return fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+    })
+        .then(response => {
+            //レスポンスコードをチェック
+            if (response.status == 200) {
+                var json = response.json();
+                console.log(json);
+                return json;
+            } else {
+                throw new Error(response);
+            }
+        })
+        .catch(err => {
+            console.log("Failed to fetch " + url, err);
+            throw new Error(err);
+        });
+}
+
+/**
  * NewsAPIでニュースを取得する
  */
 async function getNews(keyword) {
-    const url = "https://newsapi.org/v2/everything?q=" + keyword + "&language=jp&apiKey=fab5b04b828d4c6dae0f4af0be428487";
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/news/keyword=" + keyword;
     return fetch(url, {
         method: 'GET',
         mode: 'cors',
@@ -35,15 +60,16 @@ async function getNews(keyword) {
  */
 async function news() {
     let flag = true;
-    let keyword = await miku_ask("検索するキーワードを教えて下さい (キーワード / やめる)", false, "guide_normal");
-    if (/^やめる$/.test(keyword)) {
-        serviceFlag = false;
-        return;
-    }
-    let result = await getNews(keyword).catch(function () { flag = false; });
+    // let keyword = await miku_ask("検索するキーワードを教えて下さい (キーワード / やめる)", false, "guide_normal");
+    // if (/^やめる$/.test(keyword)) {
+    //     serviceFlag = false;
+    //     return;
+    // }
+    // let result = await getNews(keyword).catch(function () { flag = false; });
+    let result = await getTopNews().catch(function () { flag = false; });
     await sleep(1000);
     if (!flag) {
-        await miku_say("検索結果を取得できませんでした", "normal");
+        await miku_say("ニュースを取得できませんでした", "normal");
         serviceFlag = false;
         return;
     }
@@ -62,7 +88,7 @@ async function news() {
     }
     const size = Object.keys(list).length;
     if (size == 0) {
-        await miku_say("検索結果を取得できませんでした", "normal");
+        await miku_say("ニュースを取得できませんでした", "normal");
         serviceFlag = false;
         return;
     }
