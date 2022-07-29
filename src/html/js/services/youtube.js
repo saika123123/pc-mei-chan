@@ -73,9 +73,9 @@ async function end_youtube() {
     talking = true;
     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
     if (/よかった|良かった/.test(ans)) {
-        await miku_ask("ありがとうございます! 何か理由があれば教えていただけませんか？", false, "guide_happy");
+        await miku_ask("ありがとうございます! 理由があれば教えていただけませんか？", false, "smile");
     } else if (/いまいち/.test(ans)) {
-        await miku_ask("それは残念です. 何か理由があれば教えていただけませんか？", false, "guide_happy");
+        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
     console.log("傾聴再開");
     $("#status").html("");
@@ -207,9 +207,9 @@ async function youtube() {
     let videoID = list[num].id;
     num++;
     // await miku_say(num + "番の動画を再生します", "normal");
-    scrollYPostionPushFlag = true;
+    // scrollYPostionPushFlag = true;
     post_video(videoID);
-    setTimeout(function () { window.scrollTo(0, scrollYPostion - 50); }, 2000);
+    // setTimeout(function () { window.scrollTo(0, scrollYPostion - 50); }, 2000);
     start_youtube();
     // youtubeFlag = true;
     // seichoFlag = true;

@@ -36,8 +36,10 @@ async function checkKeyword(answer) {
 async function menu() {
     let app;
     let str = "";
+    // 傾聴モードの説明を追加
+    str = str + "<div>【傾聴モード】</div> <div>・キーワード：「傾聴モード」</div> <div>・機能：「メイちゃんが簡単な相槌だけを返すようになる」</div>";
     // 静聴モードの説明を追加
-    str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが黙って話を聞く」</div>";
+    str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが黙って話を聞くようになる」</div>";
     for (app of apps) {
         str = str + "<div>【" + app.name + "】</div> <div>・キーワード：「" + app.keyword + "」</div> <div>・機能：「" + app.description + "」</div>";
     }
@@ -67,9 +69,9 @@ async function restart_keicho() {
     talking = true;
     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
     if (/よかった|良かった/.test(ans)) {
-        await miku_ask("ありがとうございます! 何か理由があれば教えていただけませんか？", false, "guide_happy");
+        await miku_ask("ありがとうございます! 理由があれば教えていただけませんか？", false, "smile");
     } else if (/いまいち/.test(ans)) {
-        await miku_ask("それは残念です. 何か理由があれば教えていただけませんか？", false, "guide_happy");
+        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
     serviceFlag = false;
     console.log("傾聴再開");
