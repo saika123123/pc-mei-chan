@@ -88,13 +88,11 @@ async function garminStress(dataArr) {
     } else {
         await miku_say("あまりストレスを感じていなかったようです", "guide_happy");
     }
-    ans = await miku_ask("この対話はセルフケアに役立ちましたか？（はい / いいえ）")
+    ans = await miku_ask("この対話によって，健康についての意識に変化はありましたか？（はい / いいえ）")
     if (/はい/.test(ans)) {
-        await miku_say("ありがとうございます", "guide_happy");
-        await miku_ask("何か理由があれば教えていただけませんか？");
+        await miku_ask("ありがとうございます! 理由があれば教えていただけませんか？", false, "smile");
     } else if (/いいえ/.test(ans)) {
-        await miku_say("それは残念です", "guide_sad");
-        await miku_ask("何か理由があれば教えていただけませんか？");
+        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
 }
 
@@ -110,13 +108,11 @@ async function garminSleep(dataArr) {
         await miku_ask("何か理由があれば教えていただけませんか？");
     }
     await miku_say("わかりました，ありがとうございます", "greeting");
-    ans = await miku_ask("この対話はセルフケアに役立ちましたか？（はい / いいえ）")
+    ans = await miku_ask("この対話によって，健康についての意識に変化はありましたか？（はい / いいえ）")
     if (/はい/.test(ans)) {
-        await miku_say("ありがとうございます", "guide_happy");
-        await miku_ask("何か理由があれば教えていただけませんか？");
+        await miku_ask("ありがとうございます! 理由があれば教えていただけませんか？", false, "smile");
     } else if (/いいえ/.test(ans)) {
-        await miku_say("それは残念です", "guide_sad");
-        await miku_ask("何か理由があれば教えていただけませんか？");
+        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
 }
 

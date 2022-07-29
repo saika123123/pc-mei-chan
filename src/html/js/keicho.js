@@ -50,6 +50,9 @@ let apps = [];
 // サービスが実行中かどうか
 let serviceFlag = false;
 
+// 傾聴モードかどうか
+let keichoFlag = false;
+
 // 静聴モードかどうか
 let seichoFlag = false;
 
@@ -141,6 +144,9 @@ async function initialize() {
         videostm = await loadVideo();
     };
 
+    // GETパラメータ keicho が yes であるときのみ true になる．デフォルトはfalseで．
+    keichoFlag = getUrlVars()["keicho"] === "yes" ? true : false;
+
     // GETパラメータ seicho が yes であるときのみ true になる．デフォルトはfalseで．
     seichoFlag = getUrlVars()["seicho"] === "yes" ? true : false;
 
@@ -164,16 +170,19 @@ async function initialize() {
     // web socket を初期化
     initWebSocket();
 
+    //  keicho が yes であるとき,傾聴モードで開始する
+    if (keichoFlag) {
+        keichoMode();
+    }
     //  seicho が yes であるとき,静聴モードで開始する
     if (seichoFlag) {
-        startSeicho();
-        start_scenario(0);
-    } else {
-        //開始ボタンを配置
-        put_start_button();
-        // カレンダーのリマインド
-        await calCheckEvt();
+        seichoMode();
     }
+
+    //開始ボタンを配置
+    put_start_button();
+    // カレンダーのリマインド
+    await calCheckEvt();
 }
 
 // コールバック関数
@@ -198,48 +207,54 @@ async function processEvent(message) {
         let drift = preference.preferences.drift || 0;
         switch (attr.event) {
             case "present": //在イベント検知
-                if (!talking && !serviceFlag) {
+                // 対話中，サービス実行中，静聴中はシナリオを実行しない
+                if (!talking && !serviceFlag && !seichoFlag) {
                     const hour = now.getHours();
                     let num;
                     switch (hour - drift) { //個人の時差分だけ現在時刻を戻す
                         case 6:
                         case 7:
-                        case 8:
                             num = 1;
                             break;
+                        case 8:
                         case 9:
+                            num = 2;
+                            break;
                         case 10:
                         case 11:
-                            num = 2;
+                            num = 3;
                             break;
                         case 12:
                         case 13:
-                        case 14:
-                            num = 3;
+                            num = 4;
                             break;
+                        case 14:
                         case 15:
+                            num = 5;
+                            break;
                         case 16:
                         case 17:
-                            num = 4;
+                            num = 6;
                             break;
                         case 18:
                         case 19:
-                        case 20:
-                            num = 5;
+                            num = 7;
                             break;
+                        case 20:
                         case 21:
+                            num = 8;
+                            break;
                         case 22:
                         case 23:
-                            num = 6;
+                            num = 9;
                             break;
                         default:
                             //時間外は何もしないように変更 2022-01-11 by masa-n
                             return;
                         // num = 0;
                     }
-                    start_scenario(num);
                 } else {
-                    console.log("Mei-chan is now talking. Event cancelled.");
+                    console.log("Event cancelled.");
                 }
                 break;
             case "absent": //不在イベント検知
@@ -305,6 +320,7 @@ async function start_scenario(num) {
     $("#status").html("");
 
     switch (num) {
+        // default
         case 0:
             if (seichoFlag) {
                 await keicho("", "self_introduction");
@@ -312,58 +328,101 @@ async function start_scenario(num) {
                 await keicho("私になんでも話してください", "self_introduction");
             }
             return;
+        // 6，7時 (睡眠について)
         case 1:
             await miku_say(person.nickname + "さん，おはようございます", "greeting");
             if (garminFlag) {
                 await garminScenario("sleeps");
             }
-            await keicho("今朝のご気分はいかがですか？", "self_introduction");
+            await keicho("今朝の気分はいかがですか？", "self_introduction");
             return;
+        // 8，9時 (朝食について)
         case 2:
-            if (garminFlag && !garminSleepFlag) {
-                await miku_say(person.nickname + "さん，おはようございます", "greeting");
-                await garminScenario("sleeps");
-                await keicho("今朝のご気分はいかがですか？", "self_introduction");
+            // if (garminFlag && !garminSleepFlag) {
+            //     await miku_say(person.nickname + "さん，おはようございます", "greeting");
+            //     await garminScenario("sleeps");
+            //     await keicho("今朝のご気分はいかがですか？", "self_introduction");
+            // } else {
+            ans = await miku_ask(person.nickname + "さん，朝食は食べましたか？（はい／いいえ）");
+            if (/はい/.test(ans)) {
+                await miku_ask("何を食べたか教えていただけませんか？");
             } else {
-                ans = await miku_ask(person.nickname + "さん，朝食は食べましたか？（はい／いいえ）");
-                if (/はい/.test(ans)) {
-                    await miku_ask("何を食べたか教えていただけませんか？");
-                }
-                await keicho("わかりました，ありがとうございます", "greeting");
+                await miku_ask("何を食べる予定なのか，教えていただけませんか？");
             }
+            await miku_say("わかりました，ありがとうございます！", "greeting");
+            await keicho("今日の予定を教えていただけませんか？", "self_introduction");
+            // }
             return;
+        // 10，11時 (水分について)
         case 3:
+            ans = await miku_ask(person.nickname + "さん，お水はちゃんと飲んでいますか？（はい／いいえ）");
+            if (/はい/.test(ans)) {
+                await miku_say("さすが" + person.nickname + "さんです！", "smile");
+            } else {
+                await miku_say("のどが渇く前にお水を飲むことが大事ですよ！", "self_introduction");
+            }
+            await keicho("最近" + person.nickname + "さんが興味を持っていることについて，話していただけませんか？", "self_introduction");
+            return;
+        // 12，13時 (昼食について)
+        case 4:
             ans = await miku_ask(person.nickname + "さん，昼食は食べました？（はい／いいえ）");
             if (/はい/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
-                await miku_say("教えていただいてありがとうございます！");
+            } else {
+                await miku_ask("何を食べる予定なのか，教えていただけませんか？");
             }
+            await miku_say("わかりました，ありがとうございます！", "greeting");
             await keicho("午前中はどんなことをしたか，話していただけませんか？", "smile");
             return;
-        case 4:
-            ans = await miku_ask(person.nickname + "さん，今，なにかお話ししたいことはありますか？（はい／いいえ）");
-            if (/いいえ/.test(ans)) {
-                await end_keicho("わかりました．また気が向いたら，お話しして下さいね", "bye");
-                return;
-            }
-            await keicho(person.nickname + "さんが思っていることを，なんでも話してください", "greeting");
-            return;
+        // 14，15時 (水分について)
         case 5:
+            ans = await miku_ask(person.nickname + "さん，水分補給はしていますか？（はい／いいえ）");
+            if (/はい/.test(ans)) {
+                await miku_say("その調子で，定期的に水分を取るように心がけましょう！", "smile");
+            } else {
+                await miku_say("定期的に水分を取るように心がけましょう！", "self_introduction");
+            }
+            await keicho("なにかやりたいことはありますか？", "self_introduction");
+            return;
+        // 16，17時 (雑談)
+        case 6:
+            ans = await miku_ask(person.nickname + "さん，私とお話しませんか？（はい／いいえ）");
+            if (/はい/.test(ans)) {
+                await keicho("なんでも話してください", "self_introduction");
+            } else {
+                await end_keicho("わかりました．またいつでもお呼び下さい");
+            }
+            return;
+        // 18，19時 (夕食について)
+        case 7:
             ans = await miku_ask(person.nickname + "さん，夕食は食べましたか？（はい／いいえ）");
             if (/はい/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
-                await miku_say("教えていただいてありがとうございます！");
+            } else {
+                await miku_ask("何を食べる予定なのか，教えていただけませんか？");
             }
+            await miku_say("わかりました，ありがとうございます！", "greeting");
             await keicho("午後はどんなことをしたか，話していただけませんか？", "smile");
             return;
-        case 6:
-            await miku_say(person.nickname + "さん，今日も一日お疲れさまでした．", "greeting");
+        // 20，21時 (健康について)
+        case 8:
             if (garminFlag) {
+                await miku_say(person.nickname + "さんの今日の健康を振り返ります", "self_introduction");
                 if (await garminScenario("dailies")) {
                     await garminScenario("stressDetails");
                 }
+            } else {
+                await miku_say(person.nickname + "さん，こんばんは", "greeting");
             }
-            await keicho("今日，" + person.nickname + "さんが感じたことや行ったことなど，よければ私に教えてください", "self_introduction");
+            await keicho("からだやこころの調子はいかがですか？", "self_introduction");
+            return;
+        // 22，23時 (トイレについて and 今日あったことについて)
+        case 9:
+            await miku_say(person.nickname + "さん，今日も一日お疲れさまでした", "greeting");
+            await miku_say("寝る前にはお手洗いに行きましょう！", "smile");
+            let today = new Date();
+            let str = ["楽しかった", "イライラした", "ドキドキした", "悲しかった", "おもしろかった", "つらかった", "嬉しかった"];
+            await keicho("最近あった" + str[today.getDay()] + "ことについて，話していただけませんか？", "self_introduction");
             return;
     }
 }
@@ -411,7 +470,12 @@ function put_start_button(button_label = "メイちゃんと話す") {
     });
     $("#status").append(restart_button);
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
-    let hint = "【ヒント】「メニュー」と話しかけると，できることの一覧を表示します";
+
+    // ヒントを表示
+    let hint = "【ヒント】「メニュー」と話しかけると，できることの一覧を表示します！";
+    if (keichoFlag || seichoFlag) {
+        hint = "【ヒント】「対話モード」と話しかけると，返事を返すようになります！";
+    }
     post_hint(hint);
 }
 
@@ -425,6 +489,7 @@ async function keicho(str, motion) {
     do {
         serviceFlag = false;
         let answer = await miku_ask(str, false, motion);
+        str = "";
         motion = get_motion();
 
         // 静聴モード
@@ -433,12 +498,17 @@ async function keicho(str, motion) {
                 if (/終わり/.test(answer)) {
                     await end_keicho("", "bye");
                     return;
-                } else if (/傾聴モード|慶弔モード/.test(answer)) {
+                } else if (/対話モード/.test(answer)) {
                     seichoFlag = false;
-                    str = "傾聴モードに戻ります";
+                    str = "対話モードに切り替えます";
                     motion = "greeting";
-                    document.body.style.backgroundColor = "#cce3f7";
-                    console.log("傾聴モード");
+                    taiwaMode();
+                } else if (/傾聴モード|慶弔モード|緊張モード/.test(answer)) {
+                    seichoFlag = false;
+                    keichoFlag = true;
+                    str = "傾聴モードに切り替えます";
+                    motion = "greeting";
+                    keichoMode();
                 }
                 continue;
             }
@@ -453,35 +523,48 @@ async function keicho(str, motion) {
             if (/終わり/.test(answer)) {
                 await end_keicho("またお話ししてくださいね", "bye");
                 return;
+            } else if (keichoFlag && /対話モード/.test(answer)) {
+                keichoFlag = false;
+                str = "対話モードに切り替えます";
+                motion = "greeting";
+                taiwaMode();
+                continue;
+            } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
+                keichoFlag = true;
+                str = "傾聴モードに切り替えます";
+                motion = "greeting";
+                keichoMode();
+                continue;
             } else if (/静聴モード|成長モード/.test(answer)) {
+                keichoFlag = false;
                 seichoFlag = true;
-                startSeicho();
+                seichoMode();
                 continue;
             } else if (/メニュー/.test(answer)) { // 連携しているサービスの呼び出し方と概要の説明
                 await menu();
                 str = "なんでもお申し付けください";
                 motion = "greeting";
                 continue;
-                // } else if ((/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
-                //     str = getGreeting();
-                //     continue;
-                // } else if (/ありがとう/.test(answer)) {
-                //     str = "どういたしまして";
-                //     continue;
-                // } else if (/か$/.test(answer)) {
-                //     //質問には塩対応
-                //     str = "ごめんなさい，いま傾聴モードなので答えられません";
-                //     motion = "greeting";
-                //     continue;
+            } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
+                str = getGreeting();
+                continue;
+            } else if (keichoFlag && /ありがとう/.test(answer)) {
+                str = "どういたしまして";
+                continue;
+            } else if (keichoFlag && /か$/.test(answer)) {
+                //質問には塩対応
+                str = "ごめんなさい，いま傾聴モードなので答えられません";
+                motion = "greeting";
+                continue;
             } else {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);
                 if (flag && !serviceFlag) {
                     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
                     if (/よかった|良かった/.test(ans)) {
-                        await miku_ask("ありがとうございます! 何か理由があれば教えていただけませんか？", "guide_happy");
+                        await miku_ask("ありがとうございます! 理由があれば教えていただけませんか？", false, "smile");
                     } else if (/いまいち/.test(ans)) {
-                        await miku_ask("それは残念です. 何か理由があれば教えていただけませんか？", "guide_happy");
+                        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
                     }
                     str = "わかりました，ありがとうございます";
                     motion = "greeting";
@@ -504,7 +587,9 @@ async function keicho(str, motion) {
         }
 
         //応答を取得
-        str = await getResponse(answer).catch(function () { str = get_aiduchi() });
+        if (!keichoFlag) {
+            str = await getResponse(answer).catch(function () { str = get_aiduchi() });
+        }
 
         // 応答を取得できなかったときは，あいづちを取得
         if (str.length < 1) {
@@ -666,13 +751,26 @@ function get_aiduchi() {
 }
 
 /**
+ * 対話モード
+ */
+function taiwaMode() {
+    document.body.style.backgroundColor = "#cce3f7";
+    console.log("対話モード");
+}
+
+/**
+ * 傾聴モード
+ */
+function keichoMode() {
+    document.body.style.backgroundColor = "rgb(150, 175, 200)";
+    console.log("傾聴モード");
+}
+
+/**
  * 静聴モード
  */
-function startSeicho() {
-    document.body.style.backgroundColor = "rgb(100, 100, 100)";
-    str = "静聴モードを開始します";
-    post_comment(str, SPEAKER.AGENT);
-    post_database(str, SPEAKER.AGENT, person);
+function seichoMode() {
+    document.body.style.backgroundColor = "rgb(150, 150, 150)";
     console.log("静聴モード");
 }
 
