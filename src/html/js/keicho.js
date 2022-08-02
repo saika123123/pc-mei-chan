@@ -338,11 +338,6 @@ async function start_scenario(num) {
             return;
         // 8，9時 (朝食について)
         case 2:
-            // if (garminFlag && !garminSleepFlag) {
-            //     await miku_say(person.nickname + "さん，おはようございます", "greeting");
-            //     await garminScenario("sleeps");
-            //     await keicho("今朝のご気分はいかがですか？", "self_introduction");
-            // } else {
             ans = await miku_ask(person.nickname + "さん，朝食は食べましたか？（はい／いいえ）");
             if (/はい/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
@@ -351,15 +346,14 @@ async function start_scenario(num) {
             }
             await miku_say("わかりました，ありがとうございます！", "greeting");
             await keicho("今日の予定を教えていただけませんか？", "self_introduction");
-            // }
             return;
         // 10，11時 (水分について)
         case 3:
-            ans = await miku_ask(person.nickname + "さん，お水はちゃんと飲んでいますか？（はい／いいえ）");
+            ans = await miku_ask(person.nickname + "さん，水分補給はしていますか？（はい／いいえ）");
             if (/はい/.test(ans)) {
-                await miku_say("さすが" + person.nickname + "さんです！", "smile");
+                await miku_say("その調子で，定期的に水分を取るように心がけましょう！", "smile");
             } else {
-                await miku_say("のどが渇く前にお水を飲むことが大事ですよ！", "self_introduction");
+                await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
             }
             await keicho("最近" + person.nickname + "さんが興味を持っていることについて，話していただけませんか？", "self_introduction");
             return;
@@ -380,7 +374,7 @@ async function start_scenario(num) {
             if (/はい/.test(ans)) {
                 await miku_say("その調子で，定期的に水分を取るように心がけましょう！", "smile");
             } else {
-                await miku_say("定期的に水分を取るように心がけましょう！", "self_introduction");
+                await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
             }
             await keicho("なにかやりたいことはありますか？", "self_introduction");
             return;
@@ -562,7 +556,7 @@ async function keicho(str, motion) {
                 if (flag && !serviceFlag) {
                     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
                     if (/よかった|良かった/.test(ans)) {
-                        await miku_ask("ありがとうございます! 理由があれば教えていただけませんか？", false, "smile");
+                        await miku_ask("ありがとうございます!", false, "smile");
                     } else if (/いまいち/.test(ans)) {
                         await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
                     }
@@ -601,66 +595,41 @@ async function keicho(str, motion) {
 }
 
 /**
- * ChaplusAPIを実行
+ * meboAPIを実行
  */
-async function runChaplusApi(ans) {
-    // ChaplusAPIを実行
-    const url = "https://www.chaplus.jp/v1/chat?apikey=62c29145e02e6";
-    const headers = {
-        "Content-Type": "application/json"
-    };
-    const body = JSON.stringify({
-        "utterance": ans,
-        "username": person.nickname,
-        "agentState": {
-            "agentName": "メイ",
-            "age": "27歳",
-            "tone": "normal"
-        }
-    });
+async function runMeboApi(ans) {
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/mebo/uid=" + person.uid + "/utterance=" + ans;
     return fetch(url, {
-        method: 'POST',
-        // headers: headers,
-        body: body,
+        method: 'GET',
         mode: 'cors',
-    })
-        .then((response) => {
-            if (!response.ok) {
-                console.log("Status is not 200");
-                throw new Error(response);
-            }
-            let result = response.json();
-            console.log(result);
-            return result;
-        })
-        .catch(e => {
-            console.error(e);
-            return reject(e);
-        });
+    }).then((response) => {
+        if (!response.ok) {
+            console.log("Status is not 200");
+            throw new Error(response);
+        }
+        let result = response.json();
+        console.log(result);
+        return result;
+    }).catch(e => {
+        console.error(e);
+        return reject(e);
+    });
 }
 
 /**
  * 発話に対する応答を取得
  */
 async function getResponse(ans) {
-    // ChaplusAPIを実行
-    let result = await runChaplusApi(ans);
+    // MeboAPIを実行
+    let result = await runMeboApi(ans);
 
-    // 結果からスコアの高い応答を抽出
-    let responses = [];
-    for (var int in result.responses) {
-        var response = result.responses[int];
-        if (response.score < result.bestResponse.score - 0.2 || response.score < 0.6) {
-            break;
-        }
-        responses.push(response.utterance);
-    }
-
-    // スコアの高い応答からランダムに1つ選択
-    if (responses.length < 1) {
+    // スコアが低ければ却下
+    if (result.bestResponse.score < 4) {
         return "";
     }
-    let str = responses[Math.floor(Math.random() * responses.length)];
+
+    // 応答から一文だけを抽出して出力
+    let str = result.bestResponse.utterance;
     if (str.includes("。")) {
         str = str.substring(0, str.indexOf("。"));
     }
