@@ -44,7 +44,7 @@ function put_stop_youtube_button() {
         "id": youtubeStopID,
         "type": "button",
         "value": "視聴をやめる",
-        "onclick": 'end_youtube(); this.remove(); ',
+        "onclick": 'this.remove(); end_youtube();',
     });
     $("#status").append(restart_button);
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
@@ -73,13 +73,17 @@ async function end_youtube() {
     talking = true;
     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
     if (/よかった|良かった/.test(ans)) {
-        await miku_ask("ありがとうございます! ", false, "smile");
+        console.log("傾聴再開");
+        $("#status").html("");
+        keicho("ありがとうございます！", "smile");
+        return;
     } else if (/いまいち/.test(ans)) {
         await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
     console.log("傾聴再開");
     $("#status").html("");
     keicho("わかりました，ありがとうございます", "greeting");
+    return;
 }
 
 /**

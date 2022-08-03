@@ -18,8 +18,8 @@
  * キーワードが含まれているか判定し，対応するサービスを実行する
  */
 async function checkKeyword(answer) {
-    let app = apps;
-    for (app of apps) {
+    // let app = apps;
+    for (let app of apps) {
         let keyword = new RegExp(app.keyword);
         if (keyword.test(answer)) {
             console.log("Start Service : " + app.name);
@@ -69,14 +69,18 @@ async function restart_keicho() {
     talking = true;
     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
     if (/よかった|良かった/.test(ans)) {
-        await miku_ask("ありがとうございます!", false, "smile");
+        serviceFlag = false;
+        console.log("傾聴再開");
+        $("#status").html("");
+        keicho("ありがとうございます！", "smile");
+        return;
     } else if (/いまいち/.test(ans)) {
         await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
-    serviceFlag = false;
     console.log("傾聴再開");
     $("#status").html("");
     keicho("わかりました，ありがとうございます", "greeting");
+    return;
 }
 
 /**
