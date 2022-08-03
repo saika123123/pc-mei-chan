@@ -77,7 +77,7 @@ async function end_youtube() {
         $("#status").html("");
         keicho("ありがとうございます！", "smile");
         return;
-    } else if (/いまいち/.test(ans)) {
+    } else if (/いまいち|今井|今市|今何時/.test(ans)) {
         await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     }
     console.log("傾聴再開");
