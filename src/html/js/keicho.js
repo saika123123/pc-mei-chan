@@ -253,6 +253,7 @@ async function processEvent(message) {
                             return;
                         // num = 0;
                     }
+                    start_scenario(num);
                 } else {
                     console.log("Event cancelled.");
                 }
@@ -376,7 +377,8 @@ async function start_scenario(num) {
             } else {
                 await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
             }
-            await keicho("なにかやりたいことはありますか？", "self_introduction");
+            let response = await getKeyword();
+            await keicho("以前話していた「" + response.result[0].form + "」について，もっと色々聞きたいです！", "self_introduction");
             return;
         // 16，17時 (雑談)
         case 6:
@@ -401,12 +403,11 @@ async function start_scenario(num) {
         // 20，21時 (健康について)
         case 8:
             if (garminFlag) {
-                await miku_say(person.nickname + "さんの今日の健康を振り返ります", "self_introduction");
+                await miku_say(person.nickname + "さん，こんばんは", "greeting");
+                await miku_say("今日の健康を振り返ります", "self_introduction");
                 if (await garminScenario("dailies")) {
                     await garminScenario("stressDetails");
                 }
-            } else {
-                await miku_say(person.nickname + "さん，こんばんは", "greeting");
             }
             await keicho("からだやこころの調子はいかがですか？", "self_introduction");
             return;
@@ -419,6 +420,85 @@ async function start_scenario(num) {
             await keicho("最近あった" + str[today.getDay()] + "ことについて，話していただけませんか？", "self_introduction");
             return;
     }
+}
+
+/**
+ * 直近一週間の過去ログからキーワードを抽出する
+ */
+async function getKeyword() {
+    let date = new Date();
+    let textArr = [];
+    for (let i = 0; i < 7; i++) {
+        date.setDate(date.getDate() - 1);
+        let results = await getDialogueLogs(date);
+        for (let result of results) {
+            let flag = true;
+            let contents = result.contents;
+            for (let app of apps) {
+                let keyword = new RegExp(app.keyword);
+                if (keyword.test(contents)) {
+                    flag = false;
+                    break;
+                }
+            }
+            if (/終わり|メニュー/.test(contents)) {
+                flag = false;
+            }
+            if (flag) {
+                textArr.push(contents);
+            }
+        }
+    }
+    return await runCotohaKeywordApi(textArr);
+}
+
+/**
+ * APIを実行し，指定した日付の対話ログを取得
+ */
+async function getDialogueLogs(date) {
+    let dateStr = formatDate(date, 'yyyy-MM-dd');
+    const url = "http://192.168.200.115:5000/uid=" + person.uid + "/date=" + dateStr;
+    return fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+    }).then((response) => {
+        if (!response.ok) {
+            console.log("Status is not 200");
+            throw new Error(response);
+        }
+        let result = response.json();
+        console.log(result);
+        return result;
+    }).catch(e => {
+        console.error(e);
+        return reject(e);
+    });
+}
+
+/**
+ * COTOHA APIでキーワード抽出を行う
+ */
+async function runCotohaKeywordApi(textArr) {
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/cotoha/keyword";
+    const headers = new Headers({ "Content-Type": "application/json; charset=utf-8" });
+    const body = { 'textArr': textArr };
+    return fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        headers: headers,
+        body: JSON.stringify(body),
+    }).then((response) => {
+        if (!response.ok) {
+            console.log("Status is not 200");
+            throw new Error(response);
+        }
+        let result = response.json();
+        console.log(result);
+        return result;
+    }).catch(e => {
+        console.error(e);
+        return reject(e);
+    });
 }
 
 /**
@@ -556,8 +636,10 @@ async function keicho(str, motion) {
                 if (flag && !serviceFlag) {
                     let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
                     if (/よかった|良かった/.test(ans)) {
-                        await miku_ask("ありがとうございます!", false, "smile");
-                    } else if (/いまいち/.test(ans)) {
+                        str = "ありがとうございます!";
+                        motion = "smile";
+                        continue;
+                    } else if (/いまいち|今井|今市|今何時/.test(ans)) {
                         await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
                     }
                     str = "わかりました，ありがとうございます";
