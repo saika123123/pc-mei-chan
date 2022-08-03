@@ -167,7 +167,7 @@ function getEventId(title, events) {
 /**
  * カレンダーを表示する
  */
-function post_calendar(date, events) {
+async function post_calendar(date) {
     let id = formatDate(new Date(), 'yyyyMMddHHmmssms');
     const calendar = $("<div></div>", {
         id: id,
@@ -185,17 +185,27 @@ function post_calendar(date, events) {
 
         $("html,body").animate({ scrollTop: $("#bottom").offset().top });
 
-    var eventData = [];
-    for (let event of events) {
-        let eventDate = new Date(event.start.dateTime);
-        eventData.push({
-            'Date': eventDate, 'Title': event.summary
-        });
+    let start = new Date(date);
+    start.setDate(1);
+    let end = new Date(date);
+    end.setDate(31);
+    while (end.getMonth() > start.getMonth()) {
+        end.setDate(end.getDate() - 1);
     }
+    var eventData = [];
+    let events = await getEvents(start, end);
+    events = await sortEvent(events).then(async function () {
+        for (let event of events) {
+            let eventDate = new Date(event.start.dateTime);
+            eventData.push({
+                'Date': eventDate, 'Title': event.summary
+            });
+        }
+    });
     var settings = {};
     var element = document.getElementById(id);
     var obj = new Calendar(eventData, settings, date);
-    createCalendar(obj, element);
+    await createCalendar(obj, element);
 }
 
 /**
@@ -383,26 +393,9 @@ async function calendar() {
                 if (/やめる|止める/.test(ans)) break;
                 date = getMonth(ans);
                 if (date != null) {
-                    let events = await getFullEvents();
-                    events = await sortEvent(events).then(() => {
-                        /*
-                        if (Object.keys(events).length == 0) {
-                            await miku_say("該当する予定はありません", "guide_normal");
-                        }
-                        else {
-                            for (let event of events) {
-                                str = str + "<div>" + event.start.dateTime.substr(11, 5) + "   「" + event.summary + "」</div>";
-                            }
-                            await miku_say("その日の予定を表示します", "greeting");
-                            post_comment(str, SPEAKER.AGENT);
-                        }
-                        */
-                        // await miku_say("その月のカレンダーを表示します", "greeting").then(async () => {
-                        scrollYPostionPushFlag = true;
-                        post_calendar(date, events);
-                        setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 3000);
-                        // });
-                    });
+                    scrollYPostionPushFlag = true;
+                    await post_calendar(date);
+                    setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 3000);
                     break;
                 }
             }
@@ -592,10 +585,29 @@ var Calendar = function (model, options, date) {
     this.Prev.Days = new Date(this.Prev.getFullYear(), (this.Prev.getMonth() + 1), 0).getDate();
 }
 
-function createCalendar(calendar, element, adjuster) {
+async function createCalendar(calendar, element, adjuster) {
     if (typeof adjuster !== 'undefined') {
         var newDate = new Date(calendar.Selected.Year, calendar.Selected.Month + adjuster, 1);
-        calendar = new Calendar(calendar.Model, calendar.Options, newDate);
+        // ここでその月のイベントを読み込む
+        let start = new Date(newDate);
+        start.setDate(1);
+        let end = new Date(newDate);
+        end.setDate(31);
+        while (end.getMonth() > start.getMonth()) {
+            end.setDate(end.getDate() - 1);
+        }
+        let events = await getEvents(start, end);
+        events = await sortEvent(events).then(async function () {
+            var eventData = [];
+            for (let event of events) {
+                let eventDate = new Date(event.start.dateTime);
+                eventData.push({
+                    'Date': eventDate, 'Title': event.summary
+                });
+            }
+            calendar = new Calendar(eventData, calendar.Options, newDate);
+        });
+        // calendar = new Calendar(calendar.Model, calendar.Options, newDate);
         element.innerHTML = '';
     } else {
         for (var key in calendar.Options) {
@@ -621,17 +633,17 @@ function createCalendar(calendar, element, adjuster) {
             // Add Appropriate Class
             if (i == 0) {
                 x.className += ' cld-rwd cld-nav';
-                x.addEventListener('click', function () {
+                x.addEventListener('click', async function () {
                     typeof calendar.Options.ModelChange == 'function' ? calendar.Model = calendar.Options.ModelChange() : calendar.Model = calendar.Options.ModelChange;
-                    createCalendar(calendar, element, -1);
+                    await createCalendar(calendar, element, -1);
                 });
                 x.innerHTML += '<svg height="15" width="15" viewBox="0 0 100 75" fill="rgba(255,255,255,0.5)"><polyline points="0,75 100,75 50,0"></polyline></svg>';
             }
             else if (i == months.length - 4) {
                 x.className += ' cld-fwd cld-nav';
-                x.addEventListener('click', function () {
+                x.addEventListener('click', async function () {
                     typeof calendar.Options.ModelChange == 'function' ? calendar.Model = calendar.Options.ModelChange() : calendar.Model = calendar.Options.ModelChange;
-                    createCalendar(calendar, element, 1);
+                    await createCalendar(calendar, element, 1);
                 });
                 x.innerHTML += '<svg height="15" width="15" viewBox="0 0 100 75" fill="rgba(255,255,255,0.5)"><polyline points="0,0 100,0 50,75"></polyline></svg>';
             }
@@ -644,9 +656,9 @@ function createCalendar(calendar, element, adjuster) {
                 (function () {
                     var adj = (i - 4);
                     //x.addEventListener('click', function(){createCalendar(calendar, element, adj);console.log('kk', adj);} );
-                    x.addEventListener('click', function () {
+                    x.addEventListener('click', async function () {
                         typeof calendar.Options.ModelChange == 'function' ? calendar.Model = calendar.Options.ModelChange() : calendar.Model = calendar.Options.ModelChange;
-                        createCalendar(calendar, element, adj);
+                        await createCalendar(calendar, element, adj);
                     });
                     x.setAttribute('style', 'opacity:' + (1 - Math.abs(adj) / 4));
                     x.innerHTML += months[n].substr(0, 3);
@@ -682,7 +694,7 @@ function createCalendar(calendar, element, adjuster) {
         if (calendar.Options.NavShow && !calendar.Options.NavVertical) {
             var rwd = document.createElement('div');
             rwd.className += " cld-rwd cld-nav";
-            rwd.addEventListener('click', function () { createCalendar(calendar, element, -1); });
+            rwd.addEventListener('click', async function () { await createCalendar(calendar, element, -1); });
             rwd.innerHTML = '<svg height="15" width="15" viewBox="0 0 75 100" fill="rgba(0,0,0,0.5)"><polyline points="0,50 75,0 75,100"></polyline></svg>';
             datetime.appendChild(rwd);
         }
@@ -693,7 +705,7 @@ function createCalendar(calendar, element, adjuster) {
         if (calendar.Options.NavShow && !calendar.Options.NavVertical) {
             var fwd = document.createElement('div');
             fwd.className += " cld-fwd cld-nav";
-            fwd.addEventListener('click', function () { createCalendar(calendar, element, 1); });
+            fwd.addEventListener('click', async function () { await createCalendar(calendar, element, 1); });
             fwd.innerHTML = '<svg height="15" width="15" viewBox="0 0 75 100" fill="rgba(0,0,0,0.5)"><polyline points="0,0 75,50 0,100"></polyline></svg>';
             datetime.appendChild(fwd);
         }
