@@ -162,11 +162,14 @@ function post_text(str, speaker) {
 
 //ページにヒントを表示
 function post_hint(str) {
+    const comment = $("<p></p>", {
+    }).text(str);
+
     const contents = $("<div></div>", {
         class: "hint",
         id: "hint",
-    }).text(str);
-
+    }).append(comment);
+    
     $("#status").append(contents);
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
 }
