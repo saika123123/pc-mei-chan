@@ -59,13 +59,20 @@ async function checkGarminDataTime(type) {
 /*--------------- 以下対話シナリオ ---------------*/
 async function garminDaily(dataArr) {
     await miku_say("今日歩いた歩数は" + dataArr.steps + "歩です", "normal");
-    if (dataArr.steps > 8000) {
-        await miku_say("すばらしいです！", "guide_happy");
-    }
     await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
+    if (dataArr.steps > 8000) {
+        await miku_ask("すばらしいですね！なにか運動をされたのですか？", false,"guide_happy");
+        await miku_say("わかりました，ありがとうございます", "greeting");
+    } else {
+        await miku_say("もう少し身体を動かした方が良いかもしれません","idle_think");
+        await miku_say("私に「ユーチューブ (YouTube)」と言うと，ラジオ体操などの動画を再生することができます", "smile");
+        await miku_say("よければあとで使ってみて下さい", "self_introduction");
+    }
     await miku_say("今日の安静時心拍数は" + dataArr.restingHeartRateInBeatsPerMinute + "bpmです", "normal");
     if (dataArr.restingHeartRateInBeatsPerMinute > 85) {
-        await miku_say("少し高いので，気を付けて下さいね", "guide_sad");
+        await miku_say("少し高いかもしれません", "idle_think");
+        await miku_say("私に「検索」と言うと，リスクや対処法を検索することができます", "smile");
+        await miku_say("よければあとで使ってみて下さい", "self_introduction");
     }
 }
 
@@ -86,14 +93,17 @@ async function garminStress(dataArr) {
         await miku_ask("その時何をしていたのか教えていただけませんか？");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("あまりストレスを感じていなかったようです", "guide_happy");
+        await miku_say("あまりストレスを感じることなく過ごすことができたようです！", "guide_happy");
     }
-    ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）")
-    if (/はい/.test(ans)) {
-        await miku_ask("ありがとうございます! ", false, "smile");
-    } else if (/いいえ/.test(ans)) {
-        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-    }
+    // ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）");
+    // if (/はい/.test(ans)) {
+    //     await miku_ask("ありがとうございます! ", false, "smile");
+    // } else if (/いいえ/.test(ans)) {
+    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
+    // }
+    await miku_ask("この健康についての対話はいかがでしたか？", false, "self_introduction");
+    await miku_say("わかりました，ありがとうございます", "greeting");
+
 }
 
 async function garminSleep(dataArr) {
@@ -101,19 +111,21 @@ async function garminSleep(dataArr) {
     let min = Math.floor(dataArr.durationInSeconds % 3600 / 60);
     await miku_say("今日の睡眠時間は" + hour + "時間" + min + "分です", "normal");
     if (hour > 6) {
-        await miku_say("しっかりと休めたようです！", "guide_happy");
-        await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
+        await miku_say("しっかりと休めたようですね！", "guide_happy");
+        // await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
     } else {
         await miku_say("あまり休めなかったようですね", "guide_sad");
         await miku_ask("何か理由があれば教えていただけませんか？");
+        await miku_say("わかりました，ありがとうございます", "greeting");
     }
+    // ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）");
+    // if (/はい/.test(ans)) {
+    //     await miku_ask("ありがとうございます! ", false, "smile");
+    // } else if (/いいえ/.test(ans)) {
+    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
+    // }
+    await miku_ask("この健康についての対話はいかがでしたか？", false, "self_introduction");
     await miku_say("わかりました，ありがとうございます", "greeting");
-    ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）")
-    if (/はい/.test(ans)) {
-        await miku_ask("ありがとうございます! ", false, "smile");
-    } else if (/いいえ/.test(ans)) {
-        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-    }
 }
 
 async function garminScenario(type) {
