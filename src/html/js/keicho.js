@@ -186,8 +186,8 @@ async function initialize() {
 }
 
 // コールバック関数
-function callback(fc) {
-    setTimeout(fc, 60 * 1000);
+function callback(fc, time = 1) {
+    setTimeout(fc, time * 60 * 1000);
 }
 
 //メッセージを処理する
@@ -207,8 +207,8 @@ async function processEvent(message) {
         let drift = preference.preferences.drift || 0;
         switch (attr.event) {
             case "present": //在イベント検知
-                // 対話中，サービス実行中，静聴中はシナリオを実行しない
-                if (!talking && !serviceFlag && !seichoFlag) {
+                // 対話中，静聴中，YouTube視聴中はシナリオを実行しない
+                if (!talking && !seichoFlag && !youtubeFlag) {
                     const hour = now.getHours();
                     let num;
                     switch (hour - drift) { //個人の時差分だけ現在時刻を戻す
@@ -377,7 +377,10 @@ async function start_scenario(num) {
             } else {
                 await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
             }
-            let response = await getKeyword();
+            let response = await getKeyword().catch(async function () {
+                await keicho(person.nickname + "さんが好きなものについて，話していただけませんか？", "self_introduction");
+                return;
+            });
             await keicho("以前話していた「" + response.result[0].form + "」について，もっと色々聞きたいです！", "self_introduction");
             return;
         // 16，17時 (雑談)
@@ -432,6 +435,9 @@ async function getKeyword() {
         date.setDate(date.getDate() - 1);
         let results = await getDialogueLogs(date);
         for (let result of results) {
+            if (result.from == "keicho-bot") {
+                continue;
+            }
             let flag = true;
             let contents = result.contents;
             for (let app of apps) {
@@ -441,13 +447,37 @@ async function getKeyword() {
                     break;
                 }
             }
-            if (/終わり|メニュー/.test(contents)) {
-                flag = false;
+            let ngwords = [
+                "終わり",
+                "メニュー",
+                "対話モード",
+                "傾聴モード",
+                "慶弔モード",
+                "緊張モード",
+                "静聴モード",
+                "成長モード",
+                "確認",
+                "作成",
+                "削除",
+                "日付",
+                "何日",
+                "時間",
+                "何時",
+            ];
+            for (let ngword of ngwords) {
+                let word = new RegExp(ngword);
+                if (word.test(contents)) {
+                    flag = false;
+                    break;
+                }
             }
             if (flag) {
                 textArr.push(contents);
             }
         }
+    }
+    if (textArr.length == 0) {
+        throw error;
     }
     return await runCotohaKeywordApi(textArr);
 }
@@ -457,7 +487,7 @@ async function getKeyword() {
  */
 async function getDialogueLogs(date) {
     let dateStr = formatDate(date, 'yyyy-MM-dd');
-    const url = "http://192.168.200.115:5000/uid=" + person.uid + "/date=" + dateStr;
+    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/keicholog-api/uid=" + person.uid + "/date=" + dateStr;
     return fetch(url, {
         method: 'GET',
         mode: 'cors',
@@ -625,6 +655,14 @@ async function keicho(str, motion) {
             } else if (keichoFlag && /ありがとう/.test(answer)) {
                 str = "どういたしまして";
                 continue;
+            } else if (/今日/.test(answer) && (/何日/.test(answer) || /日付/.test(answer))) {
+                str = await tellDate();
+                motion = "self_introduction";
+                continue;
+            } else if (/今/.test(answer) && (/何時/.test(answer) || /時間/.test(answer))) {
+                str = await tellTime();
+                motion = "self_introduction";
+                continue;
             } else if (keichoFlag && /か$/.test(answer)) {
                 //質問には塩対応
                 str = "ごめんなさい，いま傾聴モードなので答えられません";
@@ -634,16 +672,16 @@ async function keicho(str, motion) {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);
                 if (flag && !serviceFlag) {
-                    let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
-                    if (/よかった|良かった/.test(ans)) {
-                        str = "ありがとうございます!";
-                        motion = "smile";
-                        continue;
-                    } else if (/いまいち|今井|今市|今何時/.test(ans)) {
-                        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-                    }
-                    str = "わかりました，ありがとうございます";
-                    motion = "greeting";
+                    // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
+                    // if (/よかった|良かった/.test(ans)) {
+                    //     str = "ありがとうございます!";
+                    //     motion = "smile";
+                    //     continue;
+                    // } else if (/いまいち|今井|今市|今何時/.test(ans)) {
+                    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
+                    // }
+                    str = "このサービスはいかがでしたか？";
+                    motion = "self_introduction";
                     continue;
                 }
             }
@@ -929,14 +967,23 @@ async function miku_say(str, motion = "smile") {
     if (!seichoFlag) {
         console.log("miku says " + str);
         post_keicho(str, SPEAKER.AGENT, person);
-        if (str.includes("(")) {
-            let num = str.indexOf("(");
-            str = str.substr(0, num);
+        while (str.includes(")") || str.includes("）")) {
+            if (str.includes("(")) {
+                let i = str.indexOf("(");
+                let j = str.indexOf(")");
+                let str1 = str.substr(0, i);
+                let str2 = str.substr(j + 1);
+                str = str1 + str2;
+            }
+            if (str.includes("（")) {
+                let i = str.indexOf("（");
+                let j = str.indexOf("）");
+                let str1 = str.substr(0, i);
+                let str2 = str.substr(j + 1);
+                str = str1 + str2;
+            }
         }
-        if (str.includes("（")) {
-            let num = str.indexOf("（");
-            str = str.substr(0, num);
-        }
+        console.log(str);
         await mmd.speakSync(str);
     }
     return str;
@@ -962,8 +1009,9 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     }
 
     let fnc = function () {
-        console.log("強制終了")
-        end_keicho("またいつでもお話ししてくださいね");
+        console.log("強制終了");
+        post_text("またいつでもお話ししてくださいね");
+        end_keicho("");
     };
 
     // 2分間発話が無ければ強制終了

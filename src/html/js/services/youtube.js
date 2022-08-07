@@ -15,6 +15,9 @@ let ytPlayer = null;
 // 動画が再生中かどうかのフラグ
 let youtubeFlag = false;
 
+// 視聴開始時間
+let youtubeStartTime = null;
+
 async function getYoutubeAPI(keyword) {
     const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/youtube-api/keyword=" + keyword;
     return fetch(url)
@@ -59,6 +62,13 @@ async function start_youtube() {
     console.log("傾聴中断");
     $("#status").html("");
     youtubeFlag = true;
+    youtubeStartTime = new Date();
+    setTimeout(function () {
+        let now = new Date();
+        if (youtubeStartTime.getTime() + 60 * 60 * 1000 <= now.getTime()) {
+            youtubeFlag = false;
+        }
+    }, 60 * 60 * 1000);
     talking = false;
     put_stop_youtube_button();
 }
@@ -71,18 +81,18 @@ async function end_youtube() {
     serviceFlag = false;
     ytplayer.stopVideo();
     talking = true;
-    let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
-    if (/よかった|良かった/.test(ans)) {
-        console.log("傾聴再開");
-        $("#status").html("");
-        keicho("ありがとうございます！", "smile");
-        return;
-    } else if (/いまいち|今井|今市|今何時/.test(ans)) {
-        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-    }
+    // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
+    // if (/よかった|良かった/.test(ans)) {
+    //     console.log("傾聴再開");
+    //     $("#status").html("");
+    //     keicho("ありがとうございます！", "smile");
+    //     return;
+    // } else if (/いまいち|今井|今市|今何時/.test(ans)) {
+    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
+    // }
     console.log("傾聴再開");
     $("#status").html("");
-    keicho("わかりました，ありがとうございます", "greeting");
+    keicho("このサービスはいかがでしたか？", "self_introduction");
     return;
 }
 

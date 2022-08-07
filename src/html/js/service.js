@@ -67,19 +67,19 @@ async function stop_keicho() {
  */
 async function restart_keicho() {
     talking = true;
-    let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
-    if (/よかった|良かった/.test(ans)) {
-        serviceFlag = false;
-        console.log("傾聴再開");
-        $("#status").html("");
-        keicho("ありがとうございます！", "smile");
-        return;
-    } else if (/いまいち|今井|今市|今何時/.test(ans)) {
-        await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-    }
+    // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
+    // if (/よかった|良かった/.test(ans)) {
+    //     serviceFlag = false;
+    //     console.log("傾聴再開");
+    //     $("#status").html("");
+    //     keicho("ありがとうございます！", "smile");
+    //     return;
+    // } else if (/いまいち|今井|今市|今何時/.test(ans)) {
+    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
+    // }
     console.log("傾聴再開");
     $("#status").html("");
-    keicho("わかりました，ありがとうございます", "greeting");
+    keicho("このサービスはいかがでしたか？", "self_introduction");
     return;
 }
 
