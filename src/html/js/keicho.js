@@ -959,8 +959,10 @@ function getGreeting(name = null) {
  */
 async function miku_say(str, motion = "smile") {
     await mmd.doMotion(motion);
-    console.log("miku says " + str);
-    post_keicho(str, SPEAKER.AGENT, person);
+    if (str.length > 0) {
+        console.log("miku says " + str);
+        post_keicho(str, SPEAKER.AGENT, person);
+    }
     // 静聴モードの時は返事をしない
     if (!seichoFlag) {
         while (str.includes(")") || str.includes("）")) {
