@@ -58,13 +58,14 @@ async function checkGarminDataTime(type) {
 
 /*--------------- 以下対話シナリオ ---------------*/
 async function garminDaily(dataArr) {
+    await miku_say("今日の健康を振り返ります", "self_introduction");
     await miku_say("今日歩いた歩数は" + dataArr.steps + "歩です", "normal");
     await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
     if (dataArr.steps > 8000) {
         await miku_ask("すばらしいですね！なにか運動をされたのですか？", false,"guide_happy");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("もう少し身体を動かした方が良いかもしれません","idle_think");
+        await miku_say("もう少しからだを動かした方が良いかもしれません","idle_think");
         await miku_say("私に「ユーチューブ (YouTube)」と言うと，ラジオ体操などの動画を再生することができます", "smile");
         await miku_say("よければあとで使ってみて下さい", "self_introduction");
     }
@@ -107,6 +108,7 @@ async function garminStress(dataArr) {
 }
 
 async function garminSleep(dataArr) {
+    await miku_say("今日の睡眠を振り返ります", "self_introduction");
     let hour = Math.floor(dataArr.durationInSeconds / 3600);
     let min = Math.floor(dataArr.durationInSeconds % 3600 / 60);
     await miku_say("今日の睡眠時間は" + hour + "時間" + min + "分です", "normal");

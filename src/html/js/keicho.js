@@ -323,11 +323,7 @@ async function start_scenario(num) {
     switch (num) {
         // default
         case 0:
-            if (seichoFlag) {
-                await keicho("", "self_introduction");
-            } else {
-                await keicho("私になんでも話してください", "self_introduction");
-            }
+            await keicho("私になんでも話してください", "self_introduction");
             return;
         // 6，7時 (睡眠について)
         case 1:
@@ -407,14 +403,13 @@ async function start_scenario(num) {
         case 8:
             if (garminFlag) {
                 await miku_say(person.nickname + "さん，こんばんは", "greeting");
-                await miku_say("今日の健康を振り返ります", "self_introduction");
                 if (await garminScenario("dailies")) {
                     await garminScenario("stressDetails");
                 }
             }
             await keicho("からだやこころの調子はいかがですか？", "self_introduction");
             return;
-        // 22，23時 (トイレについて and 今日あったことについて)
+        // 22，23時 (トイレについて / 今日あったことについて)
         case 9:
             await miku_say(person.nickname + "さん，今日も一日お疲れさまでした", "greeting");
             await miku_say("寝る前にはお手洗いに行きましょう！", "smile");
@@ -603,13 +598,10 @@ async function keicho(str, motion) {
                     await end_keicho("", "bye");
                     return;
                 } else if (/対話モード/.test(answer)) {
-                    seichoFlag = false;
                     str = "対話モードに切り替えます";
                     motion = "greeting";
                     taiwaMode();
                 } else if (/傾聴モード|慶弔モード|緊張モード/.test(answer)) {
-                    seichoFlag = false;
-                    keichoFlag = true;
                     str = "傾聴モードに切り替えます";
                     motion = "greeting";
                     keichoMode();
@@ -628,20 +620,18 @@ async function keicho(str, motion) {
                 await end_keicho("またお話ししてくださいね", "bye");
                 return;
             } else if (keichoFlag && /対話モード/.test(answer)) {
-                keichoFlag = false;
                 str = "対話モードに切り替えます";
                 motion = "greeting";
                 taiwaMode();
                 continue;
             } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
-                keichoFlag = true;
                 str = "傾聴モードに切り替えます";
                 motion = "greeting";
                 keichoMode();
                 continue;
             } else if (/静聴モード|成長モード/.test(answer)) {
-                keichoFlag = false;
-                seichoFlag = true;
+                str = "静聴モードに切り替えます";
+                motion = "greeting";
                 seichoMode();
                 continue;
             } else if (/メニュー/.test(answer)) { // 連携しているサービスの呼び出し方と概要の説明
@@ -844,6 +834,8 @@ function get_aiduchi() {
  */
 function taiwaMode() {
     document.body.style.backgroundColor = "#cce3f7";
+    keichoFlag = false;
+    seichoFlag = false;
     console.log("対話モード");
 }
 
@@ -852,6 +844,8 @@ function taiwaMode() {
  */
 function keichoMode() {
     document.body.style.backgroundColor = "rgb(150, 175, 200)";
+    keichoFlag = true;
+    seichoFlag = false;
     console.log("傾聴モード");
 }
 
@@ -860,6 +854,8 @@ function keichoMode() {
  */
 function seichoMode() {
     document.body.style.backgroundColor = "rgb(150, 150, 150)";
+    keichoFlag = false;
+    seichoFlag = true;
     console.log("静聴モード");
 }
 
@@ -963,10 +959,12 @@ function getGreeting(name = null) {
  */
 async function miku_say(str, motion = "smile") {
     await mmd.doMotion(motion);
-    // 静聴モードの時は返事をしない
-    if (!seichoFlag) {
+    if (str.length > 0) {
         console.log("miku says " + str);
         post_keicho(str, SPEAKER.AGENT, person);
+    }
+    // 静聴モードの時は返事をしない
+    if (!seichoFlag) {
         while (str.includes(")") || str.includes("）")) {
             if (str.includes("(")) {
                 let i = str.indexOf("(");

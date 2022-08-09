@@ -129,10 +129,10 @@ function setService() {
     }
 
     // ToDo管理サービス・ToDoリマインドサービス
-    if (todoFlag) {
-        addService("ToDo管理サービス", "やることリスト", "やることリストの編集", async function () { await todo() });
-        addService("ToDoリマインドサービス", "リマインド", "進捗のないタスクのリマインド", async function () { await remindToDo() });
-    }
+    // if (todoFlag) {
+    //     addService("ToDo管理サービス", "やることリスト", "やることリストの編集", async function () { await todo() });
+    //     addService("ToDoリマインドサービス", "リマインド", "進捗のないタスクのリマインド", async function () { await remindToDo() });
+    // }
 
     // らくらく動画サービス
     if (rakudoFlag) {
