@@ -37,9 +37,9 @@ async function menu() {
     let app;
     let str = "";
     // 傾聴モードの説明を追加
-    str = str + "<div>【傾聴モード】</div> <div>・キーワード：「傾聴モード」</div> <div>・機能：「メイちゃんが簡単な相槌だけを返すようになる」</div>";
+    // str = str + "<div>【傾聴モード】</div> <div>・キーワード：「傾聴モード」</div> <div>・機能：「メイちゃんが簡単な相槌だけを返すようになる」</div>";
     // 静聴モードの説明を追加
-    str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが黙って話を聞くようになる」</div>";
+    // str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが黙って話を聞くようになる」</div>";
     for (app of apps) {
         str = str + "<div>【" + app.name + "】</div> <div>・キーワード：「" + app.keyword + "」</div> <div>・機能：「" + app.description + "」</div>";
     }
@@ -118,7 +118,7 @@ function setService() {
     addService("検索サービス", "検索", "気になる物事の検索", async function () { await search(); });
 
     // ニュース検索サービス
-    addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
+    // addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
 
     // カレンダーサービス
     addService("カレンダーサービス", "カレンダー", "予定の確認・作成・リマインド", async function () { await calendar(); });
