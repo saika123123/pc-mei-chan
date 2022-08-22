@@ -124,9 +124,7 @@ function setService() {
     addService("カレンダーサービス", "カレンダー", "予定の確認・作成・リマインド", async function () { await calendar(); });
 
     // 天気予報サービス
-    if (preference.preferences.city) {
-        addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
-    }
+    addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
 
     // ToDo管理サービス・ToDoリマインドサービス
     // if (todoFlag) {
