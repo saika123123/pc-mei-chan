@@ -58,14 +58,13 @@ async function checkGarminDataTime(type) {
 
 /*--------------- 以下対話シナリオ ---------------*/
 async function garminDaily(dataArr) {
-    await miku_say("今日の健康を振り返ります", "self_introduction");
     await miku_say("今日歩いた歩数は" + dataArr.steps + "歩です", "normal");
     await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
     if (dataArr.steps > 8000) {
-        await miku_ask("すばらしいですね！なにか運動をされたのですか？", false,"guide_happy");
+        await miku_ask("すばらしいですね！なにか運動をされたのですか？", false, "guide_happy");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("もう少しからだを動かした方が良いかもしれません","idle_think");
+        await miku_say("もう少しからだを動かした方が良いかもしれません", "idle_think");
         await miku_say("私に「ユーチューブ (YouTube)」と言うと，ラジオ体操などの動画を再生することができます", "smile");
         await miku_say("よければあとで使ってみて下さい", "self_introduction");
     }
@@ -108,17 +107,16 @@ async function garminStress(dataArr) {
 }
 
 async function garminSleep(dataArr) {
-    await miku_say("今日の睡眠を振り返ります", "self_introduction");
     let hour = Math.floor(dataArr.durationInSeconds / 3600);
     let min = Math.floor(dataArr.durationInSeconds % 3600 / 60);
     await miku_say("今日の睡眠時間は" + hour + "時間" + min + "分です", "normal");
-    if (hour > 6) {
-        await miku_say("しっかりと休めたようですね！", "guide_happy");
-        // await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
-    } else {
-        await miku_say("あまり休めなかったようですね", "guide_sad");
+    if (hour < 6) {
+        await miku_say("あまり休めなかったようですね", "idle_think");
         await miku_ask("何か理由があれば教えていただけませんか？");
         await miku_say("わかりました，ありがとうございます", "greeting");
+    } else {
+        await miku_say("しっかりと休めたようですね！", "guide_happy");
+        // await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
     }
     // ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）");
     // if (/はい/.test(ans)) {
@@ -126,7 +124,7 @@ async function garminSleep(dataArr) {
     // } else if (/いいえ/.test(ans)) {
     //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
     // }
-    await miku_ask("この健康についての対話はいかがでしたか？", false, "self_introduction");
+    await miku_ask("この睡眠についての対話はいかがでしたか？", false, "self_introduction");
     await miku_say("わかりました，ありがとうございます", "greeting");
 }
 

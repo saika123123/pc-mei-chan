@@ -329,6 +329,7 @@ async function start_scenario(num) {
         case 1:
             await miku_say(person.nickname + "さん，おはようございます", "greeting");
             if (garminFlag) {
+                await miku_say("今日の睡眠を振り返ります", "self_introduction");
                 await garminScenario("sleeps");
             }
             await keicho("今朝の気分はいかがですか？", "self_introduction");
@@ -381,7 +382,7 @@ async function start_scenario(num) {
             return;
         // 16，17時 (雑談)
         case 6:
-            ans = await miku_ask(person.nickname + "さん，私とお話しませんか？（はい／いいえ）");
+            ans = await miku_ask(person.nickname + "さん，私とお話ししませんか？（はい／いいえ）");
             if (/はい/.test(ans)) {
                 await keicho("なんでも話してください", "self_introduction");
             } else {
@@ -401,8 +402,9 @@ async function start_scenario(num) {
             return;
         // 20，21時 (健康について)
         case 8:
+            await miku_say(person.nickname + "さん，こんばんは", "greeting");
             if (garminFlag) {
-                await miku_say(person.nickname + "さん，こんばんは", "greeting");
+                await miku_say("今日の健康を振り返ります", "self_introduction");
                 if (await garminScenario("dailies")) {
                     await garminScenario("stressDetails");
                 }
@@ -458,6 +460,11 @@ async function getKeyword() {
                 "何日",
                 "時間",
                 "何時",
+                "一番",
+                "二番",
+                "三番",
+                "四番",
+                "五番",
             ];
             for (let ngword of ngwords) {
                 let word = new RegExp(ngword);
@@ -1008,7 +1015,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
     let fnc = function () {
         console.log("強制終了");
-        post_text("またいつでもお話ししてくださいね");
+        post_text("またお話ししてくださいね");
         end_keicho("");
     };
 

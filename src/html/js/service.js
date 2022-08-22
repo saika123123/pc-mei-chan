@@ -92,7 +92,7 @@ function put_restart_button() {
         "class": "btn-primary btn-medium",
         "id": id,
         "type": "button",
-        "value": "傾聴モードに戻る",
+        "value": "対話に戻る",
         "onclick": 'restart_keicho(); this.remove(); ',
     });
     $("#status").append(restart_button);
