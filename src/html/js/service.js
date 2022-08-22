@@ -37,9 +37,9 @@ async function menu() {
     let app;
     let str = "";
     // 傾聴モードの説明を追加
-    str = str + "<div>【傾聴モード】</div> <div>・キーワード：「傾聴モード」</div> <div>・機能：「メイちゃんが簡単な相槌だけを返すようになる」</div>";
+    // str = str + "<div>【傾聴モード】</div> <div>・キーワード：「傾聴モード」</div> <div>・機能：「メイちゃんが簡単な相槌だけを返すようになる」</div>";
     // 静聴モードの説明を追加
-    str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが黙って話を聞くようになる」</div>";
+    // str = str + "<div>【静聴モード】</div> <div>・キーワード：「静聴モード」</div> <div>・機能：「メイちゃんが黙って話を聞くようになる」</div>";
     for (app of apps) {
         str = str + "<div>【" + app.name + "】</div> <div>・キーワード：「" + app.keyword + "」</div> <div>・機能：「" + app.description + "」</div>";
     }
@@ -92,7 +92,7 @@ function put_restart_button() {
         "class": "btn-primary btn-medium",
         "id": id,
         "type": "button",
-        "value": "傾聴モードに戻る",
+        "value": "対話に戻る",
         "onclick": 'restart_keicho(); this.remove(); ',
     });
     $("#status").append(restart_button);
@@ -118,15 +118,13 @@ function setService() {
     addService("検索サービス", "検索", "気になる物事の検索", async function () { await search(); });
 
     // ニュース検索サービス
-    addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
+    // addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
 
     // カレンダーサービス
     addService("カレンダーサービス", "カレンダー", "予定の確認・作成・リマインド", async function () { await calendar(); });
 
     // 天気予報サービス
-    if (preference.preferences.city) {
-        addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
-    }
+    addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
 
     // ToDo管理サービス・ToDoリマインドサービス
     // if (todoFlag) {
