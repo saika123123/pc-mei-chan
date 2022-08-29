@@ -207,6 +207,88 @@ iframe {
   transform: scale(1);
 }
 
+.logBox {
+  background: -webkit-linear-gradient(top, #fff 0%, #f0f0f0 100%);
+  background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
+  border: 1px solid #ccc;
+  border-top: 4px solid #1c66fe;
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 1) inset;
+  margin: 2em 0;
+  padding: 2em;
+}
+
+.timestamp {
+  bottom: 0;
+  font-size: 12px;
+  text-align: right;
+}
+
+hr {
+  border-top: 3px double #bbb;
+}
+
+.contents {
+  font-size: x-large;
+}
+
+.help {
+  text-decoration: underline;
+  color: #0000ff;
+}
+
+.hint {
+  padding: 0.5em 1em;
+  margin: 26px;
+  background: #f4f4f4;
+  border-left: solid 10px #428bca;
+  box-shadow: 3px 5px 3px rgba(0, 0, 0, 0.33);
+  overflow:hidden;
+}
+
+.hint p {
+  margin: 0;
+  padding: 0;
+  font-size: 20px;
+  animation: flowing 10s linear infinite;
+}
+
+@keyframes flowing {
+  0% {
+    transform: translateX(100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  /* 75% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  } */
+}
+
+#videostm {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 320px;
+  height: 240px;
+  visibility: hidden;
+}
+
+#imgcvs {
+  position: fixed;
+  bottom: 240px;
+  right: 0;
+  width: 320px;
+  height: 240px;
+  visibility: hidden;
+}
+
+.status {
+  font-size: 20px;
+}
+
 /*下のサイトから持ってきたもの
   http://irohacross.net/2013/02/css3_icon_um.html
   CSSで花びらを実現
@@ -254,73 +336,60 @@ iframe {
     3px 7px 0 0 #ffffff;
 }
 
-.logBox {
-  background: -webkit-linear-gradient(top, #fff 0%, #f0f0f0 100%);
-  background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
-  border: 1px solid #ccc;
-  border-top: 4px solid #1c66fe;
-  box-shadow: 0 -1px 0 rgba(255, 255, 255, 1) inset;
-  margin: 2em 0;
-  padding: 2em;
+/*
+  下記サイトからもってきたもの
+  https://kodocode.net/design-css-loading/
+  読み込み中アニメーション
+*/
+.dot-flashing {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  background-color: #000000;
+  color: #000000;
+  animation: dotFlashing 1s infinite linear alternate;
+  animation-delay: 0s;
+  margin: 15px;
 }
 
-.timestamp {
-  bottom: 0;
-  font-size: 12px;
-  text-align: right;
+.dot-flashing::before,
+.dot-flashing::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
 }
 
-hr {
-  border-top: 3px double #bbb;
+.dot-flashing::before {
+  left: 40px;
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  background-color: #000000;
+  color: #000000;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 0.5s;
 }
 
-.contents {
-  font-size: x-large;
+.dot-flashing::after {
+  left: 80px;
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  background-color: #000000;
+  color: #000000;
+  animation: dotFlashing 1s infinite alternate;
+  animation-delay: 1s;
 }
 
-.help {
-  text-decoration: underline;
-  color: #0000ff;
-}
+@keyframes dotFlashing {
+  0% {
+    background-color: #000000;
+  }
 
-/* .hint {
-  text-align: center;
-  font-size: 25px;
-  padding: 10px;
-  background-color: #eee;
-} */
-
-.hint{
-  padding: 0.5em 1em;
-  margin: 26px;
-  background: #f4f4f4;
-  border-left: solid 10px #428bca;
-  box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.33);
-}
-.hint p {
-  margin: 0; 
-  padding: 0;
-  font-size: 20px;
-}
-
-#videostm {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 320px;
-  height: 240px;
-  visibility: hidden;
-}
-
-#imgcvs {
-  position: fixed;
-  bottom: 240px;
-  right: 0;
-  width: 320px;
-  height: 240px;
-  visibility: hidden;
-}
-
-.status{
-  font-size: 20px;
+  50%,
+  100% {
+    background-color: #dddddd;
+  }
 }

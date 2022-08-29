@@ -600,8 +600,12 @@ async function keicho(str, motion) {
 
         // 静聴モード
         if (seichoFlag) {
+            if (/終わり$|やめる$/.test(answer)) {
+                await end_keicho("", "bye");
+                return;
+            }
             if (answer.length < 20) {
-                if (/終わり/.test(answer)) {
+                if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
                     await end_keicho("", "bye");
                     return;
                 } else if (/対話モード/.test(answer)) {
@@ -618,69 +622,68 @@ async function keicho(str, motion) {
         }
 
         // キーワードの判定
-        if (/終わり$/.test(answer)) {
+        if (/終わり$|やめる$/.test(answer)) {
             await end_keicho("またお話ししてくださいね", "bye");
             return;
         }
-        if (answer.length < 20) {
-            if (/終わり/.test(answer)) {
-                await end_keicho("またお話ししてくださいね", "bye");
-                return;
-            } else if (keichoFlag && /対話モード/.test(answer)) {
-                str = "対話モードに切り替えます";
-                motion = "greeting";
-                taiwaMode();
-                continue;
-            } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
-                str = "傾聴モードに切り替えます";
-                motion = "greeting";
-                keichoMode();
-                continue;
-            } else if (/静聴モード|成長モード/.test(answer)) {
-                str = "静聴モードに切り替えます";
-                motion = "greeting";
-                seichoMode();
-                continue;
-            } else if (/メニュー/.test(answer)) { // 連携しているサービスの呼び出し方と概要の説明
-                await menu();
-                str = "なんでもお申し付けください";
-                motion = "greeting";
-                continue;
-            } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
-                str = getGreeting();
-                continue;
-            } else if (keichoFlag && /ありがとう/.test(answer)) {
-                str = "どういたしまして";
-                continue;
-            } else if (/今日/.test(answer) && (/何日/.test(answer) || /日付/.test(answer))) {
-                str = await tellDate();
-                motion = "self_introduction";
-                continue;
-            } else if (/今/.test(answer) && (/何時/.test(answer) || /時間/.test(answer))) {
-                str = await tellTime();
-                motion = "self_introduction";
-                continue;
-            } else if (keichoFlag && /か$/.test(answer)) {
-                //質問には塩対応
-                str = "ごめんなさい，いま傾聴モードなので答えられません";
-                motion = "greeting";
-                continue;
-            } else {
-                // サービス実行のキーワード判定
-                let flag = await checkKeyword(answer);
-                if (flag && !serviceFlag) {
-                    // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
-                    // if (/よかった|良かった/.test(ans)) {
-                    //     str = "ありがとうございます!";
-                    //     motion = "smile";
-                    //     continue;
-                    // } else if (/いまいち|今井|今市|今何時/.test(ans)) {
-                    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-                    // }
+        if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
+            await end_keicho("またお話ししてくださいね", "bye");
+            return;
+        } else if (keichoFlag && /対話モード/.test(answer)) {
+            str = "対話モードに切り替えます";
+            motion = "greeting";
+            taiwaMode();
+            continue;
+        } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
+            str = "傾聴モードに切り替えます";
+            motion = "greeting";
+            keichoMode();
+            continue;
+        } else if (/静聴モード|成長モード/.test(answer)) {
+            str = "静聴モードに切り替えます";
+            motion = "greeting";
+            seichoMode();
+            continue;
+        } else if (/メニュー/.test(answer)) { // 連携しているサービスの呼び出し方と概要の説明
+            await menu();
+            str = "なんでもお申し付けください";
+            motion = "greeting";
+            continue;
+        } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
+            str = getGreeting();
+            continue;
+        } else if (keichoFlag && /ありがとう/.test(answer)) {
+            str = "どういたしまして";
+            continue;
+        } else if (/今日/.test(answer) && (/何日/.test(answer) || /日付/.test(answer))) {
+            str = await tellDate();
+            motion = "self_introduction";
+            continue;
+        } else if (/今日/.test(answer) && /曜日/.test(answer)) {
+            str = await tellDayOfWeek();
+            motion = "self_introduction";
+            continue;
+        } else if (/今/.test(answer) && (/何時/.test(answer) || /時間/.test(answer))) {
+            str = await tellTime();
+            motion = "self_introduction";
+            continue;
+        } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気はどう/.test(answer)) {
+            str = "もし天気が知りたければ，私に「天気予報」と言ってみて下さい";
+            continue;
+        } else if (keichoFlag && /か$/.test(answer)) {
+            //質問には塩対応
+            str = "ごめんなさい，いま傾聴モードなので答えられません";
+            motion = "greeting";
+            continue;
+        } else {
+            // サービス実行のキーワード判定
+            let flag = await checkKeyword(answer);
+            if (flag) {
+                if (!serviceFlag) {
                     str = "このサービスはいかがでしたか？";
                     motion = "self_introduction";
-                    continue;
                 }
+                continue;
             }
         }
 
@@ -699,7 +702,10 @@ async function keicho(str, motion) {
 
         //応答を取得
         if (!keichoFlag) {
+            post_loading();
             str = await getResponse(answer).catch(function () { str = get_aiduchi() });
+            let element = document.getElementById('loading');
+            element.remove();
         }
 
         // 応答を取得できなかったときは，あいづちを取得
