@@ -111,7 +111,7 @@ function post_help(str) {
 
 // ページに話さない文章をポストする．
 // 引数は，回答テキスト
-function post_text(str, speaker) {
+function post_text(str) {
     const now = new Date();
 
     let comment;
@@ -127,6 +127,37 @@ function post_text(str, speaker) {
 
     const bubble = $("<div></div>", {
         class: "container",
+    }).append(comment);
+
+    $("#timeline").append(bubble);
+
+    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+}
+
+// loading中の吹き出しを表示
+function post_loading() {
+    const now = new Date();
+
+    let loading;
+    loading = $("<div></div>", {
+        class: "dot-flashing",
+    }).html("");
+
+    let comment;
+    comment = $("<div></div>", {
+        class: "bubble bubble-half-bottom normal",
+        style: "text-align: center;"
+    }).append(loading);
+
+    const timestamp = $("<div></div>", {
+        class: "timestamp",
+    }).text("[" + now.toLocaleString() + "]");
+
+    comment.append(timestamp);
+
+    const bubble = $("<div></div>", {
+        class: "container",
+        id: "loading",
     }).append(comment);
 
     $("#timeline").append(bubble);

@@ -61,7 +61,7 @@ async function garminDaily(dataArr) {
     await miku_say("今日歩いた歩数は" + dataArr.steps + "歩です", "normal");
     await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
     if (dataArr.steps > 8000) {
-        await miku_ask("すばらしいですね！なにか運動をされたのですか？", false, "guide_happy");
+        await miku_ask("すばらしいですね！なにか運動をされたのですか？", false, "smile");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
         await miku_say("もう少しからだを動かした方が良いかもしれません", "idle_think");
@@ -89,11 +89,11 @@ async function garminStress(dataArr) {
     if (max > 75) {
         let hour = Math.floor(Number(timeOffset) / 3600);
         let min = Math.floor(Number(timeOffset) % 3600 / 60);
-        await miku_say("今日の" + hour + "時" + min + "分頃に高いストレスを感じていたようです", "guide_sad");
+        await miku_say("今日の" + hour + "時" + min + "分頃に高いストレスを感じていたようです", "idle_think");
         await miku_ask("その時何をしていたのか教えていただけませんか？");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("あまりストレスを感じることなく過ごすことができたようです！", "guide_happy");
+        await miku_say("あまりストレスを感じることなく過ごすことができたようです！", "smile");
     }
     // ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）");
     // if (/はい/.test(ans)) {
@@ -115,7 +115,7 @@ async function garminSleep(dataArr) {
         await miku_ask("何か理由があれば教えていただけませんか？");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("しっかりと休めたようですね！", "guide_happy");
+        await miku_say("しっかりと休めたようですね！", "smile");
         // await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
     }
     // ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）");
@@ -137,11 +137,11 @@ async function garminScenario(type) {
         if (/いいえ/.test(ans)) {
             return false;
         }
-        await miku_say("しばらくお待ちください", "greeting");
+        await miku_say("アプリを開いたまま，しばらくお待ちください", "greeting");
         await sleep(60 * 1000);
         dataArr = await checkGarminDataTime(type)
         if (dataArr._id == null) {
-            await miku_say("健康データを取得できませんでした", "guide_sad");
+            await miku_say("健康データを取得できませんでした", "greeting");
             return false;
         }
     }
@@ -175,15 +175,15 @@ async function garmin() {
                 if (!checkflag) {
                     answer = await miku_ask("スマートフォンのガーミンアプリを開いて下さい (はい / いいえ)", "normal");
                     if (/いいえ/.test(answer)) {
-                        await miku_say("健康データの取得に失敗しました", "guide_sad");
+                        await miku_say("健康データの取得に失敗しました", "greeting");
                         return;
                     }
                     checkflag = true;
-                    await miku_say("しばらくお待ちください", "greeting");
+                    await miku_say("アプリを開いたまま，しばらくお待ちください", "greeting");
                     await sleep(60 * 1000);
                 }
                 if (dataArr._id == null) {
-                    await miku_say("健康データの取得に失敗しました", "guide_sad");
+                    await miku_say("健康データの取得に失敗しました", "greeting");
                     return;
                 }
             }

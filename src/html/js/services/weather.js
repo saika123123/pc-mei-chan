@@ -88,7 +88,7 @@ async function weather() {
     let prefecture = null;
     let flag = true;
     while (flag) {
-        let ans = await miku_ask("どこの天気が知りたいですか (都道府県 / やめる)", false, "guide_normal");
+        let ans = await miku_ask("どこの天気が知りたいですか？ (都道府県 / やめる)", false, "guide_normal");
         if (/^やめる$/.test(ans)) {
             serviceFlag = false;
             return;
@@ -128,6 +128,7 @@ async function weather() {
                 await miku_say(str);
             }
         }
+        await miku_say("以上，" + prefecture.name + "の天気予報でした", "normal");
     }
     serviceFlag = false;
     return;
