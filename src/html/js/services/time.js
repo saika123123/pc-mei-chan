@@ -14,6 +14,15 @@ async function tellDate() {
 }
 
 /**
+ * 今日の曜日を報告する
+ */
+ async function tellDayOfWeek() {
+    let now = new Date();
+    let dayOfWeek = ["日", "月", "火", "水", "木", "金", "土"][now.getDay()];
+    return "今日は " + dayOfWeek + "曜日です";
+}
+
+/**
  * 現在時刻を報告する
  */
 async function tellTime() {
