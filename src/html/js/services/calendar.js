@@ -14,7 +14,8 @@ let remindedCalendarEvents = [];
 async function getEvents(date1, date2) {
     let start = formatDate(date1, 'yyyy-MM-dd');
     let end = formatDate(date2, 'yyyy-MM-dd');
-    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/start=" + start + "/end=" + end;
+    // const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/start=" + start + "/end=" + end;
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/calendar/start=" + start + "/end=" + end;
     console.log(url);
     return fetch(url)
         .then(async (response) => {
@@ -40,26 +41,26 @@ async function getEvents(date1, date2) {
  * @param date // 日時
  * @return
  */
-async function getFullEvents() {
-    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/start=0002-01-01/end=9999-12-31";
-    console.log(url);
-    return fetch(url)
-        .then(async (response) => {
-            //レスポンスコードをチェック
-            if (response.status == 200) {
-                let result = await response.json();
-                let events = getUserEvents(result);
-                console.log(events);
-                return events;
-            } else {
-                throw new Error(response);
-            }
-        })
-        .catch(err => {
-            console.log("Failed to fetch " + url, err);
-            throw new Error(err);
-        });
-}
+// async function getFullEvents() {
+//     const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/start=0002-01-01/end=9999-12-31";
+//     console.log(url);
+//     return fetch(url)
+//         .then(async (response) => {
+//             //レスポンスコードをチェック
+//             if (response.status == 200) {
+//                 let result = await response.json();
+//                 let events = getUserEvents(result);
+//                 console.log(events);
+//                 return events;
+//             } else {
+//                 throw new Error(response);
+//             }
+//         })
+//         .catch(err => {
+//             console.log("Failed to fetch " + url, err);
+//             throw new Error(err);
+//         });
+// }
 
 /**
  * APIを実行し,イベントを登録する
@@ -67,7 +68,8 @@ async function getFullEvents() {
  * @return
  */
 async function createEvent(params) {
-    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/create";
+    // const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/create";
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/calendar/create";
     let json = JSON.stringify(params);
     console.log(url);
     return new Promise((resolve, reject) => {
@@ -97,7 +99,8 @@ async function createEvent(params) {
  * @return
  */
 async function deleteEvent(params) {
-    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/delete";
+    // const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/calendar-api/delete";
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/calendar/delete";
     let json = JSON.stringify(params);
     console.log(url);
     return new Promise((resolve, reject) => {
