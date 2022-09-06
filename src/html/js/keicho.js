@@ -116,6 +116,8 @@ async function initialize() {
     uid = getUrlVars()["uid"];
     person = await getPersonInfo(uid);
     preference = await getPersonPreference(uid);
+    timerData = preference.preferences.timer;
+    alarmArr = preference.preferences.alarm;
 
     // ToDoサービスのユーザ情報をセット
     todoPreference = await getToDoPreference(uid).catch(function () { todoFlag = false });
@@ -132,6 +134,10 @@ async function initialize() {
     console.log(person);
     console.log(preference);
     console.log(new Date());
+
+    // タイマーとアラームをセット
+    setTimer();
+    setAllAlarm();
 
     // GETパラメータ voicerec が no であるときのみ false になる．デフォルトはtrueで．
     voicerec = getUrlVars()["voicerec"] === "no" ? false : true;
@@ -261,13 +267,14 @@ async function processEvent(message) {
             case "absent": //不在イベント検知
                 if (talking) {
                     if (!serviceFlag) { // サービス実行中は不在イベントを無視
-                        end_keicho("またいつでもお話ししてくださいね");
+                        post_text("またお話ししてくださいね");
+                        end_keicho("");
                     }
                 }
                 break;
             case "force": //感圧センサイベント検知
                 if (talking) {
-                    end_keicho("傾聴を中断します");
+                    end_keicho("またお話ししてくださいね");
                 } else {
                     start_scenario(0);
                 }
@@ -353,11 +360,13 @@ async function start_scenario(num) {
             } else {
                 await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
             }
-            await keicho("最近" + person.nickname + "さんが興味を持っていることについて，話していただけませんか？", "self_introduction");
+            var today = new Date();
+            var str = ["好きなもの", "嫌いなもの", "興味があること", "趣味", "悩みや気になっていること", "過去や思い出", "今後の予定や夢"];
+            await keicho(person.nickname + "さんの" + str[today.getDay()] + "ついて，話していただけませんか？", "self_introduction");
             return;
         // 12，13時 (昼食について)
         case 4:
-            ans = await miku_ask(person.nickname + "さん，昼食は食べました？（はい／いいえ）");
+            ans = await miku_ask(person.nickname + "さん，昼食は食べましたか？（はい／いいえ）");
             if (/はい/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
             } else {
@@ -386,7 +395,7 @@ async function start_scenario(num) {
             if (/はい/.test(ans)) {
                 await keicho("なんでも話してください", "self_introduction");
             } else {
-                await end_keicho("わかりました．またいつでもお呼び下さい");
+                await end_keicho("わかりました．またお話ししてくださいね");
             }
             return;
         // 18，19時 (夕食について)
@@ -415,8 +424,8 @@ async function start_scenario(num) {
         case 9:
             await miku_say(person.nickname + "さん，今日も一日お疲れさまでした", "greeting");
             await miku_say("寝る前にはお手洗いに行きましょう！", "smile");
-            let today = new Date();
-            let str = ["楽しかった", "イライラした", "ドキドキした", "悲しかった", "おもしろかった", "つらかった", "嬉しかった"];
+            var today = new Date();
+            var str = ["楽しかった", "イライラした", "ドキドキした", "悲しかった", "おもしろかった", "つらかった", "嬉しかった"];
             await keicho("最近あった" + str[today.getDay()] + "ことについて，話していただけませんか？", "self_introduction");
             return;
     }
@@ -456,6 +465,8 @@ async function getKeyword() {
                 "確認",
                 "作成",
                 "削除",
+                "登録",
+                "解除",
                 "日付",
                 "何日",
                 "時間",
@@ -465,6 +476,7 @@ async function getKeyword() {
                 "三番",
                 "四番",
                 "五番",
+                "好き",
             ];
             for (let ngword of ngwords) {
                 let word = new RegExp(ngword);
@@ -601,12 +613,12 @@ async function keicho(str, motion) {
         // 静聴モード
         if (seichoFlag) {
             if (/終わり$|やめる$/.test(answer)) {
-                await end_keicho("", "bye");
+                await end_keicho("またお話ししてくださいね", "bye");
                 return;
             }
             if (answer.length < 20) {
                 if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
-                    await end_keicho("", "bye");
+                    await end_keicho("またお話ししてくださいね", "bye");
                     return;
                 } else if (/対話モード/.test(answer)) {
                     str = "対話モードに切り替えます";
@@ -626,64 +638,69 @@ async function keicho(str, motion) {
             await end_keicho("またお話ししてくださいね", "bye");
             return;
         }
-        if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
-            await end_keicho("またお話ししてくださいね", "bye");
-            return;
-        } else if (keichoFlag && /対話モード/.test(answer)) {
-            str = "対話モードに切り替えます";
-            motion = "greeting";
-            taiwaMode();
-            continue;
-        } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
-            str = "傾聴モードに切り替えます";
-            motion = "greeting";
-            keichoMode();
-            continue;
-        } else if (/静聴モード|成長モード/.test(answer)) {
-            str = "静聴モードに切り替えます";
-            motion = "greeting";
-            seichoMode();
-            continue;
-        } else if (/メニュー/.test(answer)) { // 連携しているサービスの呼び出し方と概要の説明
-            await menu();
-            str = "なんでもお申し付けください";
-            motion = "greeting";
-            continue;
-        } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
-            str = getGreeting();
-            continue;
-        } else if (keichoFlag && /ありがとう/.test(answer)) {
-            str = "どういたしまして";
-            continue;
-        } else if (/今日/.test(answer) && (/何日/.test(answer) || /日付/.test(answer))) {
-            str = await tellDate();
-            motion = "self_introduction";
-            continue;
-        } else if (/今日/.test(answer) && /曜日/.test(answer)) {
-            str = await tellDayOfWeek();
-            motion = "self_introduction";
-            continue;
-        } else if (/今/.test(answer) && (/何時/.test(answer) || /時間/.test(answer))) {
-            str = await tellTime();
-            motion = "self_introduction";
-            continue;
-        } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気はどう/.test(answer)) {
-            str = "もし天気が知りたければ，私に「天気予報」と言ってみて下さい";
-            continue;
-        } else if (keichoFlag && /か$/.test(answer)) {
-            //質問には塩対応
-            str = "ごめんなさい，いま傾聴モードなので答えられません";
-            motion = "greeting";
-            continue;
-        } else {
-            // サービス実行のキーワード判定
-            let flag = await checkKeyword(answer);
-            if (flag) {
-                if (!serviceFlag) {
-                    str = "このサービスはいかがでしたか？";
-                    motion = "self_introduction";
-                }
+        if (answer.length < 20) {
+            if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
+                await end_keicho("またお話ししてくださいね", "bye");
+                return;
+            } else if (keichoFlag && /対話モード/.test(answer)) {
+                str = "対話モードに切り替えます";
+                motion = "greeting";
+                taiwaMode();
                 continue;
+            } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
+                str = "傾聴モードに切り替えます";
+                motion = "greeting";
+                keichoMode();
+                continue;
+            } else if (/静聴モード|成長モード/.test(answer)) {
+                str = "静聴モードに切り替えます";
+                motion = "greeting";
+                seichoMode();
+                continue;
+            } else if (/メニュー/.test(answer)) { // 連携しているサービスの呼び出し方と概要の説明
+                await menu();
+                str = "なんでもお申し付けください";
+                motion = "greeting";
+                continue;
+            } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
+                str = getGreeting();
+                continue;
+            } else if (keichoFlag && /ありがとう/.test(answer)) {
+                str = "どういたしまして";
+                continue;
+            } else if ((/今日/.test(answer) && /何日/.test(answer)) || /今日の日付は$/.test(answer)) {
+                str = await tellDate();
+                motion = "self_introduction";
+                continue;
+            } else if ((/今日/.test(answer) && /何曜日/.test(answer)) || /今日の曜日は$/.test(answer)) {
+                str = await tellDayOfWeek();
+                motion = "self_introduction";
+                continue;
+            } else if ((/今/.test(answer) && /何時/.test(answer)) || /今の時間は$/.test(answer)) {
+                str = await tellTime();
+                motion = "self_introduction";
+                continue;
+            } else if (/天気は$/.test(answer) || /天気は何/.test(answer)) {
+                str = "天気が知りたいときは，私に「天気予報」と言ってみて下さい";
+                continue;
+            } else if (keichoFlag && /か$/.test(answer)) {
+                //質問には塩対応
+                str = "ごめんなさい，いま傾聴モードなので答えられません";
+                motion = "greeting";
+                continue;
+            } else {
+                // サービス実行のキーワード判定
+                let flag = await checkKeyword(answer);
+                if (flag) {
+                    if (!serviceFlag) {
+                        str = "このサービスはいかがでしたか？";
+                        motion = "self_introduction";
+                    } else {
+                        str = "サービスの実行を中止します"
+                        motion = "greeting";
+                    }
+                    continue;
+                }
             }
         }
 
@@ -704,8 +721,6 @@ async function keicho(str, motion) {
         if (!keichoFlag) {
             post_loading();
             str = await getResponse(answer).catch(function () { str = get_aiduchi() });
-            let element = document.getElementById('loading');
-            element.remove();
         }
 
         // 応答を取得できなかったときは，あいづちを取得
@@ -745,16 +760,28 @@ async function runMeboApi(ans) {
 async function getResponse(ans) {
     // MeboAPIを実行
     let result = await runMeboApi(ans);
+    console.log(result);
+
+    // ローディング表示を消す
+    let element = document.getElementById('loading');
+    element.remove();
 
     // スコアが低ければ却下
     if (result.bestResponse.score < 4) {
         return "";
     }
 
-    // 応答から一文だけを抽出して出力
+    // 応答から一文ずつ出力
     let str = result.bestResponse.utterance;
-    if (str.includes("。")) {
-        str = str.substring(0, str.indexOf("。"));
+    while (str.includes("。")) {
+        let str1 = str.substring(0, str.indexOf("。"));
+        let str2 = str.substr(str.indexOf("。") + 1);
+        if (str2.length > 0) {
+            await miku_say(str1);
+            str = str2;
+        } else {
+            return str1;
+        }
     }
     return str;
 }
@@ -1020,14 +1047,15 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     }
 
     let fnc = function () {
-        console.log("強制終了");
-        post_text("またお話ししてくださいね");
-        end_keicho("");
+        if (talking) {
+            console.log("強制終了");
+            post_text("またお話ししてくださいね");
+            end_keicho("");
+        }
     };
 
     // 2分間発話が無ければ強制終了
     let timerID = setTimeout(fnc, 2 * 60 * 1000);
-    console.log("set timer: " + timerID);
 
     var promise = new Promise((resolve, reject) => {
         if (stt != null) {
@@ -1046,7 +1074,6 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     //確認する
     // if (confirm) await miku_say("答えは「" + answer + "」ですね");
     clearTimeout(timerID);
-    console.log("clear: " + timerID);
     return answer;
 }
 

@@ -126,6 +126,9 @@ function setService() {
     // 天気予報サービス
     addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
 
+    // 時間管理サービス
+    addService("時間管理サービス", "時間管理", "タイマー機能とアラーム機能", async function () { await time() });
+
     // ToDo管理サービス・ToDoリマインドサービス
     // if (todoFlag) {
     //     addService("ToDo管理サービス", "やることリスト", "やることリストの編集", async function () { await todo() });

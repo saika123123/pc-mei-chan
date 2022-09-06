@@ -16,8 +16,8 @@ function getPersonInfo(uid) {
             }
         })
         .catch(err => {
-            throw new Error(err);
             console.log("Failed to fetch " + url, err);
+            throw new Error(err);
         });
 }
 
@@ -33,7 +33,35 @@ function getPersonPreference(uid) {
             }
         })
         .catch(err => {
-            throw new Error(err);
             console.log("Failed to fetch " + url, err);
+            throw new Error(err);
+        });
+}
+
+function putPersonPreference(uid, pref) {
+    const url = youid_endpoint + "/prefs/" + uid + "/va_keicho/";
+    console.log(pref);
+    console.log(url);
+    return fetch(url, {
+        method: "PUT",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pref),
+        mode: 'cors',
+    })
+        .then(response => {
+            //レスポンスコードをチェック
+            if (response.status == 200) {
+                let json = response.json();
+                console.log(json);
+                return json;
+            } else {
+                throw new Error(response);
+            }
+        })
+        .catch(err => {
+            console.log("Failed to fetch " + url, err);
+            throw new Error(err);
         });
 }
