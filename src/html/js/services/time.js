@@ -94,7 +94,7 @@ async function setAlarm(time) {
     let date = new Date(time);
     for (let i in alarmArr) {
         let alarmDate = new Date(alarmArr[i].time);
-        if (time.getHours() == alarmDate.getHours() && time.getMinutes() == alarmDate.getMinutes()) {
+        if (date.getHours() == alarmDate.getHours() && date.getMinutes() == alarmDate.getMinutes()) {
             return false;
         }
     }
