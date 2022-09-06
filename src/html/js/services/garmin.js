@@ -59,7 +59,7 @@ async function checkGarminDataTime(type) {
 /*--------------- 以下対話シナリオ ---------------*/
 async function garminDaily(dataArr) {
     await miku_say("今日歩いた歩数は" + dataArr.steps + "歩です", "normal");
-    await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "kcalです", "normal");
+    await miku_say("消費したカロリーは" + (dataArr.activeKilocalories + dataArr.bmrKilocalories) + "キロカロリー(kcal)です", "normal");
     if (dataArr.steps > 8000) {
         await miku_ask("すばらしいですね！なにか運動をされたのですか？", false, "smile");
         await miku_say("わかりました，ありがとうございます", "greeting");
