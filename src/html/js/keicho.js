@@ -119,6 +119,11 @@ async function initialize() {
     timerData = preference.preferences.timer;
     alarmArr = preference.preferences.alarm;
 
+    // ユーザ情報の確認
+    console.log(person);
+    console.log(preference);
+    console.log(new Date());
+
     // ToDoサービスのユーザ情報をセット
     todoPreference = await getToDoPreference(uid).catch(function () { todoFlag = false });
     if (todoFlag) {
@@ -129,15 +134,6 @@ async function initialize() {
     if (rakudoFlag) {
         rakudoId = rakudoPreference.preferences.id;
     }
-
-    // ユーザ情報の確認
-    console.log(person);
-    console.log(preference);
-    console.log(new Date());
-
-    // タイマーとアラームをセット
-    setTimer();
-    setAllAlarm();
 
     // GETパラメータ voicerec が no であるときのみ false になる．デフォルトはtrueで．
     voicerec = getUrlVars()["voicerec"] === "no" ? false : true;
@@ -172,6 +168,10 @@ async function initialize() {
     //つけっぱなしのため，1日2回夜中の0時と12時にリロードを仕込む
     refreshAt(0, 0);
     refreshAt(12, 0);
+
+    // タイマーとアラームをセット
+    setTimer();
+    setAllAlarm();
 
     // web socket を初期化
     initWebSocket();

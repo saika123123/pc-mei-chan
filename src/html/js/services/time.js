@@ -21,6 +21,7 @@ async function setTimer() {
     let end = new Date(timerData.start + time);
     let now = new Date();
     if (end < now) {
+        console.log("timer : " + end + "is over");
         timerData = { "id": null, "start": null, "time": null };
     } else {
         let func = async function () {
@@ -29,7 +30,7 @@ async function setTimer() {
             deleteTimer();
         }
         timerData.id = setTimeout(func, (end - now));
-        console.log("set timer (start : " + new Date(timerData.start) + ", time : " + timerData.time + ")");
+        console.log("set timer (" + (end - now) + " ms)");
     }
     // Preferenceを更新
     let newPref = preference;
@@ -67,7 +68,13 @@ async function setAllAlarm() {
     for (let i in alarmArr) {
         let time = new Date(alarmArr[i].time);
         let now = new Date();
-        if (time < now || (time.getHours() == prev.getHours() && time.getMinutes() == prev.getMinutes())) {
+        if (time < now) {
+            console.log("alarm : " + time + " is over");
+            alarmArr.splice(i, 1);
+            continue;
+        }
+        if (time.getHours() == prev.getHours() && time.getMinutes() == prev.getMinutes()) {
+            await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
             alarmArr.splice(i, 1);
             continue;
         }
@@ -76,7 +83,7 @@ async function setAllAlarm() {
             alarmArr.splice(i, 1);
         }
         let id = setTimeout(func, (time - now));
-        console.log("set alarm (" + new Date(alarmArr[i].time) + ")");
+        console.log("set alarm (" + time.getHours() + ":" + time.getMinutes() + ")");
         alarmArr[i].id = id;
         prev = time;
     }
@@ -105,6 +112,7 @@ async function setAlarm(time) {
         deleteAlarm(date.getHours(), date.getMinutes())
     }
     let id = setTimeout(func, (time - now));
+    console.log("set alarm (" + date.getHours() + ":" + date.getMinutes() + ")");
     alarmArr.push({ "id": id, "time": time });
     sortAlarm();
     // Preferenceを更新
