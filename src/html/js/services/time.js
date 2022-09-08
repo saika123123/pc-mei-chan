@@ -26,11 +26,14 @@ async function setTimer() {
     } else {
         let func = async function () {
             let str = timeToText(time);
+            talking = true;
             await miku_say(str + "が経過しました！");
-            deleteTimer();
+            talking = false;
+            await deleteTimer();
         }
         timerData.id = setTimeout(func, (end - now));
-        console.log("set timer (" + (end - now) + " ms)");
+        timerFlag = true;
+        console.log("set timer (" + (end - now) / 1000 + " s)");
     }
     // Preferenceを更新
     let newPref = preference;
@@ -74,12 +77,16 @@ async function setAllAlarm() {
             continue;
         }
         if (time.getHours() == prev.getHours() && time.getMinutes() == prev.getMinutes()) {
+            talking =true;
             await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+            talking = false;
             alarmArr.splice(i, 1);
             continue;
         }
         let func = async function () {
+            talking = true;
             await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+            talking = false;
             alarmArr.splice(i, 1);
         }
         let id = setTimeout(func, (time - now));
@@ -107,9 +114,11 @@ async function setAlarm(time) {
     }
     let now = new Date();
     let func = async function () {
+        talking = true;
         await miku_say(date.getHours() + "時" + date.getMinutes() + "分になりました！");
+        talking = false;
         alarmArr.splice(i, 1);
-        deleteAlarm(date.getHours(), date.getMinutes())
+        await deleteAlarm(date.getHours(), date.getMinutes())
     }
     let id = setTimeout(func, (time - now));
     console.log("set alarm (" + date.getHours() + ":" + date.getMinutes() + ")");
@@ -212,24 +221,24 @@ function tellTime() {
 /**
  * 時間管理サービス
  */
-async function time() {
-    while (true) {
-        let ans = await miku_ask("何をしますか？（タイマー／アラーム／やめる）", false, "guide_normal");
-        // アラームの確認
-        if (/タイマー/.test(ans)) {
-            await timer();
-        }
-        // アラームの作成
-        else if (/アラーム/.test(ans)) {
-            await alarm();
-        }
-        // サービス終了
-        else if (/やめる|止める/.test(ans)) {
-            serviceFlag = false;
-            return;
-        }
-    }
-}
+// async function time() {
+//     while (true) {
+//         let ans = await miku_ask("何をしますか？（タイマー／アラーム／やめる）", false, "guide_normal");
+//         // アラームの確認
+//         if (/タイマー/.test(ans)) {
+//             await timer();
+//         }
+//         // アラームの作成
+//         else if (/アラーム/.test(ans)) {
+//             await alarm();
+//         }
+//         // サービス終了
+//         else if (/やめる|止める/.test(ans)) {
+//             serviceFlag = false;
+//             return;
+//         }
+//     }
+// }
 
 /**
  * 時間を計る
@@ -262,21 +271,21 @@ async function timer() {
         let now = new Date();
         timerData = { "id": null, "start": now.getTime(), "time": time };
         await setTimer();
-        timerFlag = true;
-        await miku_say(timeToText(time) + "のタイマーを開始します", "greeting");
-        return;
+        // await miku_say(timeToText(time) + "のタイマーを開始します", "greeting");
+        return timeToText(time) + "のタイマーを開始します";
     } else { // タイマー実行中の場合
         await miku_say(timeToText(timerData.time) + "を計測中です");
         let ans = await miku_ask("タイマーを止めますか？(はい / いいえ)");
         if (/はい/.test(ans)) {
             await deleteTimer();
-            await miku_say("タイマーを停止しました", "greeting");
+            // await miku_say("タイマーを停止しました", "greeting");
+            return "タイマーを停止しました";
         } else {
             let now = new Date();
             let time = timerData.time - (now - timerData.start);
-            await miku_say("残り" + timeToText(time) + "です");
+            // await miku_say("残り" + timeToText(time) + "です");
+            return "残り" + timeToText(time) + "です";
         }
-        return;
     }
 }
 
