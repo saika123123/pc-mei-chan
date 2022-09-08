@@ -119,6 +119,11 @@ async function initialize() {
     timerData = preference.preferences.timer;
     alarmArr = preference.preferences.alarm;
 
+    // ユーザ情報の確認
+    console.log(person);
+    console.log(preference);
+    console.log(new Date());
+
     // ToDoサービスのユーザ情報をセット
     todoPreference = await getToDoPreference(uid).catch(function () { todoFlag = false });
     if (todoFlag) {
@@ -129,15 +134,6 @@ async function initialize() {
     if (rakudoFlag) {
         rakudoId = rakudoPreference.preferences.id;
     }
-
-    // ユーザ情報の確認
-    console.log(person);
-    console.log(preference);
-    console.log(new Date());
-
-    // タイマーとアラームをセット
-    setTimer();
-    setAllAlarm();
 
     // GETパラメータ voicerec が no であるときのみ false になる．デフォルトはtrueで．
     voicerec = getUrlVars()["voicerec"] === "no" ? false : true;
@@ -172,6 +168,10 @@ async function initialize() {
     //つけっぱなしのため，1日2回夜中の0時と12時にリロードを仕込む
     refreshAt(0, 0);
     refreshAt(12, 0);
+
+    // タイマーとアラームをセット
+    setTimer();
+    setAllAlarm();
 
     // web socket を初期化
     initWebSocket();
@@ -605,6 +605,10 @@ function put_start_button(button_label = "メイちゃんと話す") {
 async function keicho(str, motion) {
 
     do {
+        if (!talking) {
+            return;
+        }
+
         serviceFlag = false;
         let answer = await miku_ask(str, false, motion);
         str = "";
@@ -617,7 +621,7 @@ async function keicho(str, motion) {
                 return;
             }
             if (answer.length < 20) {
-                if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
+                if (/終わり|やめる|またね$|バイバイ$|終了$|以上$/.test(answer)) {
                     await end_keicho("またお話ししてくださいね", "bye");
                     return;
                 } else if (/対話モード/.test(answer)) {
@@ -639,7 +643,7 @@ async function keicho(str, motion) {
             return;
         }
         if (answer.length < 20) {
-            if (/終わり|やめる|またね$|バイバイ$/.test(answer)) {
+            if (/終わり|やめる|またね$|バイバイ$|終了$|以上$/.test(answer)) {
                 await end_keicho("またお話ししてくださいね", "bye");
                 return;
             } else if (keichoFlag && /対話モード/.test(answer)) {
@@ -661,6 +665,15 @@ async function keicho(str, motion) {
                 await menu();
                 str = "なんでもお申し付けください";
                 motion = "greeting";
+                continue;
+            } else if (/タイマー/.test(answer)) { // タイマー機能
+                str = await timer();;
+                motion = "self_introduction";
+                continue;
+            } else if (/アラーム/.test(answer)) { // アラーム機能
+                await alarm();
+                str = "対話モードに戻ります";
+                motion = "self_introduction";
                 continue;
             } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
                 str = getGreeting();
@@ -998,6 +1011,9 @@ function getGreeting(name = null) {
  * @param {*} motion 問いかけ時のモーション
  */
 async function miku_say(str, motion = "smile") {
+    if (!talking) {
+        return;
+    }
     await mmd.doMotion(motion);
     if (str.length > 0) {
         console.log("miku says " + str);
@@ -1034,6 +1050,10 @@ async function miku_say(str, motion = "smile") {
  * @param {*} motion 質問時のモーション
  */
 async function miku_ask(str, confirm = false, motion = "smile") {
+    if (!talking) {
+        return;
+    }
+
     await miku_say(str, motion);
 
     // 追記
