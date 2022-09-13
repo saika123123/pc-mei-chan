@@ -111,6 +111,12 @@ function setService() {
         addService("健康管理サービス", "健康管理", "過去の健康データの振り返り", async function () { await garmin(); });
     }
 
+    // アラームサービス
+    addService("アラームサービス", "アラーム", "アラームの登録・確認", async function () { await alarm() });
+
+    // タイマーサービス
+    addService("タイマーサービス", "タイマー", "タイマー機能の利用", async function () { await timer() });
+
     // 動画再生サービス
     addService("動画再生サービス", "YouTube", "好きな動画の再生", async function () { await youtube(); });
 

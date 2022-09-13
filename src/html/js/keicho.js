@@ -362,7 +362,7 @@ async function start_scenario(num) {
             }
             var today = new Date();
             var str = ["好きなもの", "嫌いなもの", "興味があること", "趣味", "悩みや気になっていること", "過去や思い出", "今後の予定や夢"];
-            await keicho(person.nickname + "さんの" + str[today.getDay()] + "ついて，話していただけませんか？", "self_introduction");
+            await keicho(person.nickname + "さんの" + str[today.getDay()] + "について，話していただけませんか？", "self_introduction");
             return;
         // 12，13時 (昼食について)
         case 4:
@@ -666,34 +666,40 @@ async function keicho(str, motion) {
                 str = "なんでもお申し付けください";
                 motion = "greeting";
                 continue;
-            } else if (/タイマー/.test(answer)) { // タイマー機能
-                str = await timer();;
-                motion = "self_introduction";
-                continue;
-            } else if (/アラーム/.test(answer)) { // アラーム機能
-                await alarm();
-                str = "対話モードに戻ります";
-                motion = "self_introduction";
-                continue;
+            // } else if (/タイマー/.test(answer)) { // タイマー機能
+            //     str = await timer();;
+            //     motion = "self_introduction";
+            //     continue;
+            // } else if (/アラーム/.test(answer)) { // アラーム機能
+            //     await alarm();
+            //     str = "対話モードに戻ります";
+            //     motion = "self_introduction";
+            //     continue;
             } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
                 str = getGreeting();
                 continue;
             } else if (keichoFlag && /ありがとう/.test(answer)) {
                 str = "どういたしまして";
                 continue;
-            } else if ((/今日/.test(answer) && /何日/.test(answer)) || /今日の日付は$/.test(answer)) {
+            } else if ((/あなた/.test(answer) || /君/.test(answer)) && (/名前は$/.test(answer) || (/名前/.test(answer) && /何/.test(answer)))) {
+                str = "私の名前はメイです";
+                continue;
+            } else if (/あなたは誰/.test(answer) || /君は誰/.test(answer) || (/どちら様/.test(answer))) {
+                str = "私はあなたの日常生活を支えるエージェント，メイです！";
+                continue;
+            } else if ((/今日/.test(answer) && /何日/.test(answer)) || /今日の日付は$/.test(answer) || /日付を教えて/.test(answer)) {
                 str = await tellDate();
                 motion = "self_introduction";
                 continue;
-            } else if ((/今日/.test(answer) && /何曜日/.test(answer)) || /今日の曜日は$/.test(answer)) {
+            } else if ((/今日/.test(answer) && /何曜日/.test(answer)) || /今日の曜日は$/.test(answer) || /曜日を教えて/.test(answer)) {
                 str = await tellDayOfWeek();
                 motion = "self_introduction";
                 continue;
-            } else if ((/今/.test(answer) && /何時/.test(answer)) || /今の時間は$/.test(answer)) {
+            } else if ((/今/.test(answer) && /何時/.test(answer)) || /今の時間は$/.test(answer) || /時間を教えて/.test(answer)) {
                 str = await tellTime();
                 motion = "self_introduction";
                 continue;
-            } else if (/天気は$/.test(answer) || /天気は何/.test(answer)) {
+            } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気を教えて/.test(answer)) {
                 str = "天気が知りたいときは，私に「天気予報」と言ってみて下さい";
                 continue;
             } else if (keichoFlag && /か$/.test(answer)) {

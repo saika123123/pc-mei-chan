@@ -90,7 +90,7 @@ async function setAllAlarm() {
             alarmArr.splice(i, 1);
         }
         let id = setTimeout(func, (time - now));
-        console.log("set alarm (" + time.getHours() + ":" + time.getMinutes() + ")");
+        console.log("set alarm (" + time.getHours() + "時" + time.getMinutes() + "分)");
         alarmArr[i].id = id;
         prev = time;
     }
@@ -121,7 +121,7 @@ async function setAlarm(time) {
         await deleteAlarm(date.getHours(), date.getMinutes())
     }
     let id = setTimeout(func, (time - now));
-    console.log("set alarm (" + date.getHours() + ":" + date.getMinutes() + ")");
+    console.log("set alarm (" + date.getHours() + "時" + date.getMinutes() + "分)");
     alarmArr.push({ "id": id, "time": time });
     sortAlarm();
     // Preferenceを更新
@@ -272,6 +272,7 @@ async function timer() {
         timerData = { "id": null, "start": now.getTime(), "time": time };
         await setTimer();
         // await miku_say(timeToText(time) + "のタイマーを開始します", "greeting");
+        serviceFlag = false;
         return timeToText(time) + "のタイマーを開始します";
     } else { // タイマー実行中の場合
         await miku_say(timeToText(timerData.time) + "を計測中です");
@@ -381,6 +382,7 @@ async function alarm() {
         }
         // サービス終了
         else if (/やめる|止める/.test(ans)) {
+            serviceFlag = false;
             return;
         }
     }
