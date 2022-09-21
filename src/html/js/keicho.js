@@ -344,7 +344,7 @@ async function start_scenario(num) {
         // 8，9時 (朝食について)
         case 2:
             ans = await miku_ask(person.nickname + "さん，朝食は食べましたか？（はい／いいえ）");
-            if (/はい/.test(ans)) {
+            if (/はい/.test(ans) || /食べました/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
             } else {
                 await miku_ask("何を食べる予定なのか，教えていただけませんか？");
@@ -367,7 +367,7 @@ async function start_scenario(num) {
         // 12，13時 (昼食について)
         case 4:
             ans = await miku_ask(person.nickname + "さん，昼食は食べましたか？（はい／いいえ）");
-            if (/はい/.test(ans)) {
+            if (/はい/.test(ans) || /食べました/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
             } else {
                 await miku_ask("何を食べる予定なのか，教えていただけませんか？");
@@ -401,7 +401,7 @@ async function start_scenario(num) {
         // 18，19時 (夕食について)
         case 7:
             ans = await miku_ask(person.nickname + "さん，夕食は食べましたか？（はい／いいえ）");
-            if (/はい/.test(ans)) {
+            if (/はい/.test(ans) || /食べました/.test(ans)) {
                 await miku_ask("何を食べたか教えていただけませんか？");
             } else {
                 await miku_ask("何を食べる予定なのか，教えていただけませんか？");
@@ -666,15 +666,15 @@ async function keicho(str, motion) {
                 str = "なんでもお申し付けください";
                 motion = "greeting";
                 continue;
-            // } else if (/タイマー/.test(answer)) { // タイマー機能
-            //     str = await timer();;
-            //     motion = "self_introduction";
-            //     continue;
-            // } else if (/アラーム/.test(answer)) { // アラーム機能
-            //     await alarm();
-            //     str = "対話モードに戻ります";
-            //     motion = "self_introduction";
-            //     continue;
+                // } else if (/タイマー/.test(answer)) { // タイマー機能
+                //     str = await timer();;
+                //     motion = "self_introduction";
+                //     continue;
+                // } else if (/アラーム/.test(answer)) { // アラーム機能
+                //     await alarm();
+                //     str = "対話モードに戻ります";
+                //     motion = "self_introduction";
+                //     continue;
             } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
                 str = getGreeting();
                 continue;
@@ -684,7 +684,7 @@ async function keicho(str, motion) {
             } else if ((/あなた/.test(answer) || /君/.test(answer)) && (/名前は$/.test(answer) || (/名前/.test(answer) && /何/.test(answer)))) {
                 str = "私の名前はメイです";
                 continue;
-            } else if (/あなたは誰/.test(answer) || /君は誰/.test(answer) || (/どちら様/.test(answer))) {
+            } else if (/あなたは誰/.test(answer) || /君は誰/.test(answer) || (/自己紹介/.test(answer) && /して/.test(answer))) {
                 str = "私はあなたの日常生活を支えるエージェント，メイです！";
                 continue;
             } else if ((/今日/.test(answer) && /何日/.test(answer)) || /今日の日付は$/.test(answer) || /日付を教えて/.test(answer)) {
@@ -785,24 +785,24 @@ async function getResponse(ans) {
     let element = document.getElementById('loading');
     element.remove();
 
-    // スコアが低ければ却下
-    if (result.bestResponse.score < 4) {
+    // スコアが高ければその応答を採用
+    if (result.bestResponse.score >= 4) {
+        // 応答から一文ずつ出力
+        let str = result.bestResponse.utterance;
+        while (str.includes("。")) {
+            let str1 = str.substring(0, str.indexOf("。"));
+            let str2 = str.substr(str.indexOf("。") + 1);
+            if (str2.length > 0) {
+                await miku_say(str1);
+                str = str2;
+            } else {
+                return str1;
+            }
+        }
+        return str;
+    } else {
         return "";
     }
-
-    // 応答から一文ずつ出力
-    let str = result.bestResponse.utterance;
-    while (str.includes("。")) {
-        let str1 = str.substring(0, str.indexOf("。"));
-        let str2 = str.substr(str.indexOf("。") + 1);
-        if (str2.length > 0) {
-            await miku_say(str1);
-            str = str2;
-        } else {
-            return str1;
-        }
-    }
-    return str;
 }
 
 /**
@@ -1020,11 +1020,12 @@ async function miku_say(str, motion = "smile") {
     if (!talking) {
         return;
     }
-    await mmd.doMotion(motion);
-    if (str.length > 0) {
-        console.log("miku says " + str);
-        post_keicho(str, SPEAKER.AGENT, person);
+    if (!str.length) {
+        return;
     }
+    await mmd.doMotion(motion);
+    console.log("miku says " + str);
+    post_keicho(str, SPEAKER.AGENT, person);
     // 静聴モードの時は返事をしない
     if (!seichoFlag) {
         while (str.includes(")") || str.includes("）")) {
@@ -1081,7 +1082,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     };
 
     // 2分間発話が無ければ強制終了
-    let timerID = setTimeout(fnc, 2 * 60 * 1000);
+    let id = setTimeout(fnc, 2 * 60 * 1000);
 
     var promise = new Promise((resolve, reject) => {
         if (stt != null) {
@@ -1099,7 +1100,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     post_keicho(answer, SPEAKER.USER, person);
     //確認する
     // if (confirm) await miku_say("答えは「" + answer + "」ですね");
-    clearTimeout(timerID);
+    clearTimeout(id);
     return answer;
 }
 

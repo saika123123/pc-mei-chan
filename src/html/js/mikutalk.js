@@ -13,14 +13,25 @@ function post_comment(str, speaker) {
 
     let comment;
     if (speaker == SPEAKER.AGENT) {
-        comment = $("<div></div>", {
-            class: "bubble bubble-half-bottom normal",
-            //"class": "bubble bubble-half-bottom small",
-            //}).text(str);
-        }).html(
-            // "<img style='border-radius:50%;width:100px' src='img/mei_normal.png'>" + str
-            str
-        );
+        if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
+            comment = $("<div></div>", {
+                class: "bubble bubble-half-bottom normal",
+                //"class": "bubble bubble-half-bottom small",
+                //}).text(str);
+            }).html(
+                "<div style='display:flex;'>"
+                + "<img style='border-radius:50%;width:75px;height:85px' src='img/mei_normal.png'>"
+                + "<font style='margin-top:5px;margin-left:10px;'>" + str + "</font></div>"
+            );
+        } else {
+            comment = $("<div></div>", {
+                class: "bubble bubble-half-bottom normal",
+                //"class": "bubble bubble-half-bottom small",
+                //}).text(str);
+            }).html(
+                str
+            );
+        }
     } else {
         comment = $("<div></div>", {
             class: "bubble-right bubble-right-half-bottom normal",
@@ -80,7 +91,7 @@ function post_log(logList) {
     for (var i in logList) {
         d = moment(logList[i].time);
         time = d.format("MM月DD日HH時mm分");
-        str = str + "<a class='timestamp'>" + "[" + time + "]" + "</a>"　+ "<div>" + logList[i].contents + "</div>";
+        str = str + "<a class='timestamp'>" + "[" + time + "]" + "</a>" + "<div>" + logList[i].contents + "</div>";
     }
     post_text(str);
 }
@@ -169,7 +180,7 @@ function post_loading() {
  * ページを画面に表示させる
  * @param pageURL  // 表示させるページのURL
  */
- async function post_page(pageURL) {
+async function post_page(pageURL) {
 
     let id = formatDate(new Date(), 'yyyyMMddHHmmssms');
 
@@ -187,7 +198,7 @@ function post_loading() {
 
     $("#timeline").append(bubble),
 
-    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+        $("html,body").animate({ scrollTop: $("#bottom").offset().top });
 
 };
 
@@ -200,7 +211,7 @@ function post_hint(str) {
         class: "hint",
         id: "hint",
     }).append(comment);
-    
+
     $("#status").append(contents);
     $("html,body").animate({ scrollTop: $("#bottom").offset().top });
 }
