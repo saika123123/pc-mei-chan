@@ -140,6 +140,7 @@ class SpeechToText {
 
 		// 録音終了時処理
 		let stopRecord = function () {
+			console.log("stop record");
 			mediaStreamSource.disconnect();
 			scriptProcessor.disconnect();
 			audioContext.close();
@@ -150,6 +151,7 @@ class SpeechToText {
 		// 録音開始時処理
 		let startRecord = function () {
 			// 録音の準備（MediaRecorderはwebmしか扱えないのでダメ）
+			console.log("start record");
 			audioContext = new AudioContext();
 			audioSampleRate = audioContext.sampleRate;
 			scriptProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
@@ -288,7 +290,7 @@ class SpeechToText {
 		};
 		// 何らかの音が鳴ったときに発火
 		f.speech.onsoundstart = function () {
-			if (f.stat != null) f.stat.innerHTML = "【音声認識中】";
+			if (f.stat != null) f.stat.innerHTML = "<font color='red'>&#9679;</font>【音声認識中】";
 		};
 		f.speech.onnomatch = function () {
 			if (f.stat != null) f.stat.innerHTML = "【音声が聞き取れません】";
@@ -385,7 +387,7 @@ class SpeechToText {
 						self.stop();
 					}
 				} else {
-					if (f.stat != null) f.stat.innerHTML = "【認識中】> " + results[i][0].transcript;
+					if (f.stat != null) f.stat.innerHTML = "<font color='red'>&#9679;</font>【認識中】> " + results[i][0].transcript;
 					if (f.running == false) {
 						f.running = true; // 認識途中フラグ
 					}
@@ -405,7 +407,7 @@ class SpeechToText {
 					self.audioStream = stream;
 					self.init();
 					self.fields.speech.start();
-					if (self.fields.stat != null) self.fields.stat.innerHTML = "【音声認識準備完了】";
+					if (self.fields.stat != null) self.fields.stat.innerHTML = "<font color='red'>&#9679;</font>【音声認識準備完了】";
 					console.log("stt started");
 				});
 		} else {
@@ -413,7 +415,7 @@ class SpeechToText {
 			self.audioStream = null;
 			self.init();
 			self.fields.speech.start();
-			if (self.fields.stat != null) self.fields.stat.innerHTML = "【音声認識準備完了】";
+			if (self.fields.stat != null) self.fields.stat.innerHTML = "<font color='red'>&#9679;</font>【音声認識準備完了】";
 			console.log("stt started");
 		}
 	}
@@ -436,7 +438,7 @@ class SpeechToText {
 					self.audioStream = stream;
 					self.init();
 					self.fields.speech.start();
-					if (self.fields.stat != null) self.fields.stat.innerHTML = "【音声認識準備完了】";
+					if (self.fields.stat != null) self.fields.stat.innerHTML = "<font color='red'>&#9679;</font>【音声認識準備完了】";
 					console.log("stt started");
 				});
 		} else {
@@ -444,7 +446,7 @@ class SpeechToText {
 			self.audioStream = null;
 			self.init();
 			self.fields.speech.start();
-			if (self.fields.stat != null) self.fields.stat.innerHTML = "【音声認識準備完了】";
+			if (self.fields.stat != null) self.fields.stat.innerHTML = "<font color='red'>&#9679;</font>【音声認識準備完了】";
 			console.log("stt started");
 		}
 	}
