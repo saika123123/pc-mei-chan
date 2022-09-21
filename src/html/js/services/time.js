@@ -271,21 +271,23 @@ async function timer() {
         let now = new Date();
         timerData = { "id": null, "start": now.getTime(), "time": time };
         await setTimer();
-        // await miku_say(timeToText(time) + "のタイマーを開始します", "greeting");
+        await miku_say(timeToText(time) + "のタイマーを開始します", "greeting");
         serviceFlag = false;
-        return timeToText(time) + "のタイマーを開始します";
+        return;
     } else { // タイマー実行中の場合
         await miku_say(timeToText(timerData.time) + "を計測中です");
         let ans = await miku_ask("タイマーを止めますか？(はい / いいえ)");
         if (/はい/.test(ans)) {
             await deleteTimer();
-            // await miku_say("タイマーを停止しました", "greeting");
-            return "タイマーを停止しました";
+            await miku_say("タイマーを停止しました", "greeting");
+            serviceFlag = false;
+            return;
         } else {
             let now = new Date();
             let time = timerData.time - (now - timerData.start);
-            // await miku_say("残り" + timeToText(time) + "です");
-            return "残り" + timeToText(time) + "です";
+            await miku_say("残り" + timeToText(time) + "です");
+            serviceFlag = false;
+            return;
         }
     }
 }
