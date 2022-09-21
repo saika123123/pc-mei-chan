@@ -31,7 +31,7 @@ let prefecturesData = [
     { "name": "三重県", "id": "240010" },
     { "name": "滋賀県", "id": "250010" },
     { "name": "京都府", "id": "260010" },
-    { "name": "大阪府", "id": "270010" },
+    { "name": "大阪府", "id": "270000" },
     { "name": "兵庫県", "id": "280010" },
     { "name": "奈良県", "id": "290010" },
     { "name": "和歌山県", "id": "300010" },
@@ -41,7 +41,7 @@ let prefecturesData = [
     { "name": "広島県", "id": "340010" },
     { "name": "山口県", "id": "350010" },
     { "name": "徳島県", "id": "360010" },
-    { "name": "香川県", "id": "370010" },
+    { "name": "香川県", "id": "370000" },
     { "name": "愛媛県", "id": "380010" },
     { "name": "高知県", "id": "390010" },
     { "name": "福岡県", "id": "400010" },
@@ -103,11 +103,11 @@ async function weather() {
         }
     }
 
-    let result = await getWeather(prefecture.id).catch(async () => {
-        await miku_say("検索結果を取得できませんでした", "normal");
-        serviceFlag = false;
+    let result = await getWeather(prefecture.id);
+    if(result.error){
+        await miku_say("天気予報を取得できませんでした", "normal");
         return;
-    });
+    }
     let forecasts = result.forecasts;
     let str = "<div> 【" + prefecture.name + "の天気】 </div>";
     for (let forecast of forecasts) {
