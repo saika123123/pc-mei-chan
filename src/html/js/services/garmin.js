@@ -277,6 +277,8 @@ async function garmin() {
             // scrollYPostionPushFlag = true;
             post_text(str);
             setTimeout(function () { window.scrollBy(0, -500); }, 4500);
+
+            return;
         }
     }
 }
