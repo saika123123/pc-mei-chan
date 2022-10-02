@@ -162,6 +162,9 @@ async function initialize() {
         garminFlag = true;
     }
 
+    // サウンドをセット
+    const timeSound = document.querySelector("#timeSound");
+
     // 連携しているサービスをセット
     setService();
 
@@ -255,9 +258,7 @@ async function processEvent(message) {
                             num = 9;
                             break;
                         default:
-                            //時間外は何もしないように変更 2022-01-11 by masa-n
                             return;
-                        // num = 0;
                     }
                     start_scenario(num);
                 } else {
@@ -265,12 +266,12 @@ async function processEvent(message) {
                 }
                 break;
             case "absent": //不在イベント検知
-                if (talking) {
-                    if (!serviceFlag) { // サービス実行中は不在イベントを無視
-                        post_text("またお話ししてくださいね");
-                        end_keicho("");
-                    }
-                }
+                // if (talking) {
+                //     if (!serviceFlag) { // サービス実行中は不在イベントを無視
+                //         post_text("またお話ししてくださいね");
+                //         end_keicho("");
+                //     }
+                // }
                 break;
             case "force": //感圧センサイベント検知
                 if (talking) {
@@ -549,9 +550,6 @@ async function runCotohaKeywordApi(textArr) {
  * 傾聴を修了し，後片付けをする
  */
 async function end_keicho(str, motion = "bye") {
-    // 傾聴中でないなら何もしない
-    if (!talking) return;
-
     // YouTube再生中なら動画を止める
     if (youtubeFlag) {
         ytplayer.stopVideo();
@@ -715,8 +713,7 @@ async function keicho(str, motion) {
                         str = "このサービスはいかがでしたか？";
                         motion = "self_introduction";
                     } else {
-                        str = "サービスの実行を中止します"
-                        motion = "greeting";
+                        str = ""
                     }
                     continue;
                 }

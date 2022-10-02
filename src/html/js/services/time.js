@@ -2,7 +2,6 @@
  * time.js
  * 時間に関するクラス
  */
-
 let timerData = { "id": null, "start": null, "time": null };
 let alarmArr = [];
 let timerFlag = false;
@@ -25,10 +24,30 @@ async function setTimer() {
         timerData = { "id": null, "start": null, "time": null };
     } else {
         let func = async function () {
+            timeSound.play();
             let str = timeToText(time);
-            talking = true;
-            await miku_say(str + "が経過しました！");
-            talking = false;
+            post_text(str + "が経過しました！");
+            if (talking) {
+                post_text("よろしければ，このサービスの感想をお話しください");
+                await sleep(3000);
+            } else {
+                post_text("タイマーを止めるには，私に「停止」と言ってください");
+                var promise = new Promise((resolve, reject) => {
+                    if (stt != null) {
+                        stt.stop();
+                        stt = null;
+                    }
+                    stt = new SpeechToText("ja", resolve, false,
+                        $("#status").get(0));
+                    stt.start();
+                });
+                await promise;
+            }
+            if (!talking) {
+                post_text("タイマーを停止します");
+                end_keicho("");
+            }
+            timeSound.pause();
             await deleteTimer();
         }
         timerData.id = setTimeout(func, (end - now));
@@ -76,18 +95,31 @@ async function setAllAlarm() {
             alarmArr.splice(i, 1);
             continue;
         }
-        if (time.getHours() == prev.getHours() && time.getMinutes() == prev.getMinutes()) {
-            talking =true;
-            await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
-            talking = false;
-            alarmArr.splice(i, 1);
-            continue;
-        }
         let func = async function () {
-            talking = true;
-            await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
-            talking = false;
-            alarmArr.splice(i, 1);
+            timeSound.play();
+            post_text(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+            if (talking) {
+                post_text("よろしければ，このサービスの感想をお話しください");
+                await sleep(3000);
+            } else {
+                post_text("アラームを止めるには，私に「停止」と言ってください");
+                var promise = new Promise((resolve, reject) => {
+                    if (stt != null) {
+                        stt.stop();
+                        stt = null;
+                    }
+                    stt = new SpeechToText("ja", resolve, false,
+                        $("#status").get(0));
+                    stt.start();
+                });
+                await promise;
+            }
+            if (!talking) {
+                post_text("アラームを停止します");
+                end_keicho("");
+            }
+            timeSound.pause();
+            await deleteAlarm(time.getHours(), time.getMinutes());
         }
         let id = setTimeout(func, (time - now));
         console.log("set alarm (" + time.getHours() + "時" + time.getMinutes() + "分)");
@@ -114,11 +146,30 @@ async function setAlarm(time) {
     }
     let now = new Date();
     let func = async function () {
-        talking = true;
-        await miku_say(date.getHours() + "時" + date.getMinutes() + "分になりました！");
-        talking = false;
-        alarmArr.splice(i, 1);
-        await deleteAlarm(date.getHours(), date.getMinutes())
+        timeSound.play();
+        post_text(date.getHours() + "時" + date.getMinutes() + "分になりました！");
+        if (talking) {
+            post_text("よろしければ，このサービスの感想をお話しください");
+            await sleep(3000);
+        } else {
+            post_text("アラームを止めるには，私に「停止」と言ってください");
+            var promise = new Promise((resolve, reject) => {
+                if (stt != null) {
+                    stt.stop();
+                    stt = null;
+                }
+                stt = new SpeechToText("ja", resolve, false,
+                    $("#status").get(0));
+                stt.start();
+            });
+            await promise;
+        }
+        if (!talking) {
+            post_text("アラームを停止します");
+            end_keicho("");
+        }
+        timeSound.pause();
+        await deleteAlarm(date.getHours(), date.getMinutes());
     }
     let id = setTimeout(func, (time - now));
     console.log("set alarm (" + date.getHours() + "時" + date.getMinutes() + "分)");
@@ -130,6 +181,34 @@ async function setAlarm(time) {
     newPref.preferences.alarm = alarmArr;
     await putPersonPreference(uid, newPref);
     return true;
+}
+
+/**
+ * アラームを呼び出す
+ */
+async function callAlarm(time) {
+    // await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+    post_text(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+    timeSound.play();
+    if (talking) {
+        await sleep(3000);
+        timeSound.pause();
+    } else {
+        var promise = new Promise((resolve, reject) => {
+            if (stt != null) {
+                stt.stop();
+                stt = null;
+            }
+            stt = new SpeechToText("ja", resolve, false,
+                $("#status").get(0));
+            stt.start();
+        });
+        await promise;
+        timeSound.pause();
+    }
+    await miku_ask("このサービスはいかがでしたか？", "self_introduction");
+    await miku_say("わかりました，ありがとうございます", "greeting");
+    await deleteAlarm(time.getHours(), time.getMinutes());
 }
 
 /**
@@ -272,7 +351,6 @@ async function timer() {
         timerData = { "id": null, "start": now.getTime(), "time": time };
         await setTimer();
         await miku_say(timeToText(time) + "のタイマーを開始します", "greeting");
-        serviceFlag = false;
         return;
     } else { // タイマー実行中の場合
         await miku_say(timeToText(timerData.time) + "を計測中です");
@@ -280,13 +358,11 @@ async function timer() {
         if (/はい/.test(ans)) {
             await deleteTimer();
             await miku_say("タイマーを停止しました", "greeting");
-            serviceFlag = false;
             return;
         } else {
             let now = new Date();
             let time = timerData.time - (now - timerData.start);
             await miku_say("残り" + timeToText(time) + "です");
-            serviceFlag = false;
             return;
         }
     }
@@ -318,6 +394,7 @@ async function alarm() {
                 }
                 post_text(str);
             }
+            return;
         }
         // アラームの作成
         else if (/登録/.test(ans)) {
@@ -353,6 +430,7 @@ async function alarm() {
             } else {
                 await miku_say("その時間にはすでにアラームがセットされています", "greeting");
             }
+            return;
         }
         // アラームの削除
         else if (/解除/.test(ans)) {
@@ -381,10 +459,10 @@ async function alarm() {
             } else {
                 await miku_say("その時間にはアラームがセットされていません", "greeting");
             }
+            return;
         }
         // サービス終了
         else if (/やめる|止める/.test(ans)) {
-            serviceFlag = false;
             return;
         }
     }

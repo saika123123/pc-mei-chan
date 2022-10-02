@@ -196,9 +196,9 @@ async function post_page(pageURL) {
         class: "container",
     }).append(comment);
 
-    $("#timeline").append(bubble),
-
-        $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+    $("#timeline").append(bubble);
+    
+    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
 
 };
 
