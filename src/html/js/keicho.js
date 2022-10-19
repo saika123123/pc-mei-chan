@@ -141,11 +141,6 @@ async function initialize() {
     // GETパラメータ imgtak が no であるときのみ false になる．デフォルトはtrueで．
     imgtak = getUrlVars()["imgtak"] === "no" ? false : true;
 
-    // もし撮影が同意する場合，カメラをオンにする．
-    if (imgtak == true) {
-        videostm = await loadVideo();
-    };
-
     // GETパラメータ keicho が yes であるときのみ true になる．デフォルトはfalseで．
     keichoFlag = getUrlVars()["keicho"] === "yes" ? true : false;
 
@@ -168,9 +163,8 @@ async function initialize() {
     // 連携しているサービスをセット
     setService();
 
-    //つけっぱなしのため，1日2回夜中の0時と12時にリロードを仕込む
+    //つけっぱなしのため，1日1回リロードを仕込む
     refreshAt(0, 0);
-    refreshAt(12, 0);
 
     // タイマーとアラームをセット
     setTimer();
@@ -324,6 +318,11 @@ async function start_scenario(num) {
         }
         let temp = await audioDataDirectoryCreate();
     }
+
+    // カメラをオンにする．
+    if (imgtak == true) {
+        videostm = await loadVideo();
+    };
 
     talking = true;
     $("#status").html("");
@@ -550,6 +549,9 @@ async function runCotohaKeywordApi(textArr) {
  * 傾聴を修了し，後片付けをする
  */
 async function end_keicho(str, motion = "bye") {
+    if (!talking) {
+        return;
+    }
     // YouTube再生中なら動画を止める
     if (youtubeFlag) {
         ytplayer.stopVideo();
@@ -559,6 +561,10 @@ async function end_keicho(str, motion = "bye") {
         stt.stop();
         stt = null;
     }
+    if (imgtak == true) {
+        await stopVideo();
+    }
+
     if (str) {
         await miku_say(str, motion);
     }
@@ -589,9 +595,9 @@ function put_start_button(button_label = "メイちゃんと話す") {
 
     // ヒントを表示
     let hint = "【ヒント】「メニュー」と話しかけると，できることの一覧を表示します！";
-    if (keichoFlag || seichoFlag) {
-        hint = "【ヒント】「対話モード」と話しかけると，返事を返すようになります！";
-    }
+    // if (keichoFlag || seichoFlag) {
+    //     hint = "【ヒント】「対話モード」と話しかけると，返事を返すようになります！";
+    // }
     post_hint(hint);
 }
 
@@ -611,6 +617,10 @@ async function keicho(str, motion) {
         let answer = await miku_ask(str, false, motion);
         str = "";
         motion = get_motion();
+
+        if (!talking) {
+            return;
+        }
 
         // 静聴モード
         if (seichoFlag) {
@@ -664,15 +674,6 @@ async function keicho(str, motion) {
                 str = "なんでもお申し付けください";
                 motion = "greeting";
                 continue;
-                // } else if (/タイマー/.test(answer)) { // タイマー機能
-                //     str = await timer();;
-                //     motion = "self_introduction";
-                //     continue;
-                // } else if (/アラーム/.test(answer)) { // アラーム機能
-                //     await alarm();
-                //     str = "対話モードに戻ります";
-                //     motion = "self_introduction";
-                //     continue;
             } else if (keichoFlag && (/こんにちは/.test(answer)) || (/こんばんは/.test(answer)) || (/おはよう/.test(answer))) {
                 str = getGreeting();
                 continue;
@@ -686,7 +687,7 @@ async function keicho(str, motion) {
                 str = "私はあなたの日常生活を支えるエージェント，メイです！";
                 continue;
             } else if ((/今日/.test(answer) && /何日/.test(answer)) || /今日の日付は$/.test(answer) || /日付を教えて/.test(answer)) {
-                str = await tellDate();
+                str = await tellDte();
                 motion = "self_introduction";
                 continue;
             } else if ((/今日/.test(answer) && /何曜日/.test(answer)) || /今日の曜日は$/.test(answer) || /曜日を教えて/.test(answer)) {
@@ -697,8 +698,14 @@ async function keicho(str, motion) {
                 str = await tellTime();
                 motion = "self_introduction";
                 continue;
+            } else if ((/動画/.test(answer) || /ビデオ/.test(answer)) && /見たい/.test(answer)) {
+                str = "動画が見たいときは，私に「ユーチューブ(YouTube)」と言って下さい";
+                continue;
+            } else if (/調べたい/.test(answer) || (/調べ物/.test(answer) && /したい/.test(answer))) {
+                str = "調べ物をしたいときは，私に「検索」と言って下さい";
+                continue;
             } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気を教えて/.test(answer)) {
-                str = "天気が知りたいときは，私に「天気予報」と言ってみて下さい";
+                str = "天気が知りたいときは，私に「天気予報」と言って下さい";
                 continue;
             } else if (keichoFlag && /か$/.test(answer)) {
                 //質問には塩対応
@@ -1075,6 +1082,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
             console.log("強制終了");
             post_text("またお話ししてくださいね");
             end_keicho("");
+            location.reload();
         }
     };
 
