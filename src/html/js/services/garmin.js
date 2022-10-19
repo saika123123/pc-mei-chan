@@ -9,11 +9,6 @@ let garminFlag = false;
 // Garminの睡眠シナリオを実行したかどうかのフラグ
 garminSleepFlag = false;
 
-// 連携しているサービス一覧に健康管理サービスを追加
-if (garminFlag) {
-    setService("健康管理サービス", "健康管理", "過去の健康データの振り返り", garmin());
-}
-
 /**
  * APIを実行し,SSSからデータを取得する
  */
@@ -64,13 +59,15 @@ async function garminDaily(dataArr) {
         await miku_ask("すばらしいですね！なにか運動をされたのですか？", false, "smile");
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
-        await miku_say("もう少しからだを動かした方が良いかもしれません", "idle_think");
-        await miku_say("私に「ユーチューブ (YouTube)」と言うと，ラジオ体操などの動画を再生することができます", "smile");
-        await miku_say("よければあとで使ってみて下さい", "self_introduction");
+        await miku_say("もう少しからだを動かした方が良いですね", "idle_think");
+        if (dataArr.steps < 4000) {
+            await miku_say("私に「ユーチューブ (YouTube)」と言うと，ラジオ体操などの動画を再生することができます", "smile");
+            await miku_say("よければあとで使ってみて下さい", "self_introduction");
+        }
     }
     await miku_say("今日の安静時心拍数は" + dataArr.restingHeartRateInBeatsPerMinute + "bpmです", "normal");
     if (dataArr.restingHeartRateInBeatsPerMinute > 85) {
-        await miku_say("少し高いかもしれません", "idle_think");
+        await miku_say("少し高いですね", "idle_think");
         await miku_say("私に「検索」と言うと，リスクや対処法を検索することができます", "smile");
         await miku_say("よければあとで使ってみて下さい", "self_introduction");
     }
@@ -116,14 +113,7 @@ async function garminSleep(dataArr) {
         await miku_say("わかりました，ありがとうございます", "greeting");
     } else {
         await miku_say("しっかりと休めたようですね！", "smile");
-        // await miku_ask(person.nickname + "さん自身は休めた実感はありますか？");
     }
-    // ans = await miku_ask("この対話によって，健康についての意識に良い変化はありましたか？（はい / いいえ）");
-    // if (/はい/.test(ans)) {
-    //     await miku_ask("ありがとうございます! ", false, "smile");
-    // } else if (/いいえ/.test(ans)) {
-    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
-    // }
     await miku_ask("この睡眠についての対話はいかがでしたか？", false, "self_introduction");
     await miku_say("わかりました，ありがとうございます", "greeting");
 }
@@ -138,10 +128,15 @@ async function garminScenario(type) {
             return false;
         }
         await miku_say("アプリを開いたまま，しばらくお待ちください", "greeting");
+        post_loading();
         await sleep(60 * 1000);
+        // ローディング表示を消す
+        let element = document.getElementById('loading');
+        element.remove();
         dataArr = await checkGarminDataTime(type)
         if (dataArr._id == null) {
             await miku_say("健康データを取得できませんでした", "greeting");
+            await miku_say("ガーミンの電池が切れていないか確認してください", "greeting");
             return false;
         }
     }
@@ -180,10 +175,15 @@ async function garmin() {
                     }
                     checkflag = true;
                     await miku_say("アプリを開いたまま，しばらくお待ちください", "greeting");
+                    post_loading();
                     await sleep(60 * 1000);
+                    // ローディング表示を消す
+                    let element = document.getElementById('loading');
+                    element.remove();
                 }
                 if (dataArr._id == null) {
                     await miku_say("健康データの取得に失敗しました", "greeting");
+                    await miku_say("ガーミンの電池が切れていないか確認してください", "greeting");
                     return;
                 }
             }
@@ -194,7 +194,7 @@ async function garmin() {
             dataArr = await getGarminData(dateStr, "sleeps");
             if (dataArr._id != null) {
                 // await garminSleep(dataArr);
-                let timestamp = dataArr.startTimeInSeconds - (9 * 60 * 60 * 1000);
+                let timestamp = dataArr.startTimeInSeconds * 1000;
                 let date = new Date(timestamp);
                 sleepStr = sleepStr + "<div> ・就寝時間： " + date.getHours() + "時" + date.getMinutes() + "分 </div>";
                 timestamp += dataArr.durationInSeconds * 1000;
@@ -257,7 +257,7 @@ async function garmin() {
                 }
                 otherStr = otherStr + "<div> ・Body Battery： " + max + " → " + mini + "</div>";
             }
-            let str = "";
+            let str = "<div>" + date.getMonth() + "月" + date.getDate() + "日の健康データ <div>";
             if (sleepStr.length > 0) {
                 // post_text(sleepStr);
                 str = str + "<div> 【睡眠】 </div>" + sleepStr;
@@ -276,8 +276,8 @@ async function garmin() {
             }
             // scrollYPostionPushFlag = true;
             post_text(str);
-            setTimeout(function () { window.scrollBy(0, -500); }, 4500);
-
+            setTimeout(function () { window.scrollBy(0, -200); }, 3000);
+            serviceFlag = false;
             return;
         }
     }
