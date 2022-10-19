@@ -59,6 +59,9 @@ function put_stop_youtube_button() {
 async function start_youtube() {
     stt.stop();
     stt = null;
+    if (imgtak == true) {
+        await stopVideo();
+    }
     console.log("傾聴中断");
     $("#status").html("");
     youtubeFlag = true;
@@ -80,6 +83,9 @@ async function end_youtube() {
     youtubeFlag = false;
     serviceFlag = false;
     ytplayer.stopVideo();
+    if (imgtak == true) {
+        videostm = await loadVideo();
+    };
     talking = true;
     // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
     // if (/よかった|良かった/.test(ans)) {

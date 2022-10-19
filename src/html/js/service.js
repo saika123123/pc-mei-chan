@@ -55,6 +55,9 @@ async function menu() {
 async function stop_keicho() {
     stt.stop();
     stt = null;
+    if (imgtak == true) {
+        await stopVideo();
+    }
     console.log("傾聴中断");
     $("#status").html("");
     youtubeFlag = true;
@@ -67,6 +70,10 @@ async function stop_keicho() {
  */
 async function restart_keicho() {
     talking = true;
+    // カメラをオンにする．
+    if (imgtak == true) {
+        videostm = await loadVideo();
+    };
     // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
     // if (/よかった|良かった/.test(ans)) {
     //     serviceFlag = false;
@@ -131,9 +138,6 @@ function setService() {
 
     // 天気予報サービス
     addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
-
-    // 時間管理サービス
-    // addService("時間管理サービス", "時間管理", "タイマー機能とアラーム機能", async function () { await time() });
 
     // ToDo管理サービス・ToDoリマインドサービス
     // if (todoFlag) {

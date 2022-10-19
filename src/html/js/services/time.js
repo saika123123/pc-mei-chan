@@ -24,31 +24,7 @@ async function setTimer() {
         timerData = { "id": null, "start": null, "time": null };
     } else {
         let func = async function () {
-            timeSound.play();
-            let str = timeToText(time);
-            post_text(str + "が経過しました！");
-            if (talking) {
-                post_text("よろしければ，このサービスの感想をお話しください");
-                await sleep(3000);
-            } else {
-                post_text("タイマーを止めるには，私に「停止」と言ってください");
-                var promise = new Promise((resolve, reject) => {
-                    if (stt != null) {
-                        stt.stop();
-                        stt = null;
-                    }
-                    stt = new SpeechToText("ja", resolve, false,
-                        $("#status").get(0));
-                    stt.start();
-                });
-                await promise;
-            }
-            if (!talking) {
-                post_text("タイマーを停止します");
-                end_keicho("");
-            }
-            timeSound.pause();
-            await deleteTimer();
+            await callTimer(time);
         }
         timerData.id = setTimeout(func, (end - now));
         timerFlag = true;
@@ -59,6 +35,50 @@ async function setTimer() {
     delete newPref.keys;
     newPref.preferences.timer = timerData;
     await putPersonPreference(uid, newPref);
+}
+
+/**
+ * タイマーを呼び出す
+ */
+async function callTimer(time) {
+    let id = null;
+    timeSound.play();
+    let str = timeToText(time);
+    post_text(str + "が経過しました！");
+    if (talking) {
+        post_text("よろしければ，このサービスの感想をお話しください");
+        await sleep(3000);
+    } else {
+        post_text("タイマーを止めるには，私に「停止」と言ってください");
+        let func = function () {
+            location.reload();
+            return;
+        }
+        id = setTimeout(func, 10 * 60 * 1000);
+        var promise = new Promise((resolve, reject) => {
+            if (stt != null) {
+                stt.stop();
+                stt = null;
+            }
+            stt = new SpeechToText("ja", resolve, false,
+                $("#status").get(0));
+            stt.start();
+        });
+        await promise;
+    }
+    if (!talking) {
+        clearTimeout(id);
+        post_text("タイマーを停止します");
+        if (stt) {
+            stt.stop();
+            stt = null;
+        }
+        console.log("タイマー停止");
+        $("#status").html("");
+        put_start_button();
+    }
+    timeSound.pause();
+    await deleteTimer();
 }
 
 /**
@@ -91,35 +111,16 @@ async function setAllAlarm() {
         let time = new Date(alarmArr[i].time);
         let now = new Date();
         if (time < now) {
-            console.log("alarm : " + time + " is over");
-            alarmArr.splice(i, 1);
+            if (now.getTime() - time.getTime() < 60 * 1000) {
+                await callAlarm(time);
+            } else {
+                console.log("alarm : " + time + " is over");
+                alarmArr.splice(i, 1);
+            }
             continue;
         }
         let func = async function () {
-            timeSound.play();
-            post_text(time.getHours() + "時" + time.getMinutes() + "分になりました！");
-            if (talking) {
-                post_text("よろしければ，このサービスの感想をお話しください");
-                await sleep(3000);
-            } else {
-                post_text("アラームを止めるには，私に「停止」と言ってください");
-                var promise = new Promise((resolve, reject) => {
-                    if (stt != null) {
-                        stt.stop();
-                        stt = null;
-                    }
-                    stt = new SpeechToText("ja", resolve, false,
-                        $("#status").get(0));
-                    stt.start();
-                });
-                await promise;
-            }
-            if (!talking) {
-                post_text("アラームを停止します");
-                end_keicho("");
-            }
-            timeSound.pause();
-            await deleteAlarm(time.getHours(), time.getMinutes());
+            await callAlarm(time);
         }
         let id = setTimeout(func, (time - now));
         console.log("set alarm (" + time.getHours() + "時" + time.getMinutes() + "分)");
@@ -145,31 +146,11 @@ async function setAlarm(time) {
         }
     }
     let now = new Date();
+    if ((now > date) && (now.getTime() - date.getTime() < 60 * 1000)) {
+        await callAlarm(date);
+    }
     let func = async function () {
-        timeSound.play();
-        post_text(date.getHours() + "時" + date.getMinutes() + "分になりました！");
-        if (talking) {
-            post_text("よろしければ，このサービスの感想をお話しください");
-            await sleep(3000);
-        } else {
-            post_text("アラームを止めるには，私に「停止」と言ってください");
-            var promise = new Promise((resolve, reject) => {
-                if (stt != null) {
-                    stt.stop();
-                    stt = null;
-                }
-                stt = new SpeechToText("ja", resolve, false,
-                    $("#status").get(0));
-                stt.start();
-            });
-            await promise;
-        }
-        if (!talking) {
-            post_text("アラームを停止します");
-            end_keicho("");
-        }
-        timeSound.pause();
-        await deleteAlarm(date.getHours(), date.getMinutes());
+        await callAlarm(date);
     }
     let id = setTimeout(func, (time - now));
     console.log("set alarm (" + date.getHours() + "時" + date.getMinutes() + "分)");
@@ -187,13 +168,19 @@ async function setAlarm(time) {
  * アラームを呼び出す
  */
 async function callAlarm(time) {
-    // await miku_say(time.getHours() + "時" + time.getMinutes() + "分になりました！");
-    post_text(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+    let id = null
     timeSound.play();
+    post_text(time.getHours() + "時" + time.getMinutes() + "分になりました！");
     if (talking) {
+        post_text("よろしければ，このサービスの感想をお話しください");
         await sleep(3000);
-        timeSound.pause();
     } else {
+        post_text("アラームを止めるには，私に「停止」と言ってください");
+        let func = function () {
+            location.reload();
+            return;
+        }
+        id = setTimeout(func, 60 * 60 * 1000);
         var promise = new Promise((resolve, reject) => {
             if (stt != null) {
                 stt.stop();
@@ -204,10 +191,19 @@ async function callAlarm(time) {
             stt.start();
         });
         await promise;
-        timeSound.pause();
     }
-    await miku_ask("このサービスはいかがでしたか？", "self_introduction");
-    await miku_say("わかりました，ありがとうございます", "greeting");
+    if (!talking) {
+        clearTimeout(id);
+        post_text("アラームを停止します");
+        if (stt) {
+            stt.stop();
+            stt = null;
+        }
+        console.log("アラーム停止");
+        $("#status").html("");
+        put_start_button();
+    }
+    timeSound.pause();
     await deleteAlarm(time.getHours(), time.getMinutes());
 }
 
