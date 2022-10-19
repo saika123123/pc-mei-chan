@@ -32,3 +32,13 @@ async function loadVideo() {
         });
     }
 };
+
+// カメラをオフ
+async function stopVideo() {
+    const tracks = document.getElementById('videostm').srcObject.getTracks();
+    tracks.forEach(track => {
+        track.stop();
+    });
+
+    document.getElementById('videostm').srcObject = null;
+}
