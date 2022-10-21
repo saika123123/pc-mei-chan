@@ -130,15 +130,21 @@ async function garminScenario(type) {
         await miku_say("アプリを開いたまま，しばらくお待ちください", "greeting");
         post_loading();
         await sleep(60 * 1000);
+        dataArr = await checkGarminDataTime(type);
+        if (dataArr._id == null) {
+            await sleep(60 * 1000);
+            dataArr = await checkGarminDataTime(type);
+            if (dataArr._id == null) {
+                // ローディング表示を消す
+                let element = document.getElementById('loading');
+                element.remove();
+                await miku_say("健康データを取得できませんでした", "greeting");
+                return false;
+            }
+        }
         // ローディング表示を消す
         let element = document.getElementById('loading');
         element.remove();
-        dataArr = await checkGarminDataTime(type)
-        if (dataArr._id == null) {
-            await miku_say("健康データを取得できませんでした", "greeting");
-            await miku_say("ガーミンの電池が切れていないか確認してください", "greeting");
-            return false;
-        }
     }
     console.log(dataArr);
     // 各タイプのデータについてのシナリオ
