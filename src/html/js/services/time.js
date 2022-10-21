@@ -35,6 +35,7 @@ async function setTimer() {
     delete newPref.keys;
     newPref.preferences.timer = timerData;
     await putPersonPreference(uid, newPref);
+    preference = await getPersonPreference(uid);
 }
 
 /**
@@ -132,6 +133,7 @@ async function setAllAlarm() {
     delete newPref.keys;
     newPref.preferences.alarm = alarmArr;
     await putPersonPreference(uid, newPref);
+    preference = await getPersonPreference(uid);
 }
 
 /**
@@ -161,6 +163,7 @@ async function setAlarm(time) {
     delete newPref.keys;
     newPref.preferences.alarm = alarmArr;
     await putPersonPreference(uid, newPref);
+    preference = await getPersonPreference(uid);
     return true;
 }
 

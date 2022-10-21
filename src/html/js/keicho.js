@@ -24,7 +24,7 @@ let uid = null;
 let talking = false;
 
 //いつ完了したか
-let doneAt = {};
+// let doneAt = {};
 
 //カウンタ．デバッグ用
 let counter = 0;
@@ -298,11 +298,32 @@ async function start_scenario(num) {
     //シナリオ0以外は，1日に1回だけやる
     if (num != 0) {
         const now = new Date();
-        if (doneAt[num] && (now.getDate() == doneAt[num].getDate())) {
-            console.log("Scenario #" + num + " has been  already done at " + doneAt[num]);
+        // if (doneAt[num] && (now.getDate() == doneAt[num].getDate())) {
+        //     console.log("Scenario #" + num + " has been  already done at " + doneAt[num]);
+        //     return;
+        // } else {
+        //     doneAt[num] = now;
+        // }
+        if (!preference.preferences.scenarios) { // preferenceにシナリオ管理の値がない場合
+            let scenarios = Array(7);
+            scenarios.fill("2000-01-01");
+            // Preferenceを更新
+            let newPref = preference;
+            delete newPref.keys;
+            newPref.preferences.scenarios = scenarios;
+            newPref.preferences.scenarios[num] = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+            await putPersonPreference(uid, newPref);
+            preference = await getPersonPreference(uid);
+        } else if (now.getTime() - new Date(preference.preferences.scenarios[num]).getTime() < 22 * 60 * 60 * 1000) {
+            console.log("Scenario #" + num + " has been already done.");
             return;
         } else {
-            doneAt[num] = now;
+            // Preferenceを更新
+            let newPref = preference;
+            delete newPref.keys;
+            newPref.preferences.scenarios[num] = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+            await putPersonPreference(uid, newPref);
+            preference = await getPersonPreference(uid);
         }
     }
 
@@ -383,17 +404,23 @@ async function start_scenario(num) {
             } else {
                 await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
             }
-            let response = await getKeyword().catch(async function () {
-                await keicho(person.nickname + "さんが好きなものについて，話していただけませんか？", "self_introduction");
-                return;
-            });
-            await keicho("以前話していた「" + response.result[0].form + "」について，もっと色々聞きたいです！", "self_introduction");
+            // let response = await getKeyword().catch(async function () {
+            //     await keicho(person.nickname + "さんのことについて，いろいろ話していただけませんか？", "self_introduction");
+            //     return;
+            // });
+            // await keicho("以前話していた「" + response.result[0].form + "」について，もっと色々聞きたいです！", "self_introduction");
+            var today = new Date();
+            var str = ["楽しかった", "イライラした", "ドキドキした", "悲しかった", "おもしろかった", "つらかった", "嬉しかった"];
+            await keicho("最近あった" + str[today.getDay()] + "ことについて，話していただけませんか？", "self_introduction");
             return;
         // 16，17時 (雑談)
         case 6:
-            ans = await miku_ask(person.nickname + "さん，私とお話ししませんか？（はい／いいえ）");
+            ans = await miku_ask(person.nickname + "さん，今お時間はありますか？（はい／いいえ）");
             if (/はい/.test(ans)) {
-                await keicho("なんでも話してください", "self_introduction");
+                // await keicho("なんでも話してください", "self_introduction");
+                var today = new Date();
+                await miku_say("私は" + apps[today.getDay()].description + "をすることができます", "smile");
+                await keicho("よければ私に" + apps[today.getDay()].keyword + "と言ってみて下さい", "self_introduction");
             } else {
                 await end_keicho("わかりました．またお話ししてくださいね");
             }
@@ -424,9 +451,7 @@ async function start_scenario(num) {
         case 9:
             await miku_say(person.nickname + "さん，今日も一日お疲れさまでした", "greeting");
             await miku_say("寝る前にはお手洗いに行きましょう！", "smile");
-            var today = new Date();
-            var str = ["楽しかった", "イライラした", "ドキドキした", "悲しかった", "おもしろかった", "つらかった", "嬉しかった"];
-            await keicho("最近あった" + str[today.getDay()] + "ことについて，話していただけませんか？", "self_introduction");
+            await keicho("今日一日を振り返ってみて，なにか思うことはありますか？", "self_introduction");
             return;
     }
 }
@@ -1080,7 +1105,7 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     let fnc = function () {
         if (talking) {
             console.log("強制終了");
-            post_text("またお話ししてくださいね");
+            post_keicho("またお話ししてくださいね", SPEAKER.AGENT, person);
             end_keicho("");
             location.reload();
         }
