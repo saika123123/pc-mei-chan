@@ -113,37 +113,37 @@ function setService() {
     // つぶやきダイアリー
     addService("つぶやきダイアリー", "日記", "過去の対話内容の振り返り", async function () { await diary(); });
 
-    // 健康管理サービス
-    if (garminFlag) {
-        addService("健康管理サービス", "健康管理", "過去の健康データの振り返り", async function () { await garmin(); });
-    }
-
-    // アラームサービス
-    addService("アラームサービス", "アラーム", "アラームの登録・確認", async function () { await alarm() });
-
-    // タイマーサービス
-    addService("タイマーサービス", "タイマー", "タイマー機能の利用", async function () { await timer() });
-
     // 動画再生サービス
     addService("動画再生サービス", "YouTube", "好きな動画の再生", async function () { await youtube(); });
 
     // 検索サービス
     addService("検索サービス", "検索", "気になる物事の検索", async function () { await search(); });
 
-    // ニュース検索サービス
-    // addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
+    // 天気予報サービス
+    addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
 
     // カレンダーサービス
     addService("カレンダーサービス", "カレンダー", "予定の確認・作成・リマインド", async function () { await calendar(); });
 
-    // 天気予報サービス
-    addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
+    // アラームサービス
+    addService("アラームサービス", "アラーム", "アラームでの時間のお知らせ", async function () { await alarm() });
+
+    // タイマーサービス
+    addService("タイマーサービス", "タイマー", "タイマーでの時間の計測", async function () { await timer() });
+
+    // ニュース検索サービス
+    // addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
 
     // ToDo管理サービス・ToDoリマインドサービス
     // if (todoFlag) {
     //     addService("ToDo管理サービス", "やることリスト", "やることリストの編集", async function () { await todo() });
     //     addService("ToDoリマインドサービス", "リマインド", "進捗のないタスクのリマインド", async function () { await remindToDo() });
     // }
+
+    // 健康管理サービス
+    if (garminFlag) {
+        addService("健康管理サービス", "健康管理", "過去の健康データの振り返り", async function () { await garmin(); });
+    }
 
     // らくらく動画サービス
     if (rakudoFlag) {
