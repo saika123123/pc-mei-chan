@@ -419,8 +419,13 @@ async function start_scenario(num) {
             if (/はい/.test(ans)) {
                 // await keicho("なんでも話してください", "self_introduction");
                 var today = new Date();
-                await miku_say("私は" + apps[today.getDay()].description + "をすることができます", "smile");
-                await keicho("よければ私に" + apps[today.getDay()].keyword + "と言ってみて下さい", "self_introduction");
+                var keyword = apps[today.getDay()].keyword;
+                if (keyword == "YouTube") {
+                    keyword = "ユーチューブ(YouTube)";
+                }
+                var description = apps[today.getDay()].description;
+                await miku_say("私は" + description + "をすることができます", "smile");
+                await keicho("よければ私に" + keyword + "と言ってみて下さい", "self_introduction");
             } else {
                 await end_keicho("わかりました．またお話ししてくださいね");
             }
