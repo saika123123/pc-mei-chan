@@ -210,8 +210,8 @@ async function processEvent(message) {
         let drift = preference.preferences.drift || 0;
         switch (attr.event) {
             case "present": //在イベント検知
-                // 対話中，静聴中，YouTube視聴中はシナリオを実行しない
-                if (!talking && !seichoFlag && !youtubeFlag) {
+                // 対話中，静聴中，サービス実行中，YouTube視聴中はシナリオを実行しない
+                if (!talking && !seichoFlag && !serviceFlag && !youtubeFlag) {
                     const hour = now.getHours();
                     let num;
                     switch (hour - drift) { //個人の時差分だけ現在時刻を戻す
@@ -415,7 +415,7 @@ async function start_scenario(num) {
             return;
         // 16，17時 (雑談)
         case 6:
-            ans = await miku_ask(person.nickname + "さん，今お時間はありますか？（はい／いいえ）");
+            ans = await miku_ask(person.nickname + "さん，いまお時間はありますか？（はい／いいえ）");
             if (/はい/.test(ans)) {
                 // await keicho("なんでも話してください", "self_introduction");
                 var today = new Date();
