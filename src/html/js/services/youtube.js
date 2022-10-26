@@ -67,10 +67,7 @@ async function start_youtube() {
     youtubeFlag = true;
     youtubeStartTime = new Date();
     setTimeout(function () {
-        let now = new Date();
-        if (youtubeStartTime.getTime() + 60 * 60 * 1000 <= now.getTime()) {
-            youtubeFlag = false;
-        }
+        youtubeFlag = false;
     }, 60 * 60 * 1000);
     talking = false;
     put_stop_youtube_button();
@@ -161,7 +158,7 @@ async function post_video(videoID) {
  */
 async function youtube() {
     let flag = true;
-    let keyword = await miku_ask("検索するキーワードを教えて下さい (キーワード / やめる)", false, "guide_normal");
+    let keyword = await miku_ask("何の動画が見たいですか？（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
     if (/^やめる$/.test(keyword)) {
         return;
     }
@@ -199,7 +196,7 @@ async function youtube() {
     let num = -1;
     while (num < 0) {
         setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
-        let ans = await miku_ask("見たい動画の番号を教えて下さい (番号 / やめる)", false, "guide_normal");
+        let ans = await miku_ask("見たい動画の番号を教えて下さい（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
         if (/5|五/.test(ans)) {
             if (list.length > 4) {
                 num = 4;

@@ -60,8 +60,10 @@ async function stop_keicho() {
     }
     console.log("傾聴中断");
     $("#status").html("");
-    youtubeFlag = true;
     talking = false;
+    setTimeout(() => {
+        serviceFlag = false;
+    }, 10 * 60 * 1000);
     put_restart_button();
 }
 
