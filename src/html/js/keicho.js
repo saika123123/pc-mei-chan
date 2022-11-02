@@ -314,7 +314,7 @@ async function start_scenario(num) {
             newPref.preferences.scenarios[num] = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
             await putPersonPreference(uid, newPref);
             preference = await getPersonPreference(uid);
-        } else if (now.getTime() - new Date(preference.preferences.scenarios[num]).getTime() < 22 * 60 * 60 * 1000) {
+        } else if (now.getTime() - new Date(preference.preferences.scenarios[num]).getTime() < 24 * 60 * 60 * 1000) {
             console.log("Scenario #" + num + " has been already done.");
             return;
         } else {
