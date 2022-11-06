@@ -121,7 +121,12 @@ async function garminSleep(dataArr) {
 async function garminScenario(type) {
     let dataArr = [];
     // 最新のデータが存在するかを確認
-    dataArr = await checkGarminDataTime(type);
+    let errFlag = false;
+    dataArr = await checkGarminDataTime(type).catch(() => { errFlag = true; });
+    if (errFlag) {
+        await miku_say("健康データの取得に失敗しました", "greeting");
+        return false;
+    }
     if (dataArr._id == null) {
         let ans = await miku_ask("スマートフォンのガーミンアプリを開いていただけませんか？ (はい / いいえ)");
         if (/いいえ/.test(ans)) {
@@ -171,7 +176,13 @@ async function garmin() {
         date = getDate(answer);
         if (date) {
             let dateStr = formatDate(date, 'yyyy-MM-dd');
-            dataArr = await getGarminData(dateStr, "dailies");
+            let errFlag = false;
+            dataArr = await getGarminData(dateStr, "dailies").catch(() => { errFlag = true; });
+            if (errFlag) {
+                await miku_say("健康データの取得に失敗しました", "greeting");
+                console.log("err");
+                return;
+            }
             if (dataArr._id == null) {
                 if (!checkflag) {
                     answer = await miku_ask("スマートフォンのガーミンアプリを開いて下さい (はい / いいえ)", "normal");
@@ -189,7 +200,6 @@ async function garmin() {
                 }
                 if (dataArr._id == null) {
                     await miku_say("健康データの取得に失敗しました", "greeting");
-                    await miku_say("ガーミンの電池が切れていないか確認してください", "greeting");
                     return;
                 }
             }
