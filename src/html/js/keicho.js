@@ -376,7 +376,7 @@ async function start_scenario(num) {
         // 10，11時 (水分について)
         case 3:
             ans = await miku_ask(person.nickname + "さん，水分補給はしていますか？（はい／いいえ）");
-            if (/はい/.test(ans)) {
+            if (/はい/.test(ans) || /しています/.test(ans)) {
                 await miku_say("その調子で，定期的に水分を取るように心がけましょう！", "smile");
             } else {
                 await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
@@ -399,7 +399,7 @@ async function start_scenario(num) {
         // 14，15時 (水分について)
         case 5:
             ans = await miku_ask(person.nickname + "さん，水分補給はしていますか？（はい／いいえ）");
-            if (/はい/.test(ans)) {
+            if (/はい/.test(ans) || /しています/.test(ans)) {
                 await miku_say("その調子で，定期的に水分を取るように心がけましょう！", "smile");
             } else {
                 await miku_say("定期的に水分を取るように心がけましょう", "self_introduction");
@@ -416,7 +416,7 @@ async function start_scenario(num) {
         // 16，17時 (雑談)
         case 6:
             ans = await miku_ask(person.nickname + "さん，いまお時間はありますか？（はい／いいえ）");
-            if (/はい/.test(ans)) {
+            if (/はい/.test(ans) || /ある/.test(ans) || /あります/.test(ans)) {
                 // await keicho("なんでも話してください", "self_introduction");
                 var today = new Date();
                 var keyword = apps[today.getDay()].keyword;

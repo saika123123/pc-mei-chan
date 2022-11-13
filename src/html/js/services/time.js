@@ -148,9 +148,10 @@ async function setAlarm(time) {
         }
     }
     let now = new Date();
-    if ((now > date) && (now.getTime() - date.getTime() < 60 * 1000)) {
-        await callAlarm(date);
-    }
+    // if ((now > date) && (now.getTime() - date.getTime() < 60 * 1000)) {
+    //     await callAlarm(date);
+    //     return false;
+    // }
     let func = async function () {
         await callAlarm(date);
     }
