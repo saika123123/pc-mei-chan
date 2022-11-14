@@ -159,7 +159,7 @@ async function post_video(videoID) {
 async function youtube() {
     let flag = true;
     let keyword = await miku_ask("何の動画が見たいですか？（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
-    if (/^やめる$/.test(keyword)) {
+    if (/^やめる$/.test(keyword) || /^終わり$/.test(keyword)) {
         return;
     }
     let videoInfo = await getYoutubeAPI(keyword).catch(function () { flag = false; });
@@ -181,7 +181,7 @@ async function youtube() {
         if (n > 5) break;
         let title = json.title;
         if (title.length > 32) {
-            title = title.slice(0, 31) + "...";
+            title = title.slice(0, 31) + "…";
         }
         str = str + "<div> [" + n + "] " + title + "</div>";
         n++;
@@ -194,7 +194,8 @@ async function youtube() {
     scrollYPostionPushFlag = true;
     post_comment(str, SPEAKER.AGENT);
     let num = -1;
-    while (num < 0) {
+    let count = 0;
+    while (num < 0 && count < 5) {
         setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
         let ans = await miku_ask("見たい動画の番号を教えて下さい（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
         if (/5|五/.test(ans)) {
@@ -215,10 +216,11 @@ async function youtube() {
             }
         } else if (/1|一|市/.test(ans)) {
             num = 0;
-        } else if (/^やめる$/.test(ans)) {
+        } else if (/^やめる$/.test(ans) || /^終わり$/.test(ans)) {
             serviceFlag = false;
             return;
         }
+        count++;
     }
     console.log(list[num]);
     let videoID = list[num].id;
