@@ -195,7 +195,7 @@ async function youtube() {
     post_comment(str, SPEAKER.AGENT);
     let num = -1;
     let count = 0;
-    while (num < 0 && count < 5) {
+    while (num < 0) {
         setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
         let ans = await miku_ask("見たい動画の番号を教えて下さい（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
         if (/5|五/.test(ans)) {
@@ -216,7 +216,7 @@ async function youtube() {
             }
         } else if (/1|一|市/.test(ans)) {
             num = 0;
-        } else if (/^やめる$/.test(ans) || /^終わり$/.test(ans)) {
+        } else if (/^やめる$/.test(ans) || /^終わり$/.test(ans) || count > 4) {
             serviceFlag = false;
             return;
         }
