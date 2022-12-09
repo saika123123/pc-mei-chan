@@ -18,6 +18,8 @@ let youtubeFlag = false;
 // 視聴開始時間
 let youtubeStartTime = null;
 
+let youtubeTimeoutId = null;
+
 async function getYoutubeAPI(keyword) {
     const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/youtube-api/keyword=" + keyword;
     return fetch(url)
@@ -66,8 +68,9 @@ async function start_youtube() {
     $("#status").html("");
     youtubeFlag = true;
     youtubeStartTime = new Date();
-    setTimeout(function () {
+    youtubeTimeoutId = setTimeout(function () {
         youtubeFlag = false;
+        serviceFlag = false;
     }, 60 * 60 * 1000);
     talking = false;
     put_stop_youtube_button();
@@ -77,6 +80,7 @@ async function start_youtube() {
  * 動画を停止させYouTube視聴モードを終了し，傾聴モードに戻る
  */
 async function end_youtube() {
+    clearTimeout(youtubeTimeoutId);
     youtubeFlag = false;
     serviceFlag = false;
     ytplayer.stopVideo();
@@ -192,7 +196,7 @@ async function youtube() {
         return;
     }
     scrollYPostionPushFlag = true;
-    post_comment(str, SPEAKER.AGENT);
+    post_keicho(str, SPEAKER.AGENT, person);
     let num = -1;
     let count = 0;
     while (num < 0) {

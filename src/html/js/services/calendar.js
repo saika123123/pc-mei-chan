@@ -386,6 +386,7 @@ function getTime(answer) {
  * カレンダーを編集する
  */
 async function calendar() {
+    let count = 0;
     while (true) {
         let ans = await miku_ask("何をしますか？（確認／作成／削除／やめる）", false, "guide_normal");
         // イベントの確認
@@ -402,6 +403,7 @@ async function calendar() {
                     break;
                 }
             }
+            return;
         }
         // イベントの作成
         else if (/作成/.test(ans)) {
@@ -455,6 +457,7 @@ async function calendar() {
                     }
                 }
             }
+            return;
         }
         // イベントの削除
         else if (/削除/.test(ans)) {
@@ -500,12 +503,14 @@ async function calendar() {
                     }
                 }
             }
+            return;
         }
         // サービス終了
-        else if (/やめる|止める/.test(ans)) {
+        else if (/やめる|止める/.test(ans) || count > 4) {
             serviceFlag = false;
             return;
         }
+        count++;
     }
 }
 

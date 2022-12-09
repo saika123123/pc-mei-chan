@@ -263,6 +263,7 @@ async function processEvent(message) {
                 // if (talking) {
                 //     if (!serviceFlag) { // サービス実行中は不在イベントを無視
                 //         post_text("またお話ししてくださいね");
+                //         post_keicho("またお話ししてくださいね", SPEAKER.AGENT, person);
                 //         end_keicho("");
                 //     }
                 // }
@@ -737,11 +738,11 @@ async function keicho(str, motion) {
             } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気を教えて/.test(answer)) {
                 str = "天気が知りたいときは，私に「天気予報」と言って下さい";
                 continue;
-            } else if (keichoFlag && /か$/.test(answer)) {
-                //質問には塩対応
-                str = "ごめんなさい，いま傾聴モードなので答えられません";
-                motion = "greeting";
-                continue;
+            // } else if (keichoFlag && /か$/.test(answer)) {
+            //     //質問には塩対応
+            //     str = "ごめんなさい，いま傾聴モードなので答えられません";
+            //     motion = "greeting";
+            //     continue;
             } else {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);

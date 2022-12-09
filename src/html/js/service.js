@@ -3,6 +3,8 @@
  * サービス実行に関するクラス
  */
 
+let serviceTimeoutId = null;
+
 /**
  * 連携するサービスを加える
  */async function addService(name, keyword, description, func) {
@@ -45,7 +47,7 @@ async function menu() {
     }
     await miku_say("私ができることの一覧を表示します", "greeting");
     scrollYPostionPushFlag = true;
-    post_text(str);
+    post_keicho(str, SPEAKER.AGENT, person);
     setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
 }
 
@@ -61,7 +63,7 @@ async function stop_keicho() {
     console.log("傾聴中断");
     $("#status").html("");
     talking = false;
-    setTimeout(() => {
+    serviceTimeoutId = setTimeout(() => {
         serviceFlag = false;
     }, 10 * 60 * 1000);
     put_restart_button();
@@ -71,6 +73,8 @@ async function stop_keicho() {
  * 傾聴モードに戻る
  */
 async function restart_keicho() {
+    serviceFlag = false;
+    clearTimeout(serviceTimeoutId);
     talking = true;
     // カメラをオンにする．
     if (imgtak == true) {
