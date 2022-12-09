@@ -87,9 +87,10 @@ async function getWeather(city) {
 async function weather() {
     let prefecture = null;
     let flag = true;
+    let count = 0;
     while (flag) {
         let ans = await miku_ask("どこの天気が知りたいですか？ (都道府県 / やめる)", false, "guide_normal");
-        if (/^やめる$/.test(ans)) {
+        if (/^やめる$/.test(ans) || count > 4) {
             serviceFlag = false;
             return;
         }
@@ -101,6 +102,7 @@ async function weather() {
                 break;
             }
         }
+        count++;
     }
 
     let result = await getWeather(prefecture.id);
@@ -113,7 +115,7 @@ async function weather() {
     for (let forecast of forecasts) {
         str += "<div>" + forecast.date.substring(5, 7) + "月" + forecast.date.substring(8) + "日： " + forecast.telop;
     }
-    post_text(str);
+    post_keicho(str, SPEAKER.AGENT, person);
     let ans = await miku_ask("詳細をお話しましょうか？ (はい / いいえ)")
     if (/はい/.test(ans)) {
         let text = result.description.text;

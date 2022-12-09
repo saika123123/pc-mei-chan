@@ -65,7 +65,7 @@ async function search() {
         return;
     }
     scrollYPostionPushFlag = true;
-    post_comment(str, SPEAKER.AGENT);
+    post_keicho(str, SPEAKER.AGENT, person);
     let num = -1;
     let count = 0;
     while (num < 0) {

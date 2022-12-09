@@ -291,7 +291,7 @@ async function garmin() {
                 str = str + "<div> 【その他】 </div>" + otherStr;
             }
             // scrollYPostionPushFlag = true;
-            post_text(str);
+            post_keicho(str, SPEAKER.AGENT, person);
             setTimeout(function () { window.scrollBy(0, -200); }, 3000);
             serviceFlag = false;
             return;

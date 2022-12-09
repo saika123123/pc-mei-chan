@@ -45,9 +45,11 @@ async function callTimer(time) {
     let id = null;
     timeSound.play();
     let str = timeToText(time);
-    post_text(str + "が経過しました！");
+    str = str + "が経過しました！";
+    post_keicho(str, SPEAKER.AGENT, person);
     if (talking) {
         post_text("よろしければ，このサービスの感想をお話しください");
+        post_keicho("よろしければ，このサービスの感想をお話しください", SPEAKER.AGENT, person);
         await sleep(3000);
     } else {
         post_text("タイマーを止めるには，私に「停止」と言ってください");
@@ -75,8 +77,7 @@ async function callTimer(time) {
             stt = null;
         }
         console.log("タイマー停止");
-        $("#status").html("");
-        put_start_button();
+        await keicho("このサービスはいかがでしたか？");
     }
     timeSound.pause();
     await deleteTimer();
@@ -174,9 +175,10 @@ async function setAlarm(time) {
 async function callAlarm(time) {
     let id = null
     timeSound.play();
-    post_text(time.getHours() + "時" + time.getMinutes() + "分になりました！");
+    let str = time.getHours() + "時" + time.getMinutes() + "分になりました！";
+    post_keicho(str, SPEAKER.AGENT, person);
     if (talking) {
-        post_text("よろしければ，このサービスの感想をお話しください");
+        post_keicho("よろしければ，このサービスの感想をお話しください", SPEAKER.AGENT, person);
         await sleep(3000);
     } else {
         post_text("アラームを止めるには，私に「停止」と言ってください");
@@ -204,8 +206,7 @@ async function callAlarm(time) {
             stt = null;
         }
         console.log("アラーム停止");
-        $("#status").html("");
-        put_start_button();
+        await keicho("このサービスはいかがでしたか？");
     }
     timeSound.pause();
     await deleteAlarm(time.getHours(), time.getMinutes());
@@ -372,6 +373,7 @@ async function timer() {
  * アラームをセットする
  */
 async function alarm() {
+    let count = 0;
     while (true) {
         let ans = await miku_ask("何をしますか？（確認／登録／解除／やめる）", false, "guide_normal");
         // アラームの確認
@@ -392,7 +394,7 @@ async function alarm() {
                     }
                     str += "<div>" + hour + ":" + minute + "</div>";
                 }
-                post_text(str);
+                post_keicho(str, SPEAKER.AGENT, person);
             }
             return;
         }
@@ -462,8 +464,9 @@ async function alarm() {
             return;
         }
         // サービス終了
-        else if (/やめる|止める/.test(ans)) {
+        else if (/やめる|止める/.test(ans) || count > 4) {
             return;
         }
+        count++;
     }
 }

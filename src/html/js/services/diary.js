@@ -148,14 +148,16 @@ function formatDate(date, format) {
 async function diary() {
     // 日付を取得
     let date;
+    let count = 0;
     while (true) {
         answer = await miku_ask("いつの日記を見たいですか? (日付 / やめる)", false, "guide_normal");
-        if (/やめる/.test(answer)) {
+        if (/やめる/.test(answer) || count > 4) {
             serviceFlag = false;
             return;
         }
         date = getDate(answer)
         if (date) break;
+        count++;
     }
 
     // const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/tsubuyaki-diary/diary.html?uid=" + uid + "&date=" + formatDate(date, 'yyyy-MM-dd');

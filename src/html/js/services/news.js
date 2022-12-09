@@ -93,7 +93,7 @@ async function news() {
         return;
     }
     scrollYPostionPushFlag = true;
-    post_comment(str, SPEAKER.AGENT);
+    post_keicho(str, SPEAKER.AGENT, person);
     let num = -1;
     while (num < 0) {
         setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 5000);
