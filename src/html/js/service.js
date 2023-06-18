@@ -128,6 +128,9 @@ function setService() {
     // 天気予報サービス
     addService("天気予報サービス", "天気予報", "三日分の天気予報の表示", async function () { await weather() });
 
+    // ChatGPTサービス
+    addService("ChatGPTサービス", "チャット GPT", "ChatGPTを用いて質問に対して返答", async function () { await chatgpt() });
+
     // カレンダーサービス
     addService("カレンダーサービス", "カレンダー", "予定の確認・作成・リマインド", async function () { await calendar(); });
 
@@ -155,4 +158,9 @@ function setService() {
     if (rakudoFlag) {
         addService("らくらく動画サービス", "らくらく動画", "らくらく動画サービスの実行", async function () { await rakudo() });
     }
+
+    // ビデオ会議サービス
+    // if (videochatFlag) {
+        addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
+    // }
 }

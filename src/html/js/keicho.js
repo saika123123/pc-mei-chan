@@ -134,6 +134,11 @@ async function initialize() {
     if (rakudoFlag) {
         rakudoId = rakudoPreference.preferences.id;
     }
+    // ビデオ会議サービスのユーザ情報をセット
+    videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { chatFlag = false });
+    if (chatFlag) {
+        chatId = videoMeetingPreference.preferences.id;
+    }
 
     // GETパラメータ voicerec が no であるときのみ false になる．デフォルトはtrueで．
     voicerec = getUrlVars()["voicerec"] === "no" ? false : true;
@@ -181,6 +186,9 @@ async function initialize() {
     if (seichoFlag) {
         seichoMode();
     }
+
+    // 会議のリマインド
+    await calCheckMtg();
 
     // 当日の会話ログを再表示する
     let dialogueLogs = await getDialogueLogs(new Date());
@@ -755,6 +763,9 @@ async function keicho(str, motion) {
                 continue;
             } else if (/調べたい/.test(answer) || (/調べ物/.test(answer) && /したい/.test(answer))) {
                 str = "調べ物をしたいときは，私に「検索」と言って下さい";
+                continue;
+            } else if (/チャットGPT/.test(answer) || (/教えて/.test(answer))|| (/調べ物/.test(answer)|| (/調べたい/.test(answer)))) {
+                str = "調べものをしたいときは，私に「チャットGPT」と言って下さい";
                 continue;
             } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気を教えて/.test(answer)) {
                 str = "天気が知りたいときは，私に「天気予報」と言って下さい";
