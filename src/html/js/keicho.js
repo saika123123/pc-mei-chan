@@ -182,8 +182,19 @@ async function initialize() {
         seichoMode();
     }
 
+    // 当日の会話ログを再表示する
+    let dialogueLogs = await getDialogueLogs(new Date());
+    for (dialogue of dialogueLogs) {
+        if (dialogue.from == "keicho-bot") {
+            post_comment(dialogue.contents, SPEAKER.AGENT, "no");
+        } else {
+            post_comment(dialogue.contents, SPEAKER.USER, "no");
+        }
+    }
+
     //開始ボタンを配置
     put_start_button();
+
     // カレンダーのリマインド
     await calCheckEvt();
 }
@@ -599,6 +610,7 @@ async function end_keicho(str, motion = "bye") {
     if (str) {
         await miku_say(str, motion);
     }
+    runMeboApi("会話終了");
     console.log("傾聴終了");
     $("#status").html("");
     talking = false;
@@ -659,6 +671,10 @@ async function keicho(str, motion) {
                 await end_keicho("またお話ししてくださいね", "bye");
                 return;
             }
+	    if (answer.length == 0) {
+                //str = "すみません．よく聞き取れませんでした．";
+                continue;
+            }
             if (answer.length < 20) {
                 if (/終わり|やめる|またね$|バイバイ$|終了$|以上$/.test(answer)) {
                     await end_keicho("またお話ししてくださいね", "bye");
@@ -675,6 +691,11 @@ async function keicho(str, motion) {
                 continue;
             }
         }
+
+	if (answer.length == 0) {
+	    str = "すみません．よく聞き取れませんでした．";
+	    continue;
+	}
 
         // キーワードの判定
         if (/終わり$|やめる$/.test(answer)) {
@@ -738,11 +759,11 @@ async function keicho(str, motion) {
             } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気を教えて/.test(answer)) {
                 str = "天気が知りたいときは，私に「天気予報」と言って下さい";
                 continue;
-            // } else if (keichoFlag && /か$/.test(answer)) {
-            //     //質問には塩対応
-            //     str = "ごめんなさい，いま傾聴モードなので答えられません";
-            //     motion = "greeting";
-            //     continue;
+                // } else if (keichoFlag && /か$/.test(answer)) {
+                //     //質問には塩対応
+                //     str = "ごめんなさい，いま傾聴モードなので答えられません";
+                //     motion = "greeting";
+                //     continue;
             } else {
                 // サービス実行のキーワード判定
                 let flag = await checkKeyword(answer);
@@ -790,7 +811,8 @@ async function keicho(str, motion) {
  * meboAPIを実行
  */
 async function runMeboApi(ans) {
-    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/mebo/uid=" + person.uid + "/utterance=" + ans;
+    let id = uid.substr(0, 20);
+    const url = "https://wsapp.cs.kobe-u.ac.jp/ozono-nodejs/api/mebo/uid=" + id + "/utterance=" + ans;
     return fetch(url, {
         method: 'GET',
         mode: 'cors',
@@ -1111,7 +1133,6 @@ async function miku_ask(str, confirm = false, motion = "smile") {
     let fnc = function () {
         if (talking) {
             console.log("強制終了");
-            post_keicho("またお話ししてくださいね", SPEAKER.AGENT, person);
             end_keicho("");
             location.reload();
         }

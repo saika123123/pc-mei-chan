@@ -273,7 +273,7 @@ async function garmin() {
                 }
                 otherStr = otherStr + "<div> ・Body Battery： " + max + " → " + mini + "</div>";
             }
-            let str = "<div>" + date.getMonth() + "月" + date.getDate() + "日の健康データ <div>";
+            let str = "<div>" + (date.getMonth() + 1) + "月" + date.getDate() + "日の健康データ <div>";
             if (sleepStr.length > 0) {
                 // post_text(sleepStr);
                 str = str + "<div> 【睡眠】 </div>" + sleepStr;

@@ -276,7 +276,7 @@ function timeToText(time) {
 function tellDate() {
     let now = new Date();
     let dayOfWeek = ["日", "月", "火", "水", "木", "金", "土"][now.getDay()];
-    return "今日は " + now.getFullYear() + "年" + now.getMonth() + "月" + now.getDate() + "日 " + dayOfWeek + "曜日です";
+    return "今日は " + now.getFullYear() + "年" + (now.getMonth() + 1) + "月" + now.getDate() + "日 " + dayOfWeek + "曜日です";
 }
 
 /**

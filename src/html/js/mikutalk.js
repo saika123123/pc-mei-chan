@@ -8,7 +8,7 @@ const SPEAKER = {
 
 // ページに回答をポストする．
 // 引数は，回答テキストと話者(SPEAKER.AGENT または SPEAKER.USER)
-function post_comment(str, speaker) {
+function post_comment(str, speaker, animation) {
     const now = new Date();
 
     let comment;
@@ -51,7 +51,9 @@ function post_comment(str, speaker) {
 
     $("#timeline").append(bubble);
 
-    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+    if(animation != "no"){
+        $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+    }
 }
 
 /*
