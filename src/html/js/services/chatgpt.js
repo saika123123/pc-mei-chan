@@ -7,7 +7,7 @@
  * ChatGPTAPIで解答を取得する
  */
 async function getChatgpt(ans) {
-    const url = "https://wsapp.cs.kobe-u.ac.jp/gitlab-nodejs/chatgpt/text=" + ans;
+    const url = "https://wsapp.cs.kobe-u.ac.jp/gitlab-nodejs/chatgpt/text=" + ans +"40文字以内で要約して教えてください．";
     return fetch(url, {
         method: 'GET',
         mode: 'cors',
