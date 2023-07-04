@@ -156,10 +156,10 @@ function setService() {
 
     // らくらく動画サービス
     if (rakudoFlag) {
-        addService("らくらく動画サービス", "らくらく動画", "らくらく動画サービスの実行", async function () { await rakudo() });
+        addService("らくらく 動画 サービス", "らくらく 動画", "らくらく動画サービスの実行", async function () { await rakudo() });
     }
 
-    // ビデオ会議サービス
+        // ビデオ会議サービス
     // if (videochatFlag) {
         addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
     // }

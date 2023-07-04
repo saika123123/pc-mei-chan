@@ -1,0 +1,333 @@
+/**
+ * teach.js
+ * 質問に関するクラス
+ */
+
+
+// ----------------------------------Youtbeのコーディング↓-----------------------------------------------------------------------------------
+// 動画を挿入するiFrameのID
+let youtubeID = "";
+
+// 視聴終了ボタンのID
+let youtubeStopID = "";
+
+// 操作する動画の識別子
+let ytPlayer = null;
+
+// 動画が再生中かどうかのフラグ
+let youtubeFlag = false;
+
+// 視聴開始時間
+let youtubeStartTime = null;
+
+let youtubeTimeoutId = null;
+
+async function getYoutubeAPI(keyword) {
+    const url = "https://wsapp.cs.kobe-u.ac.jp/keicho-nodejs/youtube-api/keyword=" + keyword;
+    return fetch(url)
+        .then(response => {
+            //レスポンスコードをチェック
+            if (response.status == 200) {
+                let result = response.json();
+                console.log(result);
+                return result;
+            } else {
+                throw new Error(response);
+            }
+        })
+        .catch(err => {
+            console.log("Failed to fetch " + url, err);
+            throw new Error(err);
+        });
+}
+
+/**
+ * 視聴中止ボタンを配置する
+ */
+function put_stop_youtube_button() {
+    youtubeStopID = formatDate(new Date(), 'yyyyMMddHHmmssms') + "_youtubeStop";
+    const restart_button = $("<input></input>", {
+        "class": "btn-primary btn-medium",
+        "id": youtubeStopID,
+        "type": "button",
+        "value": "視聴をやめる",
+        "onclick": 'this.remove(); end_youtube();',
+    });
+    $("#status").append(restart_button);
+    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+}
+
+/**
+ * 傾聴を中断し，YouTube視聴モードにする
+ */
+async function start_youtube() {
+    stt.stop();
+    stt = null;
+    if (imgtak == true) {
+        await stopVideo();
+    }
+    console.log("傾聴中断");
+    $("#status").html("");
+    youtubeFlag = true;
+    youtubeStartTime = new Date();
+    youtubeTimeoutId = setTimeout(function () {
+        youtubeFlag = false;
+        serviceFlag = false;
+    }, 60 * 60 * 1000);
+    talking = false;
+    put_stop_youtube_button();
+}
+
+/**
+ * 動画を停止させYouTube視聴モードを終了し，傾聴モードに戻る
+ */
+async function end_youtube() {
+    clearTimeout(youtubeTimeoutId);
+    youtubeFlag = false;
+    serviceFlag = false;
+    ytplayer.stopVideo();
+    if (imgtak == true) {
+        videostm = await loadVideo();
+    };
+    talking = true;
+    // let ans = await miku_ask("このサービスはいかがでしたか？（よかった / いまいち）")
+    // if (/よかった|良かった/.test(ans)) {
+    //     console.log("傾聴再開");
+    //     $("#status").html("");
+    //     keicho("ありがとうございます！", "smile");
+    //     return;
+    // } else if (/いまいち|今井|今市|今何時/.test(ans)) {
+    //     await miku_ask("それは残念です. 理由があれば教えていただけませんか？", false, "idle_think");
+    // }
+    console.log("傾聴再開");
+    $("#status").html("");
+    keicho("このサービスはいかがでしたか？", "self_introduction");
+    return;
+}
+
+/**
+ * 動画を画面に表示させる
+ * @param videoID  // 表示させる動画のID
+ */
+async function post_video(videoID) {
+    youtubeID = formatDate(new Date(), 'yyyyMMddHHmmssms');
+    const now = new Date();
+
+    var comment = $("<div></div>", {
+        class: "bubble bubble-half-bottom normal",
+        id: "youtube" + youtubeID,
+    }).html("動画を再生できませんでした");
+
+    async function onYouTubeIframeAPIReady() {
+        ytplayer = new YT.Player(
+            "youtube" + youtubeID,
+            {
+                width: 1200,
+                height: 600,
+                id: youtubeID,
+                videoId: videoID,
+                // playerVars: { 'controls': 1 },
+                events: {
+                    'onReady': onPlayerReady,
+                }
+
+            },
+        );
+    };
+
+    // 動画の再生準備が完了したときに，動画を再生させる
+    function onPlayerReady(event) {
+        event.target.playVideo();
+    };
+
+    const timestamp = $("<div></div>", {
+        class: "timestamp",
+    }).text("[" + now.toLocaleString() + "]");
+
+    comment.append(timestamp);
+
+    const bubble = $("<div></div>", {
+        class: "container",
+    }).append(comment);
+
+    $("#timeline").append(bubble),
+        await onYouTubeIframeAPIReady();
+
+    $("html,body").animate({ scrollTop: $("#bottom").offset().top });
+
+};
+
+// ----------------------------------Youtubeのコーディング↑-----------------------------------------------------------------------------------
+
+
+// ----------------------------------ChatGPTのコーディング↓-----------------------------------------------------------------------------------
+/**
+ * ChatGPTAPIで解答を取得する
+ */
+async function getChatgpt(ans) {
+    const url = "https://wsapp.cs.kobe-u.ac.jp/gitlab-nodejs/chatgpt/text=" + ans +"40文字以内で要約して教えてください．";
+    return fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+    })
+        .then(response => {
+            //レスポンスコードをチェック
+            if (response.status == 200) {
+                var json = response.json();
+                console.log(json);
+                return json;
+            } else {
+                throw new Error(response);
+            }
+        })
+        .catch(err => {
+            console.log("Failed to fetch " + url, err);
+            throw new Error(err);
+        });
+}
+
+// ----------------------------------ChatGPTのコーディング↑-----------------------------------------------------------------------------------
+
+/*--------------- 以下対話シナリオ ---------------*/
+
+/**
+ *　質問を検索する
+ */
+async function teach() {
+    console.log("dddddd")
+    let flag = true;
+    let count = 0;
+    let ans = await miku_ask("何を教えてほしいですか？ (質問 / やめる)", false, "guide_normal");
+        if (/^やめる$/.test(ans) || count > 4) {
+            serviceFlag = false;
+            return;
+        }
+        // for (let data of prefecturesData) {
+        //     let keyword = new RegExp(data.name.slice(0, -1));
+        //     if (keyword.test(ans)) {
+        //         prefecture = data;
+        //         flag = false;
+        //         break;
+        //     }
+        // }
+        console.log(ans)
+        flag=false;
+        count++;
+    console.log(111111);
+    console.log(ans);
+    console.log(222222);
+    let media = await miku_ask("動画とテキストどちらで教えましょうか？ (動画 / テキスト / やめる)", false, "guide_normal");
+    if (/^やめる$/.test(media) || count > 4) {
+        serviceFlag = false;
+        return;
+    } else if (/^テキスト$/.test(media) || /^てきすと$/.test(media)) {
+        let result = await getChatgpt(ans);
+        if(result.error){
+            await miku_say("Chatgptからの解答を取得できませんでした", "normal");
+            return;
+        }
+
+        let str = "<div> 【ChatGPTからの返答が来ました！】 </div>";
+        
+        str += "<div>" + result.content +"</div>";
+        
+        post_keicho(str, SPEAKER.AGENT, person);
+
+        serviceFlag = false;
+        return;
+    } else if (/^動画$/.test(media) || /^どうが$/.test(media)) {
+        async function youtube() {
+            let flag = true;
+            let keyword = await miku_ask("何の動画が見たいですか？（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
+            if (/^やめる$/.test(keyword) || /^終わり$/.test(keyword)) {
+                return;
+            }
+            let videoInfo = await getYoutubeAPI(keyword).catch(function () { flag = false; });
+            let list = [];
+            for (const json of videoInfo) {
+                if (json.kind == "youtube#video") {
+                    list.push(json);
+                }
+            }
+        
+            if (!flag) {
+                await miku_say("動画を取得できませんでした", "normal");
+                return;
+            }
+        
+            let str = "";
+            let n = 1;
+            for (const json of list) {
+                if (n > 5) break;
+                let title = json.title;
+                if (title.length > 32) {
+                    title = title.slice(0, 31) + "…";
+                }
+                str = str + "<div> [" + n + "] " + title + "</div>";
+                n++;
+            }
+            const size = Object.keys(list).length;
+            if (size == 0) {
+                await miku_say("該当する動画を取得できませんでした", "normal");
+                return;
+            }
+            scrollYPostionPushFlag = true;
+            post_keicho(str, SPEAKER.AGENT, person);
+            let num = -1;
+            let count = 0;
+            while (num < 0) {
+                setTimeout(function () { window.scrollTo(0, scrollYPostionArr[scrollYPostionArr.length - 1] + 680); }, 4000);
+                let ans = await miku_ask("見たい動画の番号を教えて下さい（終わりたい時は「やめる」と言ってください）", false, "guide_normal");
+                if (/5|五/.test(ans)) {
+                    if (list.length > 4) {
+                        num = 4;
+                    }
+                } else if (/4|四/.test(ans)) {
+                    if (list.length > 3) {
+                        num = 3;
+                    }
+                } else if (/3|三/.test(ans)) {
+                    if (list.length > 2) {
+                        num = 2;
+                    }
+                } else if (/2|二/.test(ans)) {
+                    if (list.length > 1) {
+                        num = 1;
+                    }
+                } else if (/1|一|市/.test(ans)) {
+                    num = 0;
+                } else if (/^やめる$/.test(ans) || /^終わり$/.test(ans) || count > 4) {
+                    serviceFlag = false;
+                    return;
+                }
+                count++;
+            }
+            console.log(list[num]);
+            let videoID = list[num].id;
+            num++;
+            // await miku_say(num + "番の動画を再生します", "normal");
+            // scrollYPostionPushFlag = true;
+            post_video(videoID);
+            // setTimeout(function () { window.scrollTo(0, scrollYPostion - 50); }, 2000);
+            start_youtube();
+            // youtubeFlag = true;
+            // seichoFlag = true;
+            // document.body.style.backgroundColor = "rgb(100, 100, 100)";
+            // setTimeout(function () { window.scrollTo(0, scrollYPostion - 150); }, 5000);
+            // console.log("視聴開始");
+        
+            // while (true) {
+            //     answer = await miku_ask();
+            //     if (/^やめる$|^止める$/.test(answer)) {
+            //         seichoFlag = false;
+            //         youtubeFlag = false;
+            //         ytplayer.stopVideo();
+            //         motion = "greeting";
+            //         document.body.style.backgroundColor = "#cce3f7";
+            //         console.log("視聴終了");
+            //         break;
+            //     }
+            // }
+        }
+    } 
+}

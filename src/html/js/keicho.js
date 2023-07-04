@@ -134,6 +134,7 @@ async function initialize() {
     if (rakudoFlag) {
         rakudoId = rakudoPreference.preferences.id;
     }
+
     // ビデオ会議サービスのユーザ情報をセット
     videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { chatFlag = false });
     if (chatFlag) {
@@ -695,6 +696,11 @@ async function keicho(str, motion) {
                     str = "傾聴モードに切り替えます";
                     motion = "greeting";
                     keichoMode();
+                } else if (/チャットGPT|チャット GPT|チャット CPT|教えて/.test(answer)) {
+                    motion = "greeting";
+                    chatgpt();
+                    taiwaMode();
+
                 }
                 continue;
             }
@@ -714,17 +720,17 @@ async function keicho(str, motion) {
             if (/終わり|やめる|またね$|バイバイ$|終了$|以上$/.test(answer)) {
                 await end_keicho("またお話ししてくださいね", "bye");
                 return;
-            } else if (keichoFlag && /対話モード/.test(answer)) {
+            } else if (keichoFlag && /対話 モード/.test(answer)) {
                 str = "対話モードに切り替えます";
                 motion = "greeting";
                 taiwaMode();
                 continue;
-            } else if (!keichoFlag && /傾聴モード|慶弔モード|緊張モード/.test(answer)) {
+            } else if (!keichoFlag && /傾聴 モード|慶弔 モード|緊張 モード/.test(answer)) {
                 str = "傾聴モードに切り替えます";
                 motion = "greeting";
                 keichoMode();
                 continue;
-            } else if (/静聴モード|成長モード/.test(answer)) {
+            } else if (/静聴 モード|成長 モード/.test(answer)) {
                 str = "静聴モードに切り替えます";
                 motion = "greeting";
                 seichoMode();
@@ -854,7 +860,7 @@ async function getResponse(ans) {
     element.remove();
 
     // スコアが高ければその応答を採用
-    if (result.bestResponse.score >= 4) {
+    if (result.bestResponse.score >= 0.01) {
         // 応答から一文ずつ出力
         let str = result.bestResponse.utterance;
         while (str.includes("。")) {
