@@ -135,6 +135,9 @@ async function initialize() {
         rakudoId = rakudoPreference.preferences.id;
     }
 
+    // ミーティングスケジューラーの初期化
+    document.getElementById('meeting-scheduler').style.display = 'none';
+
     // ビデオ会議サービスのユーザ情報をセット
     videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { chatFlag = false });
     if (chatFlag) {
@@ -1192,4 +1195,13 @@ function scheduleMeeting() {
         .catch(error => {
             alert('Error scheduling meeting');
         });
+}
+
+function toggleMeetingScheduler() {
+    const scheduler = document.getElementById('meeting-scheduler');
+    if (scheduler.style.display === 'none') {
+        scheduler.style.display = 'block';
+    } else {
+        scheduler.style.display = 'none';
+    }
 }
