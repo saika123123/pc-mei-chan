@@ -1184,18 +1184,22 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 // sleep関数を実装
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function scheduleMeeting() {
+function scheduleMeeting(event) {
+    event.preventDefault();
     const dateTime = document.getElementById('meeting-datetime').value;
-    const participants = document.getElementById('meeting-participants').value.split(',');
-
+    const participants = document.getElementById('meeting-participants').value.split(',').map(p => p.trim());
+    
     AutoMeetingService.scheduleMeeting(dateTime, participants)
-        .then(result => {
-            alert(`Meeting scheduled with ID: ${result.meetingId}`);
-        })
-        .catch(error => {
-            alert('Error scheduling meeting');
-        });
-}
+      .then(result => {
+        document.getElementById('meeting-result').innerHTML = `ミーティングがスケジュールされました。ID: ${result.meetingId}`;
+      })
+      .catch(error => {
+        document.getElementById('meeting-result').innerHTML = 'ミーティングのスケジュールに失敗しました。もう一度お試しください。';
+        console.error('Error scheduling meeting:', error);
+      });
+  }
+  
+  document.getElementById('meeting-form').addEventListener('submit', scheduleMeeting);
 
 function toggleMeetingScheduler() {
     const scheduler = document.getElementById('meeting-scheduler');

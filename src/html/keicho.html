@@ -69,12 +69,19 @@
     <div id="sound">
         <audio id="timeSound" loop preload="auto" src="sound/Clock-Alarm02-1(Loop).mp3"></audio>
     </div>
-    <div id="meeting-scheduler" style="display: none;">
-        <h3>ミーティングのスケジュール</h3>
-        <input type="datetime-local" id="meeting-datetime">
-        <input type="text" id="meeting-participants" placeholder="参加者（カンマ区切り）">
-        <button onclick="scheduleMeeting()">ミーティングをスケジュール</button>
-    </div>
+    <div id="meeting-scheduler">
+        <h3>ミーティングをスケジュール</h3>
+        <form id="meeting-form">
+          <label for="meeting-datetime">日時:</label>
+          <input type="datetime-local" id="meeting-datetime" required><br><br>
+          
+          <label for="meeting-participants">参加者 (カンマ区切り):</label>
+          <input type="text" id="meeting-participants" required><br><br>
+          
+          <button type="submit">ミーティングをスケジュール</button>
+        </form>
+        <div id="meeting-result"></div>
+      </div>
     <video id="videostm" autoplay playsinline="true"></video>
     <canvas id="imgcvs"></canvas>
     <script>
