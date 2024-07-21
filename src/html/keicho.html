@@ -34,6 +34,7 @@
     <script type="text/javascript" src="js/service.js"></script>
     <script src="https://wsapp.cs.kobe-u.ac.jp/cs27pubsub/webjars/sockjs-client/1.0.2/sockjs.min.js"></script>
     <script src="https://wsapp.cs.kobe-u.ac.jp/cs27pubsub/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+    <script type="text/javascript" src="js/services/auto-meeting-service.js"></script>
     <link rel="stylesheet" type="text/css" href="css/mikutalk.css">
     <link rel="stylesheet" type="text/css" href="css/calendar.css">
 </head>
@@ -46,6 +47,12 @@
     </div>
     <div id="sound">
         <audio id="timeSound" loop preload="auto" src="sound/Clock-Alarm02-1(Loop).mp3"></audio>
+    </div>
+    <div id="meeting-scheduler">
+        <h3>Schedule a Meeting</h3>
+        <input type="datetime-local" id="meeting-datetime">
+        <input type="text" id="meeting-participants" placeholder="Participants (comma-separated)">
+        <button onclick="scheduleMeeting()">Schedule Meeting</button>
     </div>
     <video id="videostm" autoplay playsinline="true"></video>
     <canvas id="imgcvs"></canvas>

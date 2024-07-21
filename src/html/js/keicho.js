@@ -1180,3 +1180,16 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 
 // sleep関数を実装
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function scheduleMeeting() {
+    const dateTime = document.getElementById('meeting-datetime').value;
+    const participants = document.getElementById('meeting-participants').value.split(',');
+
+    AutoMeetingService.scheduleMeeting(dateTime, participants)
+        .then(result => {
+            alert(`Meeting scheduled with ID: ${result.meetingId}`);
+        })
+        .catch(error => {
+            alert('Error scheduling meeting');
+        });
+}
