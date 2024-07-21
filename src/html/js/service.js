@@ -20,18 +20,26 @@ let serviceTimeoutId = null;
  * キーワードが含まれているか判定し，対応するサービスを実行する
  */
 async function checkKeyword(answer) {
-    // let app = apps;
+    console.log("Checking keyword:", answer); // デバッグ用ログ
     for (let app of apps) {
         let keyword = new RegExp(app.keyword);
         if (keyword.test(answer)) {
-            console.log("Start Service : " + app.name);
+            console.log("Matched keyword:", app.keyword); // デバッグ用ログ
+            console.log("Start Service:", app.name);
             serviceFlag = true;
-            await app.func();
+            try {
+                await app.func();
+            } catch (error) {
+                console.error("Error in service execution:", error); // エラーログ
+                serviceFlag = false;
+                await miku_say("申し訳ありません。サービスの実行中にエラーが発生しました。", "greeting");
+            }
             return true;
         }
     }
+    console.log("No matching keyword found"); // デバッグ用ログ
+    return false;
 }
-
 /**
  * メイちゃんと連携している機能を説明する
  */

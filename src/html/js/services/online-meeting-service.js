@@ -1,19 +1,45 @@
 // online-meeting-service.js
 
 async function onlineMeeting() {
-    while (true) {
-        let ans = await miku_ask("会議を作成しますか、それとも参加しますか？（作成/参加/終了）", false, "guide_normal");
-        if (/作成/.test(ans)) {
-            await createMeeting();
-        } else if (/参加/.test(ans)) {
-            await joinMeeting();
-        } else if (/終了/.test(ans)) {
-            break;
+    console.log("Entered onlineMeeting function"); // デバッグ用ログ
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+        try {
+            let ans = await miku_ask("会議を作成しますか、それとも参加しますか？（作成/参加/終了）", false, "guide_normal");
+            console.log("User's answer:", ans); // デバッグ用ログ
+
+            if (/作成/.test(ans)) {
+                await createMeeting();
+                break;
+            } else if (/参加/.test(ans)) {
+                await joinMeeting();
+                break;
+            } else if (/終了/.test(ans)) {
+                console.log("Exiting onlineMeeting function"); // デバッグ用ログ
+                break;
+            } else {
+                await miku_say("申し訳ありません。「作成」、「参加」、または「終了」とお答えください。", "guide_normal");
+                attempts++;
+            }
+        } catch (error) {
+            console.error("Error in onlineMeeting:", error); // エラーログ
+            await miku_say("申し訳ありません。エラーが発生しました。もう一度お試しください。", "greeting");
+            attempts++;
         }
     }
+
+    if (attempts >= maxAttempts) {
+        await miku_say("申し訳ありません。正しい応答を得られませんでした。オンライン会議サービスを終了します。", "greeting");
+    }
+
+    console.log("Exiting onlineMeeting function"); // デバッグ用ログ
+    serviceFlag = false;
 }
 
 async function createMeeting() {
+    try {
     let date = await getMeetingDate();
     if (!date) return;
 
@@ -27,13 +53,22 @@ async function createMeeting() {
     await inviteParticipants(participants, date, meetingUrl);
 
     await miku_say(`会議を${formatDate(date, 'yyyy年MM月dd日 HH時mm分')}に設定しました。URLは${meetingUrl}です。`, "greeting");
+} catch (error) {
+    console.error("Error in createMeeting:", error);
+    await miku_say("会議の作成中にエラーが発生しました。もう一度お試しください。", "greeting");
+}
 }
 
 async function joinMeeting() {
+    try {
     let meetingUrl = await miku_ask("参加する会議のURLを教えてください。", false, "guide_normal");
     if (meetingUrl) {
         await miku_say(`会議に参加します。ブラウザで${meetingUrl}を開いてください。`, "greeting");
     }
+} catch (error) {
+    console.error("Error in joinMeeting:", error);
+    await miku_say("会議への参加中にエラーが発生しました。もう一度お試しください。", "greeting");
+}
 }
 
 async function getMeetingDate() {
