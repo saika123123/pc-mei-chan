@@ -125,11 +125,17 @@ function put_restart_button() {
 // 連携したサービスをセットしていく
 function setService() {
 
-    // オンライン会議サービスの追加
-    addService("オンライン会議サービス", "会議", "オンライン会議の作成と参加", async function () { 
-        console.log("Starting online meeting service");
+   // オンライン会議サービスの追加（統合版）
+   addService("オンライン会議サービス", "会議", "オンライン会議の作成と参加", async function () { 
+    console.log("Starting online meeting service");
+    if (typeof onlineMeeting === 'function') {
         await onlineMeeting();
-    });
+    } else {
+        console.error("onlineMeeting function is not defined");
+        await miku_say("申し訳ありません。オンライン会議サービスを開始できません。", "greeting");
+    }
+});
+
     // つぶやきダイアリー
     addService("つぶやきダイアリー", "日記", "過去の対話内容の振り返り", async function () { await diary(); });
 
@@ -173,8 +179,4 @@ function setService() {
         addService("らくらく 動画 サービス", "らくらく 動画", "らくらく動画サービスの実行", async function () { await rakudo() });
     }
 
-        // ビデオ会議サービス
-    // if (videochatFlag) {
-        addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
-    // }
 }
