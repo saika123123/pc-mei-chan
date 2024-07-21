@@ -1,6 +1,6 @@
 const AutoMeetingService = {
-    scheduleMeeting: function(dateTime, participants) {
-        return this.getParticipantUIDs(participants)
+    scheduleMeeting: function(dateTime, participantNames) {
+        return this.getParticipantUIDs(participantNames)
             .then(participantUIDs => {
                 const meetingId = this.generateMeetingId();
                 const meetingUrl = this.generateMeetingUrl(meetingId);
@@ -65,7 +65,6 @@ const AutoMeetingService = {
 
     startMeeting: function(meetingId) {
         console.log(`Starting meeting ${meetingId}`);
-        // CURRENT_USER_UID をグローバル変数や関数呼び出しで取得する必要があります
         const currentUserUid = getCurrentUserUid(); // この関数は別途定義する必要があります
         window.open(`https://wsapp.cs.kobe-u.ac.jp/meetcs27/${meetingId}?user=${currentUserUid}`, '_blank');
     }

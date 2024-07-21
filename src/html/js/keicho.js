@@ -1187,18 +1187,22 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function scheduleMeeting(event) {
     event.preventDefault();
     const dateTime = document.getElementById('meeting-datetime').value;
-    const participants = document.getElementById('meeting-participants').value.split(',').map(p => p.trim());
+    const participantNames = document.getElementById('meeting-participants').value.split(',').map(name => name.trim());
     
-    if (!validateEmails(participants)) {
-      document.getElementById('meeting-result').innerHTML = '無効なメールアドレスが含まれています。正しいメールアドレスを入力してください。';
+    if (participantNames.length === 0) {
+      document.getElementById('meeting-result').innerHTML = '参加者を入力してください。';
       return;
     }
   
-    AutoMeetingService.scheduleMeeting(dateTime, participants)
+    AutoMeetingService.scheduleMeeting(dateTime, participantNames)
       .then(result => {
-        document.getElementById('meeting-result').innerHTML = `ミーティングがスケジュールされました。ID: ${result.meetingId}<br>
+        document.getElementById('meeting-result').innerHTML = `
+          ミーティングがスケジュールされました。<br>
+          ID: ${result.meetingId}<br>
           開始時刻: ${new Date(dateTime).toLocaleString()}<br>
-          参加者に招待メールが送信されました。`;
+          参加者: ${participantNames.join(', ')}<br>
+          参加者に招待が送信されました。
+        `;
       })
       .catch(error => {
         document.getElementById('meeting-result').innerHTML = 'ミーティングのスケジュールに失敗しました。もう一度お試しください。';
@@ -1206,10 +1210,7 @@ function scheduleMeeting(event) {
       });
   }
   
-  function validateEmails(emails) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emails.every(email => emailRegex.test(email));
-  }
+  document.getElementById('meeting-form').addEventListener('submit', scheduleMeeting);
 
 function toggleMeetingScheduler() {
     const scheduler = document.getElementById('meeting-scheduler');
