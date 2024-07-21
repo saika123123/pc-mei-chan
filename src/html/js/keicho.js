@@ -109,6 +109,9 @@ function refreshAt(h, m) {
 async function initialize() {
     //ここにアプリ固有の処理を書く
 
+    // initialize() 関数内に以下を追加
+    setInterval(checkScheduledMeetings, 60 * 1000); // 1分ごとにチェック
+
     //MMD作成
     mmd = new MMD("localhost:8080", "localhost:39390");
 
@@ -134,9 +137,6 @@ async function initialize() {
     if (rakudoFlag) {
         rakudoId = rakudoPreference.preferences.id;
     }
-
-    // ミーティングスケジューラーの初期化
-    document.getElementById('meeting-scheduler').style.display = 'none';
 
     // ビデオ会議サービスのユーザ情報をセット
     videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { chatFlag = false });
@@ -1184,39 +1184,26 @@ async function miku_ask(str, confirm = false, motion = "smile") {
 // sleep関数を実装
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function scheduleMeeting(event) {
-    event.preventDefault();
-    const dateTime = document.getElementById('meeting-datetime').value;
-    const participantNames = document.getElementById('meeting-participants').value.split(',').map(name => name.trim());
-    
-    if (participantNames.length === 0) {
-      document.getElementById('meeting-result').innerHTML = '参加者を入力してください。';
-      return;
-    }
-  
-    AutoMeetingService.scheduleMeeting(dateTime, participantNames)
-      .then(result => {
-        document.getElementById('meeting-result').innerHTML = `
-          ミーティングがスケジュールされました。<br>
-          ID: ${result.meetingId}<br>
-          開始時刻: ${new Date(dateTime).toLocaleString()}<br>
-          参加者: ${participantNames.join(', ')}<br>
-          参加者に招待が送信されました。
-        `;
-      })
-      .catch(error => {
-        document.getElementById('meeting-result').innerHTML = 'ミーティングのスケジュールに失敗しました。もう一度お試しください。';
-        console.error('Error scheduling meeting:', error);
-      });
-  }
-  
-  document.getElementById('meeting-form').addEventListener('submit', scheduleMeeting);
+// keicho.js に追加
 
-function toggleMeetingScheduler() {
-    const scheduler = document.getElementById('meeting-scheduler');
-    if (scheduler.style.display === 'none') {
-        scheduler.style.display = 'block';
-    } else {
-        scheduler.style.display = 'none';
+async function checkScheduledMeetings() {
+    let now = new Date();
+    let events = await getEvents(now, now);
+    for (let event of events) {
+        if (event.summary === 'オンライン会議') {
+            let meetingTime = new Date(event.start.dateTime);
+            if (meetingTime.getTime() - now.getTime() <= 5 * 60 * 1000 && meetingTime.getTime() > now.getTime()) {
+                let meetingUrl = event.description.split('\n')[1];
+                if (talking) {
+                    await miku_say(`オンライン会議が5分後に始まります。${meetingUrl}を開いてください。`, "greeting");
+                } else {
+                    talking = true;
+                    $("#status").html("");
+                    await miku_say(`オンライン会議が5分後に始まります。${meetingUrl}を開いてください。`, "greeting");
+                    end_keicho();
+                }
+                return;
+            }
+        }
     }
 }

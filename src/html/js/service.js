@@ -116,6 +116,9 @@ function put_restart_button() {
 //---------- 以下サービス連携 ----------//
 // 連携したサービスをセットしていく
 function setService() {
+
+    // service.js に追加
+    addService("オンライン会議サービス", "会議", "オンライン会議の作成と参加", async function () { await onlineMeeting(); });
     // つぶやきダイアリー
     addService("つぶやきダイアリー", "日記", "過去の対話内容の振り返り", async function () { await diary(); });
 
@@ -140,11 +143,6 @@ function setService() {
     // タイマーサービス
     addService("タイマーサービス", "タイマー", "タイマーでの時間の計測", async function () { await timer() });
 
-    // ミーティングスケジューラーサービス
-    addService("自動ミーティングスケジューラー", "ミーティング", "ミーティングの自動スケジュール", async function() {
-        await autoScheduleMeeting();
-      });
-
     // ニュース検索サービス
     // addService("ニュースサービス", "ニュース", "今日のTOPニュースの表示", async function () { await news() });
 
@@ -168,9 +166,4 @@ function setService() {
     // if (videochatFlag) {
         addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
     // }
-}
-
-async function autoScheduleMeeting() {
-    toggleMeetingScheduler(); // UIを表示
-    await miku_say("ミーティングスケジューラーを表示しました。日時と参加者を入力し、「ミーティングをスケジュール」ボタンを押してください。");
 }
