@@ -125,8 +125,11 @@ function put_restart_button() {
 // 連携したサービスをセットしていく
 function setService() {
 
-    // service.js に追加
-    addService("オンライン会議サービス", "会議", "オンライン会議の作成と参加", async function () { await onlineMeeting(); });
+    // オンライン会議サービスの追加
+    addService("オンライン会議サービス", "会議", "オンライン会議の作成と参加", async function () { 
+        console.log("Starting online meeting service");
+        await onlineMeeting();
+    });
     // つぶやきダイアリー
     addService("つぶやきダイアリー", "日記", "過去の対話内容の振り返り", async function () { await diary(); });
 

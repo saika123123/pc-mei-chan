@@ -1,31 +1,36 @@
 // online-meeting-service.js
 
 async function onlineMeeting() {
-    console.log("Entered onlineMeeting function"); // デバッグ用ログ
+    console.log("Entered onlineMeeting function");
     let attempts = 0;
     const maxAttempts = 3;
 
     while (attempts < maxAttempts) {
         try {
+            console.log("Asking user for action");
             let ans = await miku_ask("会議を作成しますか、それとも参加しますか？（作成/参加/終了）", false, "guide_normal");
-            console.log("User's answer:", ans); // デバッグ用ログ
+            console.log("User's answer:", ans);
 
             if (/作成/.test(ans)) {
+                console.log("User chose to create a meeting");
                 await createMeeting();
                 break;
             } else if (/参加/.test(ans)) {
+                console.log("User chose to join a meeting");
                 await joinMeeting();
                 break;
             } else if (/終了/.test(ans)) {
-                console.log("Exiting onlineMeeting function"); // デバッグ用ログ
+                console.log("User chose to exit");
                 break;
             } else {
+                console.log("Invalid answer");
                 await miku_say("申し訳ありません。「作成」、「参加」、または「終了」とお答えください。", "guide_normal");
                 attempts++;
             }
         } catch (error) {
-            console.error("Error in onlineMeeting:", error); // エラーログ
-            await miku_say("申し訳ありません。エラーが発生しました。もう一度お試しください。", "greeting");
+            console.error("Error in onlineMeeting:", error);
+            console.error("Error stack:", error.stack);
+            await miku_say(`申し訳ありません。エラーが発生しました: ${error.message}`, "greeting");
             attempts++;
         }
     }
@@ -34,41 +39,51 @@ async function onlineMeeting() {
         await miku_say("申し訳ありません。正しい応答を得られませんでした。オンライン会議サービスを終了します。", "greeting");
     }
 
-    console.log("Exiting onlineMeeting function"); // デバッグ用ログ
+    console.log("Exiting onlineMeeting function");
     serviceFlag = false;
 }
 
 async function createMeeting() {
+    console.log("Entered createMeeting function");
     try {
-    let date = await getMeetingDate();
-    if (!date) return;
+        let date = await getMeetingDate();
+        if (!date) {
+            console.log("Failed to get meeting date");
+            return;
+        }
 
-    let participants = await getParticipants();
-    if (!participants) return;
+        let participants = await getParticipants();
+        if (!participants) {
+            console.log("Failed to get participants");
+            return;
+        }
 
-    let meetingId = generateMeetingId();
-    let meetingUrl = `https://wsapp.cs.kobe-u.ac.jp/meetcs27/${meetingId}?user=${uid}`;
+        let meetingId = generateMeetingId();
+        let meetingUrl = `https://wsapp.cs.kobe-u.ac.jp/meetcs27/${meetingId}?user=${uid}`;
 
-    await scheduleMeeting(date, meetingUrl);
-    await inviteParticipants(participants, date, meetingUrl);
+        await scheduleMeeting(date, meetingUrl);
+        await inviteParticipants(participants, date, meetingUrl);
 
-    await miku_say(`会議を${formatDate(date, 'yyyy年MM月dd日 HH時mm分')}に設定しました。URLは${meetingUrl}です。`, "greeting");
-} catch (error) {
-    console.error("Error in createMeeting:", error);
-    await miku_say("会議の作成中にエラーが発生しました。もう一度お試しください。", "greeting");
-}
+        await miku_say(`会議を${formatDate(date, 'yyyy年MM月dd日 HH時mm分')}に設定しました。URLは${meetingUrl}です。`, "greeting");
+    } catch (error) {
+        console.error("Error in createMeeting:", error);
+        console.error("Error stack:", error.stack);
+        await miku_say(`会議の作成中にエラーが発生しました: ${error.message}`, "greeting");
+    }
 }
 
 async function joinMeeting() {
+    console.log("Entered joinMeeting function");
     try {
-    let meetingUrl = await miku_ask("参加する会議のURLを教えてください。", false, "guide_normal");
-    if (meetingUrl) {
-        await miku_say(`会議に参加します。ブラウザで${meetingUrl}を開いてください。`, "greeting");
+        let meetingUrl = await miku_ask("参加する会議のURLを教えてください。", false, "guide_normal");
+        if (meetingUrl) {
+            await miku_say(`会議に参加します。ブラウザで${meetingUrl}を開いてください。`, "greeting");
+        }
+    } catch (error) {
+        console.error("Error in joinMeeting:", error);
+        console.error("Error stack:", error.stack);
+        await miku_say(`会議への参加中にエラーが発生しました: ${error.message}`, "greeting");
     }
-} catch (error) {
-    console.error("Error in joinMeeting:", error);
-    await miku_say("会議への参加中にエラーが発生しました。もう一度お試しください。", "greeting");
-}
 }
 
 async function getMeetingDate() {
