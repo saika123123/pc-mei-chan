@@ -172,5 +172,5 @@ function setService() {
 
 async function autoScheduleMeeting() {
     toggleMeetingScheduler(); // UIを表示
-    await miku_say("ミーティングスケジューラーを表示しました。日時と参加者を入力してください。");
+    await miku_say("ミーティングスケジューラーを表示しました。日時と参加者を入力し、「ミーティングをスケジュール」ボタンを押してください。");
 }

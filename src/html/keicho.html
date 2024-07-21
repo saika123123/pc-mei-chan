@@ -37,6 +37,27 @@
     <script type="text/javascript" src="js/services/auto-meeting-service.js"></script>
     <link rel="stylesheet" type="text/css" href="css/mikutalk.css">
     <link rel="stylesheet" type="text/css" href="css/calendar.css">
+    <script>
+        initialize();
+    
+        var scrollYPostion = 0, scrollYPostionPushFlag = false, scrollYPostionArr = new Array();
+        window.addEventListener("scroll", (event) => {
+            scrollYPostion = Number(this.scrollY);
+            if (scrollYPostionPushFlag) {
+                scrollYPostionArr.push(scrollYPostion);
+                scrollYPostionPushFlag = false;
+            };
+            if (scrollYPostionArr.length > 5) {
+                scrollYPostionArr = scrollYPostionArr.splice(0, 1);
+            };
+        });
+    
+        // 以下を追加
+        document.getElementById('meeting-scheduler').addEventListener('submit', function(event) {
+            event.preventDefault();
+            scheduleMeeting();
+        });
+    </script>
 </head>
 
 <body>

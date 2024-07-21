@@ -6,24 +6,29 @@ class AutoMeetingService {
     }
   
     async scheduleMeeting(dateTime, participants) {
-      const meetingId = this.generateMeetingId();
-      const userId = this.getUserId();
-      const meeting = {
-        id: meetingId,
-        dateTime: dateTime,
-        participants: participants,
-        organizer: userId
-      };
-      
-      // MeetCS27サービスとの連携
-      const meetingUrl = await this.createMeetCS27Meeting(meeting);
-      
-      // カレンダーサービスとの連携
-      await this.addToCalendar(meeting, meetingUrl);
-      
-      this.meetings.push(meeting);
-      return meeting;
-    }
+        try {
+          const meetingId = this.generateMeetingId();
+          const userId = this.getUserId();
+          const meeting = {
+            id: meetingId,
+            dateTime: dateTime,
+            participants: participants,
+            organizer: userId
+          };
+          
+          // MeetCS27サービスとの連携
+          const meetingUrl = await this.createMeetCS27Meeting(meeting);
+          
+          // カレンダーサービスとの連携
+          await this.addToCalendar(meeting, meetingUrl);
+          
+          this.meetings.push(meeting);
+          return meeting;
+        } catch (error) {
+          console.error("Error scheduling meeting:", error);
+          throw error;
+        }
+      }
   
     generateMeetingId() {
       return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -61,18 +66,28 @@ class AutoMeetingService {
     }
   }
   
-  // Export the AutoMeetingService class
-  window.AutoMeetingService = new AutoMeetingService();
+// グローバルスコープにインスタンスを作成
+window.autoMeetingService = new AutoMeetingService();
+
+// グローバル関数としてscheduleMeetingを定義
+window.scheduleMeeting = async function() {
+  const dateTimeInput = document.getElementById('meeting-datetime');
+  const participantsInput = document.getElementById('meeting-participants');
   
-  function scheduleMeeting() {
-    const dateTime = document.getElementById('meeting-datetime').value;
-    const participants = document.getElementById('meeting-participants').value.split(',').map(p => p.trim());
-  
-    AutoMeetingService.scheduleMeeting(dateTime, participants)
-      .then(result => {
-        alert(`Meeting scheduled successfully!`);
-      })
-      .catch(error => {
-        alert('Error scheduling meeting: ' + error.message);
-      });
+  const dateTime = dateTimeInput.value;
+  const participants = participantsInput.value.split(',').map(p => p.trim());
+
+  if (!dateTime || participants.length === 0) {
+    alert('日時と参加者を入力してください。');
+    return;
   }
+
+  try {
+    const meeting = await autoMeetingService.scheduleMeeting(dateTime, participants);
+    alert(`ミーティングが正常にスケジュールされました。ミーティングID: ${meeting.id}`);
+    dateTimeInput.value = '';
+    participantsInput.value = '';
+  } catch (error) {
+    alert(`ミーティングのスケジュールに失敗しました: ${error.message}`);
+  }
+};
