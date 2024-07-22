@@ -7,7 +7,9 @@ async function videochat() {
     try {
         videochatFlag = true;
         await miku_say("ビデオ会議サービスを開始します。何をしますか？", "smile");
-        let answer = await miku_ask("1. 会議を作成する\n2. 会議の通知を確認する\n3. 会議に参加する", false, "self_introduction");
+        
+        await miku_say("1. 会議を作成する\n2. 会議の通知を確認する\n3. 会議に参加する", "self_introduction");
+        let answer = await manualInput("選択肢の番号を入力してください（1, 2, または 3）");
         
         switch(answer) {
             case "1":
