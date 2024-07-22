@@ -20,14 +20,6 @@ let serviceTimeoutId = null;
  * キーワードが含まれているか判定し，対応するサービスを実行する
  */
 async function checkKeyword(answer) {
-        // ビデオ会議サービスのキーワードチェックを追加
-        if (/会議/.test(answer)) {
-            console.log("Start Service : ビデオ会議サービス");
-            serviceFlag = true;
-            await videochat();
-            return true;
-        }
-    
     // let app = apps;
     for (let app of apps) {
         let keyword = new RegExp(app.keyword);
@@ -169,8 +161,5 @@ function setService() {
         addService("らくらく 動画 サービス", "らくらく 動画", "らくらく動画サービスの実行", async function () { await rakudo() });
     }
 
-        // ビデオ会議サービス
-    // if (videochatFlag) {
-        // addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
-    // }
+    
 }
