@@ -27,14 +27,15 @@ async function videochat() {
 
 async function createMeeting() {
     try {
-        await miku_say("会議の作成を開始します。以下の情報を入力してください。", "self_introduction");
-        
-        let meetingName = await manualInput("会議の名前を入力してください");
-        let meetingDate = await manualInput("会議の日付を入力してください（例：2023-07-01）");
-        let meetingTime = await manualInput("会議の時間を入力してください（例：14:30）");
+        let meetingName = await miku_ask("会議の名前を教えてください。", false, "self_introduction");
+        let meetingDate = await miku_ask("会議の日付を教えてください（例：2023-07-01）。", false, "self_introduction");
+        let meetingTime = await miku_ask("会議の時間を教えてください（例：14:30）。", false, "self_introduction");
+
+        console.log("Input values:", { meetingName, meetingDate, meetingTime }); // デバッグ用
 
         if (!validateMeetingInput(meetingName, meetingDate, meetingTime)) {
-            throw new Error('Invalid input');
+            await miku_say("入力された情報が正しくありません。もう一度お試しください。", "idle_think");
+            return;
         }
 
         let meetingId = await generateSecureMeetingId();
@@ -119,32 +120,39 @@ async function saveMeetingData(meetingData) {
 
 async function getMeetings() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/meetings`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch meetings');
-        }
-        return response.json();
+      const response = await fetch(`${API_BASE_URL}/api/meetings`);
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Failed to fetch meetings: ${response.status} ${response.statusText}\n${errorBody}`);
+      }
+      return response.json();
     } catch (error) {
-        console.error('Error fetching meetings:', error);
-        throw error;
+      console.error('Error fetching meetings:', error);
+      throw error;
     }
-}
+  }
 
 function validateMeetingInput(name, date, time) {
+    console.log("Validating:", { name, date, time }); // デバッグ用
+
     if (!name || name.trim() === '') {
+        console.log("Name validation failed");
         return false;
     }
     
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
+        console.log("Date validation failed");
         return false;
     }
     
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
     if (!timeRegex.test(time)) {
+        console.log("Time validation failed");
         return false;
     }
     
+    console.log("All validations passed");
     return true;
 }
 
