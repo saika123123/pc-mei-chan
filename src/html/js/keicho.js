@@ -110,9 +110,13 @@ async function initialize() {
     //ここにアプリ固有の処理を書く
 
 
-    setInterval(autoStartMeeting, 60000); // 1分ごとにチェック
+    if (typeof autoStartMeeting === 'function') {
+        setInterval(autoStartMeeting, 60000);
+    } else {
+        console.warn('autoStartMeeting function is not defined');
+    }
 
-    
+
     //MMD作成
     mmd = new MMD("localhost:8080", "localhost:39390");
 

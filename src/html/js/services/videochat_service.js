@@ -130,7 +130,8 @@ async function generateSecureMeetingId() {
     return Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('');
 }
 
-async function checkAndStartMeeting() {
+// checkAndStartMeeting 関数を autoStartMeeting として名前を変更
+async function autoStartMeeting() {
     try {
         const meetings = await getMeetings();
         const now = new Date();
@@ -147,9 +148,12 @@ async function checkAndStartMeeting() {
             }
         }
     } catch (error) {
-        console.error('Error in checkAndStartMeeting:', error);
+        console.error('Error in autoStartMeeting:', error);
     }
 }
 
-// 1分ごとに会議をチェック
-setInterval(checkAndStartMeeting, 60000);
+// setInterval の呼び出しも変更
+setInterval(autoStartMeeting, 60000);
+
+// videochat 関数を外部から呼び出せるようにエクスポート
+window.videochat = videochat;
