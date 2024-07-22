@@ -195,70 +195,7 @@ async function generateMeetingUrl(meetingId, userId) {
 //     }
 // }
 
-async function saveMeetingData(meetingData) {
-    try {
-        let meetings = JSON.parse(localStorage.getItem('meetings')) || [];
-        meetings.push(meetingData);
-        localStorage.setItem('meetings', JSON.stringify(meetings));
-        return meetingData;
-    } catch (error) {
-        console.error('Error saving meeting data:', error);
-        throw error;
-    }
-}
 
-async function sendNotifications(meetingData) {
-    try {
-        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-        notifications.push({
-            meetingId: meetingData.id,
-            participants: meetingData.participants,
-        });
-        localStorage.setItem('notifications', JSON.stringify(notifications));
-        return { success: true };
-    } catch (error) {
-        console.error('Error sending notifications:', error);
-        throw error;
-    }
-}
-
-async function getNotifications(userId) {
-    try {
-        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-        return notifications.filter(n => n.participants.includes(userId));
-    } catch (error) {
-        console.error('Error getting notifications:', error);
-        throw error;
-    }
-}
-
-async function getUpcomingMeetings(userId) {
-    try {
-        let meetings = JSON.parse(localStorage.getItem('meetings')) || [];
-        return meetings.filter(m => m.participants.includes(userId));
-    } catch (error) {
-        console.error('Error getting upcoming meetings:', error);
-        throw error;
-    }
-}
-
-async function checkNotifications() {
-    try {
-        const notifications = await getNotifications(uid);
-        if (notifications.length === 0) {
-            await miku_say("新しい会議の通知はありません。", "smile");
-        } else {
-            await miku_say(`${notifications.length}件の新しい会議通知があります。`, "smile");
-            for (let notification of notifications) {
-                const meeting = await getMeetingById(notification.meetingId);
-                await miku_say(`${meeting.name}が${meeting.date}の${meeting.time}に予定されています。`, "self_introduction");
-            }
-        }
-    } catch (error) {
-        console.error('Error in checkNotifications:', error);
-        await miku_say("通知の確認中にエラーが発生しました。", "idle_think");
-    }
-}
 
 async function joinMeeting() {
     try {
@@ -319,3 +256,89 @@ async function getMeetingById(meetingId) {
         throw error;
     }
 }
+
+const API_BASE_URL = 'https://es4.eedept.kobe-u.ac.jp/videochat_server';
+
+async function saveMeetingData(meetingData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/meetings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(meetingData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save meeting data');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error saving meeting data:', error);
+      throw error;
+    }
+  }
+  
+  async function sendNotifications(meetingData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          meetingName: meetingData.name,
+          participants: meetingData.participants,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send notifications');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error sending notifications:', error);
+      throw error;
+    }
+  }
+  
+  async function getNotifications(userId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to get notifications');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      throw error;
+    }
+  }
+  
+  async function getUpcomingMeetings(userId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/meetings/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to get upcoming meetings');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error getting upcoming meetings:', error);
+      throw error;
+    }
+  }
+  
+  // 新しい関数: 通知を確認する
+  async function checkNotifications() {
+    try {
+      const notifications = await getNotifications(uid);
+      if (notifications.length === 0) {
+        await miku_say("新しい通知はありません。", "smile");
+      } else {
+        for (let notification of notifications) {
+          await miku_say(notification.message, "self_introduction");
+        }
+      }
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+      await miku_say("通知の確認中にエラーが発生しました。", "idle_think");
+    }
+  }
