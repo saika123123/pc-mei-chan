@@ -36,14 +36,14 @@ async function createMeeting() {
         let meetingName = await miku_ask("会議の名前を教えてください。", false, "self_introduction");
         let meetingDate = await miku_ask("会議の日付を教えてください（例：2023-07-01）。", false, "self_introduction");
         let meetingTime = await miku_ask("会議の時間を教えてください（例：14:30）。", false, "self_introduction");
-        let participants = await miku_ask("参加者のuidをカンマ区切りで教えてください。", false, "self_introduction");
+        let participants = await miku_ask("参加者の名前をカンマ区切りで教えてください。", false, "self_introduction");
 
-        // 入力のバリデーション
         if (!validateMeetingInput(meetingName, meetingDate, meetingTime, participants)) {
             throw new Error('Invalid input');
         }
 
-        let participantList = participants.split(',').map(p => p.trim());
+        let participantNames = participants.split(',').map(p => p.trim());
+        let participantUids = await Promise.all(participantNames.map(getUidFromName));
         
         let meetingId = await generateSecureMeetingId();
         let meetingUrl = await generateMeetingUrl(meetingId, uid);
@@ -53,7 +53,8 @@ async function createMeeting() {
             name: meetingName,
             date: meetingDate,
             time: meetingTime,
-            participants: participantList,
+            participants: participantUids,
+            participantNames: participantNames,
             url: meetingUrl,
             creator: uid
         };
@@ -204,6 +205,84 @@ async function getUpcomingMeetings(userId) {
         return meetings.filter(m => m.participants.includes(userId));
     } catch (error) {
         console.error('Error getting upcoming meetings:', error);
+        throw error;
+    }
+}
+
+async function checkNotifications() {
+    try {
+        const notifications = await getNotifications(uid);
+        if (notifications.length === 0) {
+            await miku_say("新しい会議の通知はありません。", "smile");
+        } else {
+            await miku_say(`${notifications.length}件の新しい会議通知があります。`, "smile");
+            for (let notification of notifications) {
+                const meeting = await getMeetingById(notification.meetingId);
+                await miku_say(`${meeting.name}が${meeting.date}の${meeting.time}に予定されています。`, "self_introduction");
+            }
+        }
+    } catch (error) {
+        console.error('Error in checkNotifications:', error);
+        await miku_say("通知の確認中にエラーが発生しました。", "idle_think");
+    }
+}
+
+async function joinMeeting() {
+    try {
+        const upcomingMeetings = await getUpcomingMeetings(uid);
+        if (upcomingMeetings.length === 0) {
+            await miku_say("参加可能な会議はありません。", "idle_think");
+            return;
+        }
+
+        let meetingList = upcomingMeetings.map((m, i) => `${i + 1}. ${m.name} (${m.date} ${m.time})`).join('\n');
+        let answer = await miku_ask(`参加する会議の番号を選んでください：\n${meetingList}`, false, "self_introduction");
+
+        let selectedIndex = parseInt(answer) - 1;
+        if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= upcomingMeetings.length) {
+            await miku_say("無効な選択です。", "idle_think");
+            return;
+        }
+
+        let selectedMeeting = upcomingMeetings[selectedIndex];
+        await miku_say(`${selectedMeeting.name}に参加します。ブラウザで会議URLを開きます。`, "smile");
+        window.open(selectedMeeting.url, '_blank');
+    } catch (error) {
+        console.error('Error in joinMeeting:', error);
+        await miku_say("会議への参加中にエラーが発生しました。", "idle_think");
+    }
+}
+
+async function autoStartMeeting() {
+    try {
+        const now = new Date();
+        const upcomingMeetings = await getUpcomingMeetings(uid);
+        const meetingsToStart = upcomingMeetings.filter(meeting => {
+            const meetingDateTime = new Date(`${meeting.date}T${meeting.time}`);
+            const timeDiff = meetingDateTime.getTime() - now.getTime();
+            return timeDiff >= 0 && timeDiff <= 5 * 60 * 1000; // 5分以内に開始する会議
+        });
+
+        for (let meeting of meetingsToStart) {
+            await miku_say(`${meeting.name}が間もなく始まります。参加しますか？`, "self_introduction");
+            let answer = await miku_ask("はい/いいえ", false, "idle_think");
+            if (answer.toLowerCase() === 'はい') {
+                await miku_say(`${meeting.name}に参加します。ブラウザで会議URLを開きます。`, "smile");
+                window.open(meeting.url, '_blank');
+            }
+        }
+    } catch (error) {
+        console.error('Error in autoStartMeeting:', error);
+    }
+}
+
+// 会議データを取得する関数（ローカルストレージ版）
+async function getMeetingById(meetingId) {
+    try {
+        let meetings = JSON.parse(localStorage.getItem('meetings')) || [];
+        return meetings.find(m => m.id === meetingId);
+    } catch (error) {
+        console.error('Error getting meeting by id:', error);
         throw error;
     }
 }

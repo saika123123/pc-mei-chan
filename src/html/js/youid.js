@@ -83,3 +83,14 @@ function getVideoMeetingPreference(uid) {
             throw new Error(err);
         });
 }
+
+function getUidFromName(name) {
+    // 本来はサーバーサイドで実装すべきですが、ここではダミーの実装をします
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            // ダミーのUID生成（実際の実装では適切なロジックに置き換えてください）
+            const uid = 'user_' + name.toLowerCase().replace(/\s/g, '_');
+            resolve(uid);
+        }, 500);
+    });
+}

@@ -109,6 +109,10 @@ function refreshAt(h, m) {
 async function initialize() {
     //ここにアプリ固有の処理を書く
 
+
+    setInterval(autoStartMeeting, 60000); // 1分ごとにチェック
+
+    
     //MMD作成
     mmd = new MMD("localhost:8080", "localhost:39390");
 
