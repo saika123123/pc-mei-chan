@@ -4,7 +4,7 @@ async function videochat() {
     try {
         videochatFlag = true;
         await miku_say("ビデオ会議サービスを開始します。何をしますか？", "smile");
-        let answer = await miku_ask("1. 会議を作成する\n2. 会議の一覧を確認する", false, "self_introduction");
+        let answer = await manualInput("1. 会議を作成する\n2. 会議の一覧を確認する\n選択肢の番号を入力してください（1または2）");
         
         switch(answer) {
             case "1":
@@ -27,9 +27,11 @@ async function videochat() {
 
 async function createMeeting() {
     try {
-        let meetingName = await miku_ask("会議の名前を教えてください。", false, "self_introduction");
-        let meetingDate = await miku_ask("会議の日付を教えてください（例：2023-07-01）。", false, "self_introduction");
-        let meetingTime = await miku_ask("会議の時間を教えてください（例：14:30）。", false, "self_introduction");
+        await miku_say("会議の作成を開始します。以下の情報を入力してください。", "self_introduction");
+        
+        let meetingName = await manualInput("会議の名前を入力してください");
+        let meetingDate = await manualInput("会議の日付を入力してください（例：2023-07-01）");
+        let meetingTime = await manualInput("会議の時間を入力してください（例：14:30）");
 
         if (!validateMeetingInput(meetingName, meetingDate, meetingTime)) {
             throw new Error('Invalid input');
@@ -54,6 +56,28 @@ async function createMeeting() {
         console.error('Error in createMeeting:', error);
         await miku_say("会議の作成中にエラーが発生しました。", "idle_think");
     }
+}
+
+function manualInput(prompt) {
+    return new Promise((resolve) => {
+        let inputElement = document.createElement('input');
+        inputElement.type = 'text';
+        inputElement.placeholder = prompt;
+        
+        let submitButton = document.createElement('button');
+        submitButton.textContent = '送信';
+        
+        let container = document.getElementById('status');
+        container.appendChild(inputElement);
+        container.appendChild(submitButton);
+        
+        submitButton.onclick = () => {
+            let value = inputElement.value;
+            container.removeChild(inputElement);
+            container.removeChild(submitButton);
+            resolve(value);
+        };
+    });
 }
 
 async function listMeetings() {
@@ -139,7 +163,7 @@ async function autoStartMeeting() {
             const meetingDateTime = new Date(`${meeting.date}T${meeting.time}`);
             if (now >= meetingDateTime && now < new Date(meetingDateTime.getTime() + 5 * 60000)) { // 開始時間から5分以内
                 await miku_say(`会議「${meeting.name}」の開始時間です。参加しますか？`, "self_introduction");
-                let answer = await miku_ask("はい/いいえ", false, "idle_think");
+                let answer = await manualInput("はい/いいえを入力してください");
                 if (answer.toLowerCase() === 'はい') {
                     await miku_say(`会議「${meeting.name}」に参加します。ブラウザで会議URLを開きます。`, "smile");
                     window.open(meeting.url, '_blank');
