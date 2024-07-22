@@ -33,10 +33,18 @@ async function videochat() {
 
 async function createMeeting() {
     try {
+        await miku_say("会議の作成を開始します。以下の情報を入力してください。", "self_introduction");
+        
         let meetingName = await miku_ask("会議の名前を教えてください。", false, "self_introduction");
-        let meetingDate = await miku_ask("会議の日付を教えてください（例：2023-07-01）。", false, "self_introduction");
-        let meetingTime = await miku_ask("会議の時間を教えてください（例：14:30）。", false, "self_introduction");
-        let participants = await miku_ask("参加者の名前をカンマ区切りで教えてください。", false, "self_introduction");
+        
+        await miku_say("会議の日付を入力してください。", "self_introduction");
+        let meetingDate = await manualInput("日付（例：2023-07-01）");
+        
+        await miku_say("会議の時間を入力してください。", "self_introduction");
+        let meetingTime = await manualInput("時間（例：14:30）");
+        
+        await miku_say("参加者の名前をカンマ区切りで入力してください。", "self_introduction");
+        let participants = await manualInput("参加者名（例：山田太郎,佐藤花子）");
 
         if (!validateMeetingInput(meetingName, meetingDate, meetingTime, participants)) {
             throw new Error('Invalid input');
@@ -67,6 +75,29 @@ async function createMeeting() {
         console.error('Error in createMeeting:', error);
         await miku_say("会議の作成中にエラーが発生しました。", "idle_think");
     }
+}
+
+// 手動入力を処理する関数
+function manualInput(prompt) {
+    return new Promise((resolve) => {
+        let inputElement = document.createElement('input');
+        inputElement.type = 'text';
+        inputElement.placeholder = prompt;
+        
+        let submitButton = document.createElement('button');
+        submitButton.textContent = '送信';
+        
+        let container = document.getElementById('status');
+        container.appendChild(inputElement);
+        container.appendChild(submitButton);
+        
+        submitButton.onclick = () => {
+            let value = inputElement.value;
+            container.removeChild(inputElement);
+            container.removeChild(submitButton);
+            resolve(value);
+        };
+    });
 }
 
 // 入力のバリデーション関数
