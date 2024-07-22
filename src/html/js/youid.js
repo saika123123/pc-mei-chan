@@ -65,3 +65,21 @@ function putPersonPreference(uid, pref) {
             throw new Error(err);
         });
 }
+
+// youid.js に以下の関数を追加
+
+function getVideoMeetingPreference(uid) {
+    const url = youid_endpoint + "/prefs/" + uid + "/videochat";
+    return fetch(url)
+        .then(response => {
+            if (response.status == 200) {
+                return response.json();
+            } else {
+                throw new Error(response);
+            }
+        })
+        .catch(err => {
+            console.log("Failed to fetch " + url, err);
+            throw new Error(err);
+        });
+}

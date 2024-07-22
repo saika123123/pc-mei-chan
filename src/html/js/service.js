@@ -20,26 +20,26 @@ let serviceTimeoutId = null;
  * キーワードが含まれているか判定し，対応するサービスを実行する
  */
 async function checkKeyword(answer) {
-    console.log("Checking keyword:", answer); // デバッグ用ログ
+        // ビデオ会議サービスのキーワードチェックを追加
+        if (/会議/.test(answer)) {
+            console.log("Start Service : ビデオ会議サービス");
+            serviceFlag = true;
+            await videochat();
+            return true;
+        }
+    
+    // let app = apps;
     for (let app of apps) {
         let keyword = new RegExp(app.keyword);
         if (keyword.test(answer)) {
-            console.log("Matched keyword:", app.keyword); // デバッグ用ログ
-            console.log("Start Service:", app.name);
+            console.log("Start Service : " + app.name);
             serviceFlag = true;
-            try {
-                await app.func();
-            } catch (error) {
-                console.error("Error in service execution:", error); // エラーログ
-                serviceFlag = false;
-                await miku_say("申し訳ありません。サービスの実行中にエラーが発生しました。", "greeting");
-            }
+            await app.func();
             return true;
         }
     }
-    console.log("No matching keyword found"); // デバッグ用ログ
-    return false;
 }
+
 /**
  * メイちゃんと連携している機能を説明する
  */
@@ -124,18 +124,8 @@ function put_restart_button() {
 //---------- 以下サービス連携 ----------//
 // 連携したサービスをセットしていく
 function setService() {
-
-   // オンライン会議サービスの追加（統合版）
-   addService("オンライン会議サービス", "会議", "オンライン会議の作成と参加", async function () { 
-    console.log("Starting online meeting service");
-    if (typeof onlineMeeting === 'function') {
-        await onlineMeeting();
-    } else {
-        console.error("onlineMeeting function is not defined");
-        await miku_say("申し訳ありません。オンライン会議サービスを開始できません。", "greeting");
-    }
-});
-
+    // service.js の setService 関数内に以下を追加
+    addService("ビデオ会議サービス", "会議", "ビデオ会議の作成、参加、通知の確認", async function () { await videochat() });
     // つぶやきダイアリー
     addService("つぶやきダイアリー", "日記", "過去の対話内容の振り返り", async function () { await diary(); });
 
@@ -179,4 +169,8 @@ function setService() {
         addService("らくらく 動画 サービス", "らくらく 動画", "らくらく動画サービスの実行", async function () { await rakudo() });
     }
 
+        // ビデオ会議サービス
+    // if (videochatFlag) {
+        // addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
+    // }
 }
