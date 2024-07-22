@@ -27,9 +27,11 @@ async function videochat() {
 
 async function createMeeting() {
     try {
-        let meetingName = await miku_ask("会議の名前を教えてください。", false, "self_introduction");
-        let meetingDate = await miku_ask("会議の日付を教えてください（例：2023-07-01）。", false, "self_introduction");
-        let meetingTime = await miku_ask("会議の時間を教えてください（例：14:30）。", false, "self_introduction");
+        await miku_say("会議の作成を開始します。以下の情報を入力してください。", "self_introduction");
+
+        let meetingName = await manualInput("会議の名前を入力してください");
+        let meetingDate = await manualInput("会議の日付を入力してください（例：2023-07-01）");
+        let meetingTime = await manualInput("会議の時間を入力してください（例：14:30）");
 
         console.log("Input values:", { meetingName, meetingDate, meetingTime }); // デバッグ用
 
@@ -61,23 +63,40 @@ async function createMeeting() {
 
 function manualInput(prompt) {
     return new Promise((resolve) => {
-        let inputElement = document.createElement('input');
-        inputElement.type = 'text';
-        inputElement.placeholder = prompt;
-        
-        let submitButton = document.createElement('button');
+        const inputContainer = document.createElement('div');
+        inputContainer.style.margin = '10px 0';
+
+        const label = document.createElement('label');
+        label.textContent = prompt;
+        label.style.display = 'block';
+        label.style.marginBottom = '5px';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.style.width = '100%';
+        input.style.padding = '5px';
+        input.style.fontSize = '16px';
+
+        const submitButton = document.createElement('button');
         submitButton.textContent = '送信';
-        
-        let container = document.getElementById('status');
-        container.appendChild(inputElement);
-        container.appendChild(submitButton);
-        
+        submitButton.style.marginTop = '5px';
+        submitButton.style.padding = '5px 10px';
+        submitButton.style.fontSize = '16px';
+
+        inputContainer.appendChild(label);
+        inputContainer.appendChild(input);
+        inputContainer.appendChild(submitButton);
+
+        const statusElement = document.getElementById('status');
+        statusElement.appendChild(inputContainer);
+
         submitButton.onclick = () => {
-            let value = inputElement.value;
-            container.removeChild(inputElement);
-            container.removeChild(submitButton);
+            const value = input.value;
+            statusElement.removeChild(inputContainer);
             resolve(value);
         };
+
+        input.focus();
     });
 }
 
