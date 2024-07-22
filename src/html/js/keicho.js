@@ -136,8 +136,8 @@ async function initialize() {
     }
 
     // ビデオ会議サービスのユーザ情報をセット
-    videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { chatFlag = false });
-    if (chatFlag) {
+    videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { videochatFlag = false });
+    if (videochatFlag) {
         chatId = videoMeetingPreference.preferences.id;
     }
 
