@@ -730,6 +730,7 @@ async function displayCircleDetails(circleId) {
 
 // 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成の処理 - 対話内で行うよう修正
+// 寄合作成の処理 - 対話内で行うよう修正
 async function handleCreateGathering() {
     try {
         const token = localStorage.getItem('token');
@@ -855,8 +856,11 @@ async function handleCreateGathering() {
                 // 詳細入力
                 const details = await miku_ask("寄合の詳細を教えてください（任意）");
 
-                // 日時をフォーマット
+                // 日時をフォーマット - ここを修正
                 const gatheringDate = new Date(year, month, day, hour, 0);
+
+                // ISO形式で正確なフォーマットを指定
+                // APIのリクエスト形式に合わせる
                 const formattedDate = gatheringDate.toISOString();
 
                 // 確認
@@ -886,6 +890,16 @@ async function handleCreateGathering() {
                     if (/はい|よい|良い|OK|作成|する/.test(confirmAnswer)) {
                         validConfirm = true;
 
+                        // リクエストボディを修正
+                        const requestBody = {
+                            circleId: selectedCircle.id,
+                            theme: theme,
+                            datetime: formattedDate,
+                            details: details || "" // nullの場合に空文字を設定
+                        };
+
+                        console.log("寄合作成リクエスト:", requestBody); // デバッグログ
+
                         // 寄合作成リクエスト
                         const createResponse = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
                             method: 'POST',
@@ -893,26 +907,27 @@ async function handleCreateGathering() {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
-                            body: JSON.stringify({
-                                circleId: selectedCircle.id,
-                                theme: theme,
-                                datetime: formattedDate,
-                                details: details
-                            })
+                            body: JSON.stringify(requestBody)
                         });
 
                         if (createResponse.ok) {
                             await miku_say(`「${theme}」寄合を作成しました！メンバーに招待が送信されます。`, "greeting");
                         } else {
-                            const errorData = await createResponse.json();
-                            await miku_say(`寄合作成に失敗しました: ${errorData.message}`, "idle_think");
+                            // エラー時のレスポンスを詳細に確認
+                            let errorMessage = "寄合作成に失敗しました";
+                            try {
+                                const errorData = await createResponse.json();
+                                console.error("寄合作成エラー:", errorData);
+                                errorMessage += `: ${errorData.message || "不明なエラー"}`;
+                            } catch (e) {
+                                console.error("寄合作成レスポンス解析エラー:", e);
+                            }
+                            await miku_say(errorMessage, "idle_think");
                         }
-                    }
-                    else if (/いいえ|違う|キャンセル|やめる/.test(confirmAnswer)) {
+                    } else if (/いいえ|違う|キャンセル|やめる/.test(confirmAnswer)) {
                         validConfirm = true;
                         await miku_say("寄合作成をキャンセルしました。", "greeting");
-                    }
-                    else {
+                    } else {
                         await miku_say("「はい」か「いいえ」でお答えください。", "idle_think");
                     }
                 }
