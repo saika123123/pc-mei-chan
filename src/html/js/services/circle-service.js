@@ -184,12 +184,17 @@ async function notifyInvitations() {
 }
 
 const now = new Date();
-        const diffMinutes = Math.floor((gatheringTime - now) / (1000 * 60));
-        
-        gatheringText = `「${gathering.theme}」の寄合がまもなく始まります。（あと約${diffMinutes}分）`;
-    } else {
-        gatheringText = `${window.upcomingGatheringsCount}件の寄合がまもなく始まります。`;
-    }
+let gatheringText = "";
+if (window.upcomingGatheringsCount === 1) {
+    const gathering = window.upcomingGatherings[0];
+    const gatheringTime = new Date(gathering.datetime);
+    const now = new Date();
+    const diffMinutes = Math.floor((gatheringTime - now) / (1000 * 60));
+    
+    gatheringText = `「${gathering.theme}」の寄合がまもなく始まります。（あと約${diffMinutes}分）`;
+} else {
+    gatheringText = `${window.upcomingGatheringsCount}件の寄合がまもなく始まります。`;
+}
     
     await miku_say(gatheringText, "greeting");
     
@@ -212,7 +217,7 @@ const now = new Date();
             await selectAndJoinGathering();
         }
     }
-}
+
 
 // 寄合を選択して参加する
 async function selectAndJoinGathering() {
