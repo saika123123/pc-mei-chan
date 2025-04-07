@@ -8,28 +8,28 @@ const circleService = {
     name: "オンラインサークル",
     keyword: "サークル",
     description: "オンラインでサークル活動や寄合を楽しめるサービス",
-    func: async function() { await handleCircleService(); },
+    func: async function () { await handleCircleService(); },
 };
 
 // サークルサービスのメイン処理
 async function handleCircleService() {
     // サービスフラグを立てる
     serviceFlag = true;
-    
+
     // 未読の招待や近日中の寄合があるかチェック
     const hasUnreadInvitations = await checkUnreadInvitations();
     const hasUpcomingGatherings = await checkUpcomingGatherings();
-    
+
     // 招待がある場合は優先して通知
     if (hasUnreadInvitations) {
         await notifyInvitations();
     }
-    
+
     // 開始予定の寄合があるかチェック
     if (hasUpcomingGatherings) {
         await notifyUpcomingGatherings();
     }
-    
+
     // メインメニューを表示
     await showServiceMainMenu();
 }
@@ -42,20 +42,20 @@ async function checkUnreadInvitations() {
             await miku_say("オンラインサークルサービスにログインしていません。あらかじめログインしておいてください。", "idle_think");
             return false;
         }
-        
+
         const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/invitations', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             // 現在時刻より後の寄合招待のみをフィルタリング
-            const futureInvitations = data.invitations.filter(invitation => 
+            const futureInvitations = data.invitations.filter(invitation =>
                 new Date(invitation.datetime) > new Date()
             );
-            
+
             return futureInvitations.length > 0;
         }
         return false;
@@ -70,13 +70,13 @@ async function checkUpcomingGatherings() {
     try {
         const token = localStorage.getItem('token');
         if (!token) return false;
-        
+
         const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/upcoming-gatherings', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             // 30分以内に開始する寄合のみフィルタリング
@@ -86,7 +86,7 @@ async function checkUpcomingGatherings() {
                 const diffMinutes = (gatheringTime - now) / (1000 * 60);
                 return diffMinutes <= 30 && diffMinutes >= 0;
             });
-            
+
             return upcoming.length > 0;
         }
         return false;
@@ -105,29 +105,29 @@ async function notifyInvitations() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             // 現在時刻より後の寄合招待のみをフィルタリング
-            const futureInvitations = data.invitations.filter(invitation => 
+            const futureInvitations = data.invitations.filter(invitation =>
                 new Date(invitation.datetime) > new Date()
             );
-            
+
             if (futureInvitations.length > 0) {
                 // 招待を表示
                 let str = `<div style="background-color:#f0f7ff;padding:15px;border-radius:10px;border-left:4px solid #4a90e2;margin:10px 0;">
                            <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">📩 未回答の寄合招待 (${futureInvitations.length}件)</div>`;
-                
+
                 for (let i = 0; i < futureInvitations.length; i++) {
                     const inv = futureInvitations[i];
                     const dateStr = new Date(inv.datetime).toLocaleString('ja-JP');
                     str += `<div style="padding:8px;margin-bottom:5px;background-color:white;border-radius:5px;">
-                            ${i+1}. ${inv.theme}（${dateStr}）- ${inv.circle_name}</div>`;
+                            ${i + 1}. ${inv.theme}（${dateStr}）- ${inv.circle_name}</div>`;
                 }
-                
+
                 str += `</div>`;
                 post_keicho(str, SPEAKER.AGENT, person);
-                
+
                 // ユーザーに招待への応答を促す
                 const answer = await miku_ask("これらの招待に応答しますか？（はい/いいえ）");
                 if (/はい|おねがい|お願い|頼む|頼みます/.test(answer)) {
@@ -145,10 +145,10 @@ async function handleInvitationResponses(invitations) {
     for (let i = 0; i < invitations.length; i++) {
         const inv = invitations[i];
         const dateStr = new Date(inv.datetime).toLocaleString('ja-JP');
-        
+
         await miku_say(`「${inv.theme}」（${dateStr}）への招待です。`, "smile");
         const answer = await miku_ask("参加しますか？（参加する/参加しない/後で決める）");
-        
+
         if (/参加|する|はい|yes/.test(answer)) {
             // 参加する場合
             try {
@@ -161,7 +161,7 @@ async function handleInvitationResponses(invitations) {
                     },
                     body: JSON.stringify({ status: 'accepted' })
                 });
-                
+
                 if (response.ok) {
                     await miku_say("参加登録が完了しました！", "greeting");
                 } else {
@@ -171,7 +171,7 @@ async function handleInvitationResponses(invitations) {
                 console.error('招待応答中にエラーが発生しました:', error);
                 await miku_say("応答処理中にエラーが発生しました。", "idle_think");
             }
-        } 
+        }
         else if (/参加しない|不参加|no|いいえ/.test(answer)) {
             // 参加しない場合
             try {
@@ -184,7 +184,7 @@ async function handleInvitationResponses(invitations) {
                     },
                     body: JSON.stringify({ status: 'declined' })
                 });
-                
+
                 if (response.ok) {
                     await miku_say("不参加の登録が完了しました。", "greeting");
                 } else {
@@ -211,7 +211,7 @@ async function notifyUpcomingGatherings() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             // 30分以内に開始する寄合のみフィルタリング
@@ -221,46 +221,46 @@ async function notifyUpcomingGatherings() {
                 const diffMinutes = (gatheringTime - now) / (1000 * 60);
                 return diffMinutes <= 30 && diffMinutes >= 0;
             });
-            
+
             if (upcoming.length > 0) {
                 // 通知
                 let str = `<div style="background-color:#fff3e0;padding:15px;border-radius:10px;border-left:4px solid #ff9800;margin:10px 0;">
                            <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">⏰ まもなく始まる寄合</div>`;
-                
+
                 for (const gathering of upcoming) {
                     const gatheringTime = new Date(gathering.datetime);
                     const diffMinutes = Math.floor((gatheringTime - now) / (1000 * 60));
                     str += `<div style="padding:8px;margin-bottom:5px;background-color:white;border-radius:5px;">
                             ・${gathering.theme}（あと約${diffMinutes}分）</div>`;
                 }
-                
+
                 str += `</div>`;
                 post_keicho(str, SPEAKER.AGENT, person);
-                
+
                 // 参加を促す
                 if (upcoming.length === 1) {
                     await miku_say(`まもなく「${upcoming[0].theme}」の寄合が始まります。`, "greeting");
-                    const answer = await miku_ask("参加しますか？（はい/いいえ）");
-                    
+                    const answer = await miku_ask("参加情報を表示しますか？（はい/いいえ）");
+
                     if (/はい|参加|する/.test(answer)) {
-                        // ブラウザで寄合ページを開く
-                        const url = `https://es4.eedept.kobe-u.ac.jp/online-circle/gathering/${upcoming[0].id}`;
-                        window.open(url, '_blank');
-                        await miku_say("参加リンクを開きました。良い時間をお過ごしください！", "greeting");
+                        await displayGatheringInfo(upcoming[0].id);
                     }
                 } else {
-                    await miku_say("まもなく複数の寄合が始まります。参加しますか？", "greeting");
-                    const answer = await miku_ask("参加する場合は寄合の番号を教えてください。（1, 2, ... または「やめる」）");
-                    
+                    await miku_say("まもなく複数の寄合が始まります。参加情報を表示しますか？", "greeting");
+                    const answer = await miku_ask("はい/いいえ、または寄合の番号を教えてください（1, 2, ...）");
+
                     if (/やめる|中止|キャンセル|いいえ|no/.test(answer)) {
                         await miku_say("わかりました。また後でご案内します。", "greeting");
+                    } else if (/はい|参加|する/.test(answer)) {
+                        // 全ての寄合情報を表示
+                        for (const gathering of upcoming) {
+                            await displayGatheringInfo(gathering.id);
+                        }
                     } else {
                         // 番号を解析
                         const num = parseInt(answer.match(/\d+/) || ["0"][0]);
                         if (num >= 1 && num <= upcoming.length) {
-                            const url = `https://es4.eedept.kobe-u.ac.jp/online-circle/gathering/${upcoming[num-1].id}`;
-                            window.open(url, '_blank');
-                            await miku_say("参加リンクを開きました。良い時間をお過ごしください！", "greeting");
+                            await displayGatheringInfo(upcoming[num - 1].id);
                         } else {
                             await miku_say("有効な番号が選択されませんでした。また後でご案内します。", "greeting");
                         }
@@ -270,6 +270,94 @@ async function notifyUpcomingGatherings() {
         }
     } catch (error) {
         console.error('寄合通知中にエラーが発生しました:', error);
+    }
+}
+
+// 寄合情報を表示
+async function displayGatheringInfo(gatheringId) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings/${gatheringId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const gathering = data.gathering;
+
+            // 参加者情報取得
+            const participantsResponse = await fetch(`https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings/${gatheringId}/participants`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            let participantsInfo = "";
+            if (participantsResponse.ok) {
+                const participantsData = await participantsResponse.json();
+                const acceptedParticipants = participantsData.participants.filter(p => p.status === 'accepted');
+
+                participantsInfo = `<div style="margin-top:10px;padding:8px;background-color:#f5f5f5;border-radius:5px;">
+                                    <div style="font-weight:bold;">参加者 (${acceptedParticipants.length}人)</div>
+                                    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;">`;
+
+                for (const participant of acceptedParticipants.slice(0, 5)) {
+                    participantsInfo += `<span style="background-color:#e3f2fd;padding:3px 8px;border-radius:10px;font-size:14px;">
+                                        👤 ${participant.display_name}</span>`;
+                }
+
+                if (acceptedParticipants.length > 5) {
+                    participantsInfo += `<span style="background-color:#e3f2fd;padding:3px 8px;border-radius:10px;font-size:14px;">
+                                        +${acceptedParticipants.length - 5}人</span>`;
+                }
+
+                participantsInfo += `</div></div>`;
+            }
+
+            // 寄合情報を表示
+            const gatheringTime = new Date(gathering.datetime);
+            let infoStr = `<div style="background-color:#e8f5e9;padding:15px;border-radius:10px;border-left:4px solid #4caf50;margin:10px 0;">
+                          <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                          📅 寄合情報: ${gathering.theme}</div>
+                          <div style="padding:10px;background-color:white;border-radius:8px;margin-bottom:10px;">
+                            <div style="display:flex;align-items:center;margin-bottom:5px;">
+                              <span style="font-weight:bold;min-width:80px;">サークル:</span> ${gathering.circle_name}
+                            </div>
+                            <div style="display:flex;align-items:center;margin-bottom:5px;">
+                              <span style="font-weight:bold;min-width:80px;">日時:</span> ${gatheringTime.toLocaleString('ja-JP')}
+                            </div>`;
+
+            if (gathering.details) {
+                infoStr += `<div style="margin-top:10px;">
+                            <div style="font-weight:bold;margin-bottom:5px;">詳細:</div>
+                            <div style="padding:8px;background-color:#f9f9f9;border-radius:5px;">${gathering.details}</div>
+                          </div>`;
+            }
+
+            infoStr += participantsInfo;
+
+            if (gathering.url) {
+                infoStr += `<div style="margin-top:15px;text-align:center;">
+                            <div style="display:inline-block;background-color:#ff9800;color:white;padding:10px 15px;border-radius:5px;font-weight:bold;">
+                              参加URL: ${gathering.url}
+                            </div>
+                            <div style="font-size:12px;margin-top:5px;color:#666;">
+                              ※このURLをブラウザで開くか、クリックすると参加できます
+                            </div>
+                          </div>`;
+            }
+
+            infoStr += `</div></div>`;
+
+            post_keicho(infoStr, SPEAKER.AGENT, person);
+        } else {
+            await miku_say("寄合情報の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('寄合情報表示中にエラーが発生しました:', error);
+        await miku_say("寄合情報の表示中にエラーが発生しました。", "idle_think");
     }
 }
 
@@ -297,29 +385,29 @@ async function showServiceMainMenu() {
                         </div>
                     </div>
                     </div>`;
-    
+
     post_keicho(menuText, SPEAKER.AGENT, person);
-    
+
     // ユーザーの選択を受け付ける
     let selectedOption = false;
     let count = 0;
-    
+
     while (!selectedOption && count < 3) {
         const answer = await miku_ask("何をしますか？ 番号または項目名でお答えください。（終了する場合は「終わり」と言ってください）");
         count++;
-        
+
         if (/1|参加する|サークルに参加/.test(answer)) {
             await handleJoinCircle();
             selectedOption = true;
-        } 
+        }
         else if (/2|確認する|参加中|サークルを確認/.test(answer)) {
             await handleCheckCircles();
             selectedOption = true;
-        } 
+        }
         else if (/3|作成する|寄合を作成/.test(answer)) {
             await handleCreateGathering();
             selectedOption = true;
-        } 
+        }
         else if (/4|寄合一覧|寄合を確認/.test(answer)) {
             await handleCheckGatherings();
             selectedOption = true;
@@ -333,40 +421,682 @@ async function showServiceMainMenu() {
             await miku_say("すみません、選択肢から選んでください。", "idle_think");
         }
     }
-    
+
     if (!selectedOption) {
         await miku_say("選択肢から選ばれなかったため、サービスを終了します。", "greeting");
     }
-    
+
     serviceFlag = false;
 }
 
-// サークル参加の処理
+// サークル参加の処理 - 対話内に表示するよう修正
 async function handleJoinCircle() {
-    await miku_say("サークルへの参加ページを開きます。ブラウザで開いたページからサークルに参加してください。", "smile");
-    window.open("https://es4.eedept.kobe-u.ac.jp/online-circle/join-circle", '_blank');
-    stop_keicho();
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/circles?type=join', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.circles && data.circles.length > 0) {
+                // 参加可能なサークル一覧を表示
+                let circlesStr = `<div style="background-color:#e3f2fd;padding:15px;border-radius:10px;margin:10px 0;">
+                                 <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                                 👥 参加可能なサークル (${data.circles.length}件)</div>`;
+
+                for (let i = 0; i < data.circles.length; i++) {
+                    const circle = data.circles[i];
+
+                    // ジャンルに応じたアイコンを設定
+                    let genreIcon = '✨';
+                    switch (circle.genre) {
+                        case 'スポーツ': genreIcon = '⚽'; break;
+                        case '音楽': genreIcon = '🎵'; break;
+                        case '芸術': genreIcon = '🎨'; break;
+                        case '学習': genreIcon = '📚'; break;
+                    }
+
+                    circlesStr += `<div style="padding:10px;background-color:white;border-radius:8px;margin-bottom:10px;">
+                                  <div style="font-size:16px;font-weight:bold;margin-bottom:5px;display:flex;align-items:center;">
+                                    <span style="font-size:1.2em;margin-right:8px;">${genreIcon}</span>
+                                    ${i + 1}. ${circle.name}
+                                  </div>
+                                  <div style="padding:5px 10px;background-color:#f5f5f5;border-radius:5px;margin-bottom:5px;">
+                                    <span style="font-weight:bold;">テーマ:</span> ${circle.theme}
+                                  </div>
+                                  <div style="padding:5px 10px;background-color:#f5f5f5;border-radius:5px;">
+                                    <span style="font-weight:bold;">ジャンル:</span> ${circle.genre}
+                                  </div>
+                                  ${circle.details ? `<div style="margin-top:5px;padding:5px 10px;font-size:14px;color:#666;">${circle.details}</div>` : ''}
+                                </div>`;
+                }
+
+                circlesStr += `</div>`;
+                post_keicho(circlesStr, SPEAKER.AGENT, person);
+
+                // サークル選択と参加
+                const answer = await miku_ask("参加したいサークルの番号を教えてください。または「やめる」で中止できます。");
+
+                if (/やめる|中止|キャンセル/.test(answer)) {
+                    await miku_say("サークル参加をキャンセルしました。", "greeting");
+                    return;
+                }
+
+                const num = parseInt(answer.match(/\d+/) || ["0"][0]);
+
+                if (num >= 1 && num <= data.circles.length) {
+                    const selectedCircle = data.circles[num - 1];
+
+                    // サークルに参加
+                    const joinResponse = await fetch(`https://es4.eedept.kobe-u.ac.jp/online-circle/api/circles/${selectedCircle.id}/join`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (joinResponse.ok) {
+                        await miku_say(`「${selectedCircle.name}」サークルへの参加が完了しました！`, "greeting");
+                    } else {
+                        const errorData = await joinResponse.json();
+                        await miku_say(`サークル参加に失敗しました: ${errorData.message}`, "idle_think");
+                    }
+                } else {
+                    await miku_say("有効な番号が選択されませんでした。", "idle_think");
+                }
+            } else {
+                await miku_say("現在参加可能なサークルがありません。新しいサークルを作成しますか？", "guide_normal");
+
+                const createAnswer = await miku_ask("「はい」または「いいえ」でお答えください。", false, "guide_normal");
+
+                if (/はい|作成|する/.test(createAnswer)) {
+                    await handleCreateCircle();
+                }
+            }
+        } else {
+            await miku_say("サークル情報の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('サークル参加処理中にエラーが発生しました:', error);
+        await miku_say("サークル参加処理中にエラーが発生しました。", "idle_think");
+    }
 }
 
-// サークル確認の処理
+// サークル確認の処理 - 対話内に表示するよう修正
 async function handleCheckCircles() {
-    await miku_say("参加中のサークル一覧ページを開きます。", "smile");
-    window.open("https://es4.eedept.kobe-u.ac.jp/online-circle/check-circles", '_blank');
-    stop_keicho();
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/circles?type=check', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.circles && data.circles.length > 0) {
+                // 参加中のサークル一覧を表示
+                let circlesStr = `<div style="background-color:#e8f5e9;padding:15px;border-radius:10px;margin:10px 0;">
+                                 <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                                 👥 参加中のサークル (${data.circles.length}件)</div>`;
+
+                for (let i = 0; i < data.circles.length; i++) {
+                    const circle = data.circles[i];
+
+                    // ジャンルに応じたアイコンを設定
+                    let genreIcon = '✨';
+                    switch (circle.genre) {
+                        case 'スポーツ': genreIcon = '⚽'; break;
+                        case '音楽': genreIcon = '🎵'; break;
+                        case '芸術': genreIcon = '🎨'; break;
+                        case '学習': genreIcon = '📚'; break;
+                    }
+
+                    circlesStr += `<div style="padding:10px;background-color:white;border-radius:8px;margin-bottom:10px;">
+                                  <div style="font-size:16px;font-weight:bold;margin-bottom:5px;display:flex;align-items:center;">
+                                    <span style="font-size:1.2em;margin-right:8px;">${genreIcon}</span>
+                                    ${i + 1}. ${circle.name}
+                                  </div>
+                                  <div style="padding:5px 10px;background-color:#f5f5f5;border-radius:5px;margin-bottom:5px;">
+                                    <span style="font-weight:bold;">テーマ:</span> ${circle.theme}
+                                  </div>
+                                  <div style="padding:5px 10px;background-color:#f5f5f5;border-radius:5px;">
+                                    <span style="font-weight:bold;">ジャンル:</span> ${circle.genre}
+                                  </div>
+                                  ${circle.details ? `<div style="margin-top:5px;padding:5px 10px;font-size:14px;color:#666;">${circle.details}</div>` : ''}
+                                </div>`;
+                }
+
+                circlesStr += `</div>`;
+                post_keicho(circlesStr, SPEAKER.AGENT, person);
+
+                // サークル詳細表示のオプション
+                const answer = await miku_ask("詳しく知りたいサークルの番号を教えてください。または「やめる」で終了できます。");
+
+                if (/やめる|終了|中止|キャンセル/.test(answer)) {
+                    await miku_say("サークル確認を終了します。", "greeting");
+                    return;
+                }
+
+                const num = parseInt(answer.match(/\d+/) || ["0"][0]);
+
+                if (num >= 1 && num <= data.circles.length) {
+                    const selectedCircle = data.circles[num - 1];
+                    await displayCircleDetails(selectedCircle.id);
+                } else {
+                    await miku_say("有効な番号が選択されませんでした。", "idle_think");
+                }
+            } else {
+                await miku_say("参加しているサークルがありません。新しいサークルに参加しませんか？", "guide_normal");
+
+                const joinAnswer = await miku_ask("「はい」または「いいえ」でお答えください。", false, "guide_normal");
+
+                if (/はい|参加|する/.test(joinAnswer)) {
+                    await handleJoinCircle();
+                }
+            }
+        } else {
+            await miku_say("サークル情報の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('サークル確認処理中にエラーが発生しました:', error);
+        await miku_say("サークル確認処理中にエラーが発生しました。", "idle_think");
+    }
 }
 
-// 寄合作成の処理
+// サークル詳細を表示
+async function displayCircleDetails(circleId) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://es4.eedept.kobe-u.ac.jp/online-circle/api/circles/${circleId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const circle = data.circle;
+            const members = data.members;
+
+            // ジャンルに応じたアイコンを設定
+            let genreIcon = '✨';
+            switch (circle.genre) {
+                case 'スポーツ': genreIcon = '⚽'; break;
+                case '音楽': genreIcon = '🎵'; break;
+                case '芸術': genreIcon = '🎨'; break;
+                case '学習': genreIcon = '📚'; break;
+            }
+
+            // サークル詳細を表示
+            let detailsStr = `<div style="background-color:#e3f2fd;padding:15px;border-radius:10px;margin:10px 0;">
+                             <div style="font-size:20px;font-weight:bold;margin-bottom:15px;display:flex;align-items:center;justify-content:center;">
+                               <span style="font-size:1.3em;margin-right:10px;">${genreIcon}</span>
+                               ${circle.name}
+                             </div>
+                             
+                             <div style="padding:12px;background-color:white;border-radius:8px;margin-bottom:15px;">
+                               <div style="margin-bottom:8px;">
+                                 <span style="font-weight:bold;min-width:80px;display:inline-block;">テーマ:</span>
+                                 <span>${circle.theme}</span>
+                               </div>
+                               <div style="margin-bottom:8px;">
+                                 <span style="font-weight:bold;min-width:80px;display:inline-block;">ジャンル:</span>
+                                 <span>${circle.genre}</span>
+                               </div>
+                               <div>
+                                 <span style="font-weight:bold;min-width:80px;display:inline-block;">対象:</span>
+                                 <span>${circle.gender}</span>
+                               </div>
+                             </div>`;
+
+            if (circle.details) {
+                detailsStr += `<div style="padding:12px;background-color:#f0f4ff;border-radius:8px;margin-bottom:15px;">
+                              <div style="font-weight:bold;margin-bottom:5px;">サークル詳細:</div>
+                              <div>${circle.details}</div>
+                            </div>`;
+            }
+
+            // メンバー一覧
+            detailsStr += `<div style="padding:12px;background-color:#f5f5f5;border-radius:8px;">
+                          <div style="font-weight:bold;margin-bottom:8px;">メンバー一覧 (${members.length}人):</div>
+                          <div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+
+            for (const member of members) {
+                detailsStr += `<span style="background-color:white;padding:5px 10px;border-radius:15px;font-size:14px;">
+                              👤 ${member.display_name}
+                            </span>`;
+            }
+
+            detailsStr += `</div></div></div>`;
+
+            post_keicho(detailsStr, SPEAKER.AGENT, person);
+        } else {
+            await miku_say("サークル詳細の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('サークル詳細表示中にエラーが発生しました:', error);
+        await miku_say("サークル詳細の表示中にエラーが発生しました。", "idle_think");
+    }
+}
+
+// 寄合作成の処理 - 対話内で行うよう修正
 async function handleCreateGathering() {
-    await miku_say("寄合作成ページを開きます。ブラウザで開いたページから寄合を作成できます。", "smile");
-    window.open("https://es4.eedept.kobe-u.ac.jp/online-circle/create-gathering", '_blank');
-    stop_keicho();
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/user-circles', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.circles && data.circles.length > 0) {
+                // 寄合を作成できるサークル一覧を表示
+                let circlesStr = `<div style="background-color:#fff3e0;padding:15px;border-radius:10px;margin:10px 0;">
+                                 <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                                 📅 寄合を作成できるサークル (${data.circles.length}件)</div>
+                                 <div style="padding:10px;background-color:white;border-radius:8px;">`;
+
+                for (let i = 0; i < data.circles.length; i++) {
+                    const circle = data.circles[i];
+                    circlesStr += `<div style="padding:8px 5px;${i > 0 ? 'border-top:1px solid #eee;' : ''}">
+                                  ${i + 1}. ${circle.name}
+                                </div>`;
+                }
+
+                circlesStr += `</div></div>`;
+                post_keicho(circlesStr, SPEAKER.AGENT, person);
+
+                // サークル選択
+                const circleAnswer = await miku_ask("どのサークルの寄合を作成しますか？ 番号でお答えください。(やめる場合は「やめる」と言ってください)");
+
+                if (/やめる|中止|キャンセル/.test(circleAnswer)) {
+                    await miku_say("寄合作成をキャンセルしました。", "greeting");
+                    return;
+                }
+
+                const num = parseInt(circleAnswer.match(/\d+/) || ["0"][0]);
+
+                if (num >= 1 && num <= data.circles.length) {
+                    const selectedCircle = data.circles[num - 1];
+
+                    // 寄合情報入力
+                    await miku_say(`「${selectedCircle.name}」サークルの寄合を作成します。`, "greeting");
+
+                    // テーマ入力
+                    const theme = await miku_ask("寄合のテーマを教えてください。");
+                    if (!theme || theme.length < 2) {
+                        await miku_say("テーマが短すぎます。最初からやり直してください。", "idle_think");
+                        return;
+                    }
+
+                    // 日時入力
+                    await miku_say("では、開催日時を決めましょう。", "smile");
+                    const dateAnswer = await miku_ask("開催日を教えてください（例: 明日、5月10日など）");
+
+                    // 日付の解析
+                    const now = new Date();
+                    let year = now.getFullYear();
+                    let month = now.getMonth();
+                    let day = now.getDate();
+
+                    if (dateAnswer.includes("明日")) {
+                        day += 1;
+                    } else if (dateAnswer.includes("明後日")) {
+                        day += 2;
+                    } else {
+                        const dateMatch = dateAnswer.match(/(\d+)月(\d+)日/);
+                        if (dateMatch) {
+                            month = parseInt(dateMatch[1]) - 1;
+                            day = parseInt(dateMatch[2]);
+                        } else {
+                            await miku_say("日付の形式が正しくありません。最初からやり直してください。", "idle_think");
+                            return;
+                        }
+                    }
+
+                    // 時間入力
+                    const timeAnswer = await miku_ask("開始時間を教えてください（例: 14時、午後2時など）");
+                    let hour = 0;
+
+                    const timeMatch = timeAnswer.match(/(\d+)時/);
+                    if (timeMatch) {
+                        hour = parseInt(timeMatch[1]);
+                        if (timeAnswer.includes("午後") && hour < 12) {
+                            hour += 12;
+                        }
+                    } else {
+                        await miku_say("時間の形式が正しくありません。最初からやり直してください。", "idle_think");
+                        return;
+                    }
+
+                    // 詳細入力
+                    const details = await miku_ask("寄合の詳細を教えてください（任意）");
+
+                    // 日時をフォーマット
+                    const gatheringDate = new Date(year, month, day, hour, 0);
+                    const formattedDate = gatheringDate.toISOString();
+
+                    // 確認
+                    const confirmStr = `<div style="background-color:#e8f5e9;padding:15px;border-radius:10px;margin:10px 0;">
+                                       <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">📝 寄合内容の確認</div>
+                                       <div style="padding:10px;background-color:white;border-radius:8px;">
+                                         <div style="margin-bottom:5px;">
+                                           <span style="font-weight:bold;">サークル:</span> ${selectedCircle.name}
+                                         </div>
+                                         <div style="margin-bottom:5px;">
+                                           <span style="font-weight:bold;">テーマ:</span> ${theme}
+                                         </div>
+                                         <div style="margin-bottom:5px;">
+                                           <span style="font-weight:bold;">開催日時:</span> ${gatheringDate.toLocaleString('ja-JP')}
+                                         </div>
+                                         ${details ? `<div><span style="font-weight:bold;">詳細:</span> ${details}</div>` : ''}
+                                       </div>
+                                     </div>`;
+
+                    post_keicho(confirmStr, SPEAKER.AGENT, person);
+
+                    const confirmAnswer = await miku_ask("この内容で寄合を作成してよろしいですか？（はい/いいえ）");
+
+                    if (/はい|よい|良い|OK|作成|する/.test(confirmAnswer)) {
+                        // 寄合作成リクエスト
+                        const createResponse = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                circleId: selectedCircle.id,
+                                theme: theme,
+                                datetime: formattedDate,
+                                details: details
+                            })
+                        });
+
+                        if (createResponse.ok) {
+                            await miku_say(`「${theme}」寄合を作成しました！メンバーに招待が送信されます。`, "greeting");
+                        } else {
+                            const errorData = await createResponse.json();
+                            await miku_say(`寄合作成に失敗しました: ${errorData.message}`, "idle_think");
+                        }
+                    } else {
+                        await miku_say("寄合作成をキャンセルしました。", "greeting");
+                    }
+                } else {
+                    await miku_say("有効な番号が選択されませんでした。", "idle_think");
+                }
+            } else {
+                await miku_say("寄合を作成できるサークルがありません。サークルに参加してから再試行してください。", "idle_think");
+            }
+        } else {
+            await miku_say("サークル情報の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('寄合作成処理中にエラーが発生しました:', error);
+        await miku_say("寄合作成処理中にエラーが発生しました。", "idle_think");
+    }
 }
 
-// 寄合確認の処理
+// サークル作成処理
+async function handleCreateCircle() {
+    await miku_say("新しいサークルを作成します。", "greeting");
+
+    // サークル名の入力
+    const name = await miku_ask("サークル名を教えてください");
+    if (!name || name.length < 2) {
+        await miku_say("サークル名が短すぎます。", "idle_think");
+        return;
+    }
+
+    // テーマの入力
+    const theme = await miku_ask("サークルのテーマを教えてください");
+    if (!theme || theme.length < 2) {
+        await miku_say("テーマが短すぎます。", "idle_think");
+        return;
+    }
+
+    // ジャンルの入力
+    await miku_say("ジャンルを選んでください：\n1. スポーツ\n2. 音楽\n3. 芸術\n4. 学習\n5. その他", "guide_normal");
+    const genreAnswer = await miku_ask("番号でお答えください (1-5)");
+
+    let genre;
+    if (/1|スポーツ/.test(genreAnswer)) {
+        genre = "スポーツ";
+    } else if (/2|音楽/.test(genreAnswer)) {
+        genre = "音楽";
+    } else if (/3|芸術/.test(genreAnswer)) {
+        genre = "芸術";
+    } else if (/4|学習/.test(genreAnswer)) {
+        genre = "学習";
+    } else {
+        genre = "その他";
+    }
+
+    // 対象性別の入力
+    await miku_say("対象を選んでください：\n1. 男性のみ\n2. 女性のみ\n3. どなたでも", "guide_normal");
+    const genderAnswer = await miku_ask("番号でお答えください (1-3)");
+
+    let gender;
+    if (/1|男性/.test(genderAnswer)) {
+        gender = "男性のみ";
+    } else if (/2|女性/.test(genderAnswer)) {
+        gender = "女性のみ";
+    } else {
+        gender = "両方";
+    }
+
+    // 詳細の入力
+    const details = await miku_ask("サークルの詳細を教えてください（任意）");
+
+    // 確認
+    const confirmStr = `<div style="background-color:#e3f2fd;padding:15px;border-radius:10px;margin:10px 0;">
+                       <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">📝 サークル内容の確認</div>
+                       <div style="padding:10px;background-color:white;border-radius:8px;">
+                         <div style="margin-bottom:5px;">
+                           <span style="font-weight:bold;">サークル名:</span> ${name}
+                         </div>
+                         <div style="margin-bottom:5px;">
+                           <span style="font-weight:bold;">テーマ:</span> ${theme}
+                         </div>
+                         <div style="margin-bottom:5px;">
+                           <span style="font-weight:bold;">ジャンル:</span> ${genre}
+                         </div>
+                         <div style="margin-bottom:5px;">
+                           <span style="font-weight:bold;">対象:</span> ${gender}
+                         </div>
+                         ${details ? `<div><span style="font-weight:bold;">詳細:</span> ${details}</div>` : ''}
+                       </div>
+                     </div>`;
+
+    post_keicho(confirmStr, SPEAKER.AGENT, person);
+
+    const confirmAnswer = await miku_ask("この内容でサークルを作成してよろしいですか？（はい/いいえ）");
+
+    if (/はい|よい|良い|OK|作成|する/.test(confirmAnswer)) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/circles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, theme, genre, gender, details })
+            });
+
+            if (response.ok) {
+                await miku_say(`「${name}」サークルを作成しました！`, "greeting");
+            } else {
+                const errorData = await response.json();
+                await miku_say(`サークル作成に失敗しました: ${errorData.message}`, "idle_think");
+            }
+        } catch (error) {
+            console.error('サークル作成処理中にエラーが発生しました:', error);
+            await miku_say("サークル作成処理中にエラーが発生しました。", "idle_think");
+        }
+    } else {
+        await miku_say("サークル作成をキャンセルしました。", "greeting");
+    }
+}
+
+// 寄合確認の処理 - 対話内で行うよう修正
 async function handleCheckGatherings() {
-    await miku_say("寄合一覧ページを開きます。参加予定の寄合を確認できます。", "smile");
-    window.open("https://es4.eedept.kobe-u.ac.jp/online-circle/gathering-list", '_blank');
-    stop_keicho();
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            // 未来の寄合のみをフィルタリング
+            const now = new Date();
+            const participatingGatherings = data.participatingGatherings.filter(g =>
+                new Date(g.datetime) > now
+            );
+
+            const invitedGatherings = data.invitedGatherings.filter(g =>
+                new Date(g.datetime) > now
+            );
+
+            // 参加予定の寄合一覧を表示
+            if (participatingGatherings.length > 0) {
+                let gatheringsStr = `<div style="background-color:#e8f5e9;padding:15px;border-radius:10px;margin:10px 0;">
+                                   <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                                   📅 参加予定の寄合 (${participatingGatherings.length}件)</div>`;
+
+                for (let i = 0; i < participatingGatherings.length; i++) {
+                    const gathering = participatingGatherings[i];
+                    const gatheringTime = new Date(gathering.datetime);
+
+                    gatheringsStr += `<div style="padding:10px;background-color:white;border-radius:8px;margin-bottom:10px;">
+                                    <div style="font-size:16px;font-weight:bold;margin-bottom:5px;">
+                                      ${i + 1}. ${gathering.theme}
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                      <span style="color:#666;">${gathering.circle_name}</span>
+                                      <span style="font-weight:bold;">${gatheringTime.toLocaleString('ja-JP')}</span>
+                                    </div>
+                                  </div>`;
+                }
+
+                gatheringsStr += `</div>`;
+                post_keicho(gatheringsStr, SPEAKER.AGENT, person);
+            } else {
+                await miku_say("参加予定の寄合はありません。", "greeting");
+            }
+
+            // 招待中の寄合一覧を表示
+            if (invitedGatherings.length > 0) {
+                let invitationsStr = `<div style="background-color:#fff3e0;padding:15px;border-radius:10px;margin:10px 0;">
+                                    <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                                    📩 招待中の寄合 (${invitedGatherings.length}件)</div>`;
+
+                for (let i = 0; i < invitedGatherings.length; i++) {
+                    const gathering = invitedGatherings[i];
+                    const gatheringTime = new Date(gathering.datetime);
+                    const startIdx = participatingGatherings.length + i + 1;
+
+                    invitationsStr += `<div style="padding:10px;background-color:white;border-radius:8px;margin-bottom:10px;">
+                                     <div style="font-size:16px;font-weight:bold;margin-bottom:5px;">
+                                       ${startIdx}. ${gathering.theme}
+                                     </div>
+                                     <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                       <span style="color:#666;">${gathering.circle_name}</span>
+                                       <span style="font-weight:bold;">${gatheringTime.toLocaleString('ja-JP')}</span>
+                                     </div>
+                                   </div>`;
+                }
+
+                invitationsStr += `</div>`;
+                post_keicho(invitationsStr, SPEAKER.AGENT, person);
+            }
+
+            if (participatingGatherings.length === 0 && invitedGatherings.length === 0) {
+                await miku_say("現在、参加予定の寄合も招待もありません。", "greeting");
+                return;
+            }
+
+            // 詳細表示
+            const answer = await miku_ask("詳細を確認したい寄合の番号を教えてください。または「やめる」で終了できます。");
+
+            if (/やめる|終了|中止|キャンセル/.test(answer)) {
+                await miku_say("寄合確認を終了します。", "greeting");
+                return;
+            }
+
+            const num = parseInt(answer.match(/\d+/) || ["0"][0]);
+
+            if (num >= 1 && num <= participatingGatherings.length) {
+                // 参加予定の寄合
+                const selectedGathering = participatingGatherings[num - 1];
+                await displayGatheringInfo(selectedGathering.id);
+            } else if (num > participatingGatherings.length && num <= participatingGatherings.length + invitedGatherings.length) {
+                // 招待中の寄合
+                const index = num - participatingGatherings.length - 1;
+                const selectedGathering = invitedGatherings[index];
+                await displayGatheringInfo(selectedGathering.id);
+
+                // 招待に対する応答
+                const responseAnswer = await miku_ask("この招待に返信しますか？ 「参加する」「参加しない」「後で決める」からお選びください。");
+
+                if (/参加する/.test(responseAnswer)) {
+                    await respondToInvitation(selectedGathering.id, 'accepted');
+                } else if (/参加しない/.test(responseAnswer)) {
+                    await respondToInvitation(selectedGathering.id, 'declined');
+                } else {
+                    await miku_say("後で返信することにしました。", "greeting");
+                }
+            } else {
+                await miku_say("有効な番号が選択されませんでした。", "idle_think");
+            }
+        } else {
+            await miku_say("寄合情報の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('寄合確認処理中にエラーが発生しました:', error);
+        await miku_say("寄合確認処理中にエラーが発生しました。", "idle_think");
+    }
+}
+
+// 招待に応答する
+async function respondToInvitation(gatheringId, status) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings/${gatheringId}/participate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+
+        if (response.ok) {
+            if (status === 'accepted') {
+                await miku_say("参加登録が完了しました！", "greeting");
+            } else {
+                await miku_say("不参加の登録が完了しました。", "greeting");
+            }
+        } else {
+            await miku_say("応答の登録に失敗しました。後でもう一度お試しください。", "idle_think");
+        }
+    } catch (error) {
+        console.error('招待応答中にエラーが発生しました:', error);
+        await miku_say("応答処理中にエラーが発生しました。", "idle_think");
+    }
 }
 
 // 定期的な通知チェックのための状態管理
@@ -379,43 +1109,43 @@ let gatheringNotificationShown = false;
 async function checkCircleNotifications() {
     // 他のサービスが実行中・会話中は通知しない
     if (serviceFlag || talking) return;
-    
+
     const now = new Date();
-    
+
     // 招待チェック（最後のチェックから5分以上経過している場合のみ）
     if (now - lastCheckedInvitations > 5 * 60 * 1000) {
         lastCheckedInvitations = now;
         const hasUnreadInvitations = await checkUnreadInvitations();
-        
+
         if (hasUnreadInvitations && !invitationNotificationShown) {
             invitationNotificationShown = true;
             // 未読の招待があることを通知するが、邪魔にならないように会話開始ボタンを表示
             const message = "<div style='background-color:#f0f4ff;padding:12px;border-radius:8px;border-left:4px solid #4a69ff;margin:10px 0;'>" +
-                            "<div style='font-weight:bold;display:flex;align-items:center;'>" +
-                            "<span style='font-size:1.5em;margin-right:8px;'>📩</span>" +
-                            "新しい寄合への招待があります" +
-                            "</div>" +
-                            "<div style='margin-top:8px;'>「サークル」と話しかけると確認できます</div>" +
-                            "</div>";
+                "<div style='font-weight:bold;display:flex;align-items:center;'>" +
+                "<span style='font-size:1.5em;margin-right:8px;'>📩</span>" +
+                "新しい寄合への招待があります" +
+                "</div>" +
+                "<div style='margin-top:8px;'>「サークル」と話しかけると確認できます</div>" +
+                "</div>";
             post_text(message);
         }
     }
-    
+
     // 寄合チェック（最後のチェックから1分以上経過している場合のみ）
     if (now - lastCheckedGatherings > 60 * 1000) {
         lastCheckedGatherings = now;
         const hasUpcomingGatherings = await checkUpcomingGatherings();
-        
+
         if (hasUpcomingGatherings && !gatheringNotificationShown) {
             gatheringNotificationShown = true;
             // まもなく始まる寄合があることを通知する
             const message = "<div style='background-color:#fff4e5;padding:12px;border-radius:8px;border-left:4px solid #ff9800;margin:10px 0;'>" +
-                            "<div style='font-weight:bold;display:flex;align-items:center;'>" +
-                            "<span style='font-size:1.5em;margin-right:8px;'>⏰</span>" +
-                            "まもなく寄合が始まります！" +
-                            "</div>" +
-                            "<div style='margin-top:8px;'>「サークル」と話しかけると参加できます</div>" +
-                            "</div>";
+                "<div style='font-weight:bold;display:flex;align-items:center;'>" +
+                "<span style='font-size:1.5em;margin-right:8px;'>⏰</span>" +
+                "まもなく寄合が始まります！" +
+                "</div>" +
+                "<div style='margin-top:8px;'>「サークル」と話しかけると参加できます</div>" +
+                "</div>";
             post_text(message);
         }
     }
@@ -428,4 +1158,4 @@ apps.push(circleService);
 setInterval(checkCircleNotifications, 2 * 60 * 1000); // 2分ごとにチェック
 
 // 初回チェック実行
-setTimeout(checkCircleNotifications, 10000); // ページロード10秒後に最初のチェック
+setTimeout(checkCircleNotifications, 10000); // ページロード10秒
