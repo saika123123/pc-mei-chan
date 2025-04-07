@@ -340,11 +340,11 @@ async function displayGatheringInfo(gatheringId) {
 
             if (gathering.url) {
                 infoStr += `<div style="margin-top:15px;text-align:center;">
-                            <div style="display:inline-block;background-color:#ff9800;color:white;padding:10px 15px;border-radius:5px;font-weight:bold;">
-                              参加URL: ${gathering.url}
-                            </div>
+                            <a href="${gathering.url}" target="_blank" style="display:inline-block;background-color:#ff9800;color:white;padding:10px 15px;border-radius:5px;font-weight:bold;text-decoration:none;">
+                              ここをクリックして寄合に参加する
+                            </a>
                             <div style="font-size:12px;margin-top:5px;color:#666;">
-                              ※このURLをブラウザで開くか、クリックすると参加できます
+                              ※新しいウィンドウで開きます
                             </div>
                           </div>`;
             }
