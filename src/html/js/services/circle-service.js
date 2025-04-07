@@ -52,40 +52,11 @@ async function handleCircleService() {
 
 // メインメニューを表示
 async function showCircleMainMenu() {
-    let menuText = "<div style='background-color:#f0f5ff; padding:15px; border-radius:10px; border-left:4px solid #2f54eb; margin-bottom:15px;'>";
-    menuText += "<div style='font-size:20px; font-weight:bold; text-align:center; margin-bottom:15px; color:#2f54eb;'>🌟 オンラインサークルサービス</div>";
-    
-    menuText += "<div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;'>";
-    
-    menuText += "<div style='background-color:white; padding:12px; border-radius:8px; border:1px solid #d9d9d9; text-align:center;'>";
-    menuText += "<div style='font-size:24px; margin-bottom:5px;'>👥</div>";
-    menuText += "<div style='font-weight:bold; margin-bottom:3px; color:#2f54eb;'>1. サークルに参加する</div>";
-    menuText += "<div style='font-size:12px; color:#666;'>新しいサークルを探す</div>";
-    menuText += "</div>";
-    
-    menuText += "<div style='background-color:white; padding:12px; border-radius:8px; border:1px solid #d9d9d9; text-align:center;'>";
-    menuText += "<div style='font-size:24px; margin-bottom:5px;'>🔍</div>";
-    menuText += "<div style='font-weight:bold; margin-bottom:3px; color:#2f54eb;'>2. サークルを確認する</div>";
-    menuText += "<div style='font-size:12px; color:#666;'>所属サークルを見る</div>";
-    menuText += "</div>";
-    
-    menuText += "<div style='background-color:white; padding:12px; border-radius:8px; border:1px solid #d9d9d9; text-align:center;'>";
-    menuText += "<div style='font-size:24px; margin-bottom:5px;'>📝</div>";
-    menuText += "<div style='font-weight:bold; margin-bottom:3px; color:#2f54eb;'>3. 寄合を作成する</div>";
-    menuText += "<div style='font-size:12px; color:#666;'>新しい寄合を開く</div>";
-    menuText += "</div>";
-    
-    menuText += "<div style='background-color:white; padding:12px; border-radius:8px; border:1px solid #d9d9d9; text-align:center;'>";
-    menuText += "<div style='font-size:24px; margin-bottom:5px;'>📅</div>";
-    menuText += "<div style='font-weight:bold; margin-bottom:3px; color:#2f54eb;'>4. 寄合一覧を確認する</div>";
-    menuText += "<div style='font-size:12px; color:#666;'>予定されている寄合を見る</div>";
-    menuText += "</div>";
-    
-    menuText += "</div>";
-    
-    menuText += "<div style='text-align:center; font-style:italic; color:#666; font-size:12px;'>「終了」と言うとオンラインサークルサービスを終了します</div>";
-    
-    menuText += "</div>";
+    let menuText = "<div>【オンラインサークルサービス】</div>";
+    menuText += "<div>1. サークルに参加する</div>";
+    menuText += "<div>2. 参加中のサークルを確認する</div>";
+    menuText += "<div>3. 寄合を作成する</div>";
+    menuText += "<div>4. 寄合一覧を確認する</div>";
     
     // メニュー表示
     post_keicho(menuText, SPEAKER.AGENT, person);
@@ -129,72 +100,38 @@ async function notifyInvitations() {
     const invitationText = `${window.unreadInvitationsCount}件の寄合への招待が届いています。`;
     await miku_say(invitationText, "greeting");
     
-    // 現在時刻
-    const now = new Date();
-    
-    let detailText = "<div style='background-color:#fff7e6; padding:12px; border-radius:10px; border-left:4px solid #fa8c16; margin-bottom:15px;'>";
-    detailText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#fa8c16;'>📨 未回答の寄合招待</div>";
-    
+    let detailText = "<div>【未回答の寄合招待】</div>";
     for (let i = 0; i < window.invitations.length && i < 3; i++) {
         const inv = window.invitations[i];
-        const invDate = new Date(inv.datetime);
-        
-        // 残り時間の計算
-        const diffTime = invDate - now;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        let timeLeftStr = "";
-        
-        if (diffDays > 0) {
-            timeLeftStr = `(あと ${diffDays}日 ${diffHours}時間)`;
-        } else if (diffHours > 0) {
-            timeLeftStr = `(あと ${diffHours}時間)`;
-        } else {
-            const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-            timeLeftStr = `(あと ${diffMinutes}分)`;
-        }
-        
-        const dateStr = invDate.toLocaleString('ja-JP', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'long',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        detailText += `<div style='background-color:white; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #d9d9d9;'>`;
-        detailText += `<div style='font-weight:bold; margin-bottom:5px;'>${i + 1}. ${inv.theme}</div>`;
-        detailText += `<div style='color:#444; margin-bottom:3px;'>📍 ${inv.circle_name}</div>`;
-        detailText += `<div style='color:#666;'>🕒 ${dateStr} <span style='color:#fa8c16;'>${timeLeftStr}</span></div>`;
-        detailText += `</div>`;
+        const dateStr = new Date(inv.datetime).toLocaleString('ja-JP');
+        detailText += `<div>・${inv.theme}（${dateStr}）- ${inv.circle_name}</div>`;
     }
     
     if (window.invitations.length > 3) {
-        detailText += `<div style='text-align:center; color:#666;'>他、${window.invitations.length - 3}件の招待があります</div>`;
+        detailText += "<div>他、" + (window.invitations.length - 3) + "件</div>";
     }
     
-    detailText += "</div>";
     post_keicho(detailText, SPEAKER.AGENT, person);
     
-    const answer = await miku_ask("招待に応答しますか？「はい」とお答えいただくと招待の詳細を確認できます。", false, "guide_normal");
-    if (/はい|応答|する|確認/.test(answer)) {
+    const answer = await miku_ask("招待に応答しますか？", false, "guide_normal");
+    if (/はい|応答|する/.test(answer)) {
         await handleInvitationResponse();
     }
 }
 
-const now = new Date();
-let gatheringText = "";
-if (window.upcomingGatheringsCount === 1) {
-    const gathering = window.upcomingGatherings[0];
-    const gatheringTime = new Date(gathering.datetime);
-    const now = new Date();
-    const diffMinutes = Math.floor((gatheringTime - now) / (1000 * 60));
-    
-    gatheringText = `「${gathering.theme}」の寄合がまもなく始まります。（あと約${diffMinutes}分）`;
-} else {
-    gatheringText = `${window.upcomingGatheringsCount}件の寄合がまもなく始まります。`;
-}
+// 近日中の寄合を通知
+async function notifyUpcomingGatherings() {
+    let gatheringText = "";
+    if (window.upcomingGatheringsCount === 1) {
+        const gathering = window.upcomingGatherings[0];
+        const gatheringTime = new Date(gathering.datetime);
+        const now = new Date();
+        const diffMinutes = Math.floor((gatheringTime - now) / (1000 * 60));
+        
+        gatheringText = `「${gathering.theme}」の寄合がまもなく始まります。（あと約${diffMinutes}分）`;
+    } else {
+        gatheringText = `${window.upcomingGatheringsCount}件の寄合がまもなく始まります。`;
+    }
     
     await miku_say(gatheringText, "greeting");
     
@@ -217,7 +154,7 @@ if (window.upcomingGatheringsCount === 1) {
             await selectAndJoinGathering();
         }
     }
-
+}
 
 // 寄合を選択して参加する
 async function selectAndJoinGathering() {
@@ -264,45 +201,26 @@ async function joinGathering(gatheringId) {
             const data = await response.json();
             await miku_say("寄合情報を取得しました。", "greeting");
             
-            let detailText = "<div style='background-color:#f6ffed; padding:12px; border-radius:10px; border-left:4px solid #52c41a; margin-bottom:15px;'>";
-            detailText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#52c41a;'>🎯 寄合の詳細</div>";
-            detailText += `<div style='background-color:white; padding:15px; border-radius:8px; border:1px solid #d9d9d9;'>`;
-            detailText += `<div style='font-size:18px; font-weight:bold; margin-bottom:8px;'>${data.gathering.theme}</div>`;
-            detailText += `<div style='color:#444; margin-bottom:5px;'>📍 ${data.gathering.circle_name}</div>`;
-            detailText += `<div style='color:#666; margin-bottom:15px;'>🕒 ${new Date(data.gathering.datetime).toLocaleString('ja-JP', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'long',
-                hour: '2-digit',
-                minute: '2-digit'
-            })}</div>`;
-            
+            let detailText = "<div>【寄合詳細】</div>";
+            detailText += `<div>サークル: ${data.gathering.circle_name}</div>`;
+            detailText += `<div>テーマ: ${data.gathering.theme}</div>`;
+            detailText += `<div>日時: ${new Date(data.gathering.datetime).toLocaleString('ja-JP')}</div>`;
             if (data.gathering.details) {
-                detailText += `<div style='margin-top:5px; padding:10px; background-color:#f9f9f9; border-radius:5px;'>${data.gathering.details}</div>`;
+                detailText += `<div>内容: ${data.gathering.details}</div>`;
             }
-            
-            detailText += `</div>`;
-            detailText += "</div>";
             
             post_keicho(detailText, SPEAKER.AGENT, person);
             
             // 参加URL表示
             if (data.gathering.url) {
-                let urlText = "<div style='background-color:#e6f7ff; padding:12px; border-radius:10px; border-left:4px solid #1890ff; margin-bottom:15px;'>";
-                urlText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#1890ff;'>🌐 寄合に参加するためのURL</div>";
-                urlText += `<div style='background-color:white; padding:15px; border-radius:8px; border:1px solid #d9d9d9; word-break:break-all;'>`;
-                urlText += `<div style='color:#1890ff; margin-bottom:8px; font-family:monospace;'>${data.gathering.url}</div>`;
-                urlText += `<div style='margin-top:8px; font-style:italic; color:#888;'>※このURLをブラウザで開くと寄合に参加できます</div>`;
-                urlText += `</div>`;
-                urlText += "</div>";
+                let urlText = "<div>【寄合に参加するためのURL】</div>";
+                urlText += `<div>${data.gathering.url}</div>`;
+                urlText += "<div>※このURLをブラウザで開くと寄合に参加できます</div>";
                 
                 post_keicho(urlText, SPEAKER.AGENT, person);
-                
-                await miku_say("このURLをコピーしてブラウザで開くことで、寄合に参加できます。", "greeting");
-            } else {
-                await miku_say("申し訳ありませんが、この寄合の参加用URLが見つかりませんでした。", "idle_think");
             }
+            
+            await miku_say("このURLをコピーしてブラウザで開くことで、寄合に参加できます。", "greeting");
         } else {
             await miku_say("寄合情報の取得に失敗しました。", "idle_think");
         }
@@ -732,104 +650,33 @@ async function handleCheckGatherings() {
         
         if (response.ok) {
             const data = await response.json();
-            const now = new Date();
-            
-            // 未来の寄合のみをフィルタリング
-            const futureParticipatingGatherings = data.participatingGatherings ? 
-                data.participatingGatherings.filter(g => new Date(g.datetime) > now) : [];
-                
-            const futureInvitedGatherings = data.invitedGatherings ? 
-                data.invitedGatherings.filter(g => new Date(g.datetime) > now) : [];
             
             let hasGatherings = false;
             
             // 参加予定の寄合
-            if (futureParticipatingGatherings.length > 0) {
+            if (data.participatingGatherings && data.participatingGatherings.length > 0) {
                 hasGatherings = true;
-                let gatheringText = "<div style='background-color:#e6f7ff; padding:12px; border-radius:10px; border-left:4px solid #1890ff; margin-bottom:15px;'>";
-                gatheringText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#1890ff;'>📅 参加予定の寄合</div>";
-                
-                for (let i = 0; i < futureParticipatingGatherings.length; i++) {
-                    const gathering = futureParticipatingGatherings[i];
-                    const gatheringDate = new Date(gathering.datetime);
-                    const dateStr = gatheringDate.toLocaleString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'long',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    
-                    // 残り時間の計算
-                    const diffTime = gatheringDate - now;
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    let timeLeftStr = "";
-                    
-                    if (diffDays > 0) {
-                        timeLeftStr = `(あと ${diffDays}日 ${diffHours}時間)`;
-                    } else if (diffHours > 0) {
-                        timeLeftStr = `(あと ${diffHours}時間)`;
-                    } else {
-                        const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-                        timeLeftStr = `(あと ${diffMinutes}分)`;
-                    }
-                    
-                    gatheringText += `<div style='background-color:white; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #d9d9d9;'>`;
-                    gatheringText += `<div style='font-weight:bold; margin-bottom:5px;'>${i + 1}. ${gathering.theme}</div>`;
-                    gatheringText += `<div style='color:#444; margin-bottom:3px;'>📍 ${gathering.circle_name}</div>`;
-                    gatheringText += `<div style='color:#666;'>🕒 ${dateStr} <span style='color:#1890ff;'>${timeLeftStr}</span></div>`;
-                    gatheringText += `</div>`;
+                let gatheringText = "<div>【参加予定の寄合】</div>";
+                for (let i = 0; i < data.participatingGatherings.length; i++) {
+                    const gathering = data.participatingGatherings[i];
+                    const dateStr = new Date(gathering.datetime).toLocaleString('ja-JP');
+                    gatheringText += `<div>${i + 1}. ${dateStr} ${gathering.theme} - ${gathering.circle_name}</div>`;
                 }
                 
-                gatheringText += "</div>";
                 post_keicho(gatheringText, SPEAKER.AGENT, person);
             }
             
             // 招待中の寄合
-            if (futureInvitedGatherings.length > 0) {
+            if (data.invitedGatherings && data.invitedGatherings.length > 0) {
                 hasGatherings = true;
-                let invitationText = "<div style='background-color:#fff7e6; padding:12px; border-radius:10px; border-left:4px solid #fa8c16; margin-bottom:15px;'>";
-                invitationText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#fa8c16;'>📨 招待中の寄合</div>";
-                
-                let startIdx = futureParticipatingGatherings.length + 1;
-                for (let i = 0; i < futureInvitedGatherings.length; i++) {
-                    const gathering = futureInvitedGatherings[i];
-                    const gatheringDate = new Date(gathering.datetime);
-                    const dateStr = gatheringDate.toLocaleString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'long',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    
-                    // 残り時間の計算
-                    const diffTime = gatheringDate - now;
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    let timeLeftStr = "";
-                    
-                    if (diffDays > 0) {
-                        timeLeftStr = `(あと ${diffDays}日 ${diffHours}時間)`;
-                    } else if (diffHours > 0) {
-                        timeLeftStr = `(あと ${diffHours}時間)`;
-                    } else {
-                        const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-                        timeLeftStr = `(あと ${diffMinutes}分)`;
-                    }
-                    
-                    invitationText += `<div style='background-color:white; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #d9d9d9;'>`;
-                    invitationText += `<div style='font-weight:bold; margin-bottom:5px;'>${startIdx + i}. ${gathering.theme}</div>`;
-                    invitationText += `<div style='color:#444; margin-bottom:3px;'>📍 ${gathering.circle_name}</div>`;
-                    invitationText += `<div style='color:#666;'>🕒 ${dateStr} <span style='color:#fa8c16;'>${timeLeftStr}</span></div>`;
-                    invitationText += `<div style='margin-top:5px;'><span style='color:#fa8c16; font-weight:bold;'>⚠️ 未回答</span></div>`;
-                    invitationText += `</div>`;
+                let invitationText = "<div>【招待中の寄合】</div>";
+                let startIdx = data.participatingGatherings ? data.participatingGatherings.length + 1 : 1;
+                for (let i = 0; i < data.invitedGatherings.length; i++) {
+                    const gathering = data.invitedGatherings[i];
+                    const dateStr = new Date(gathering.datetime).toLocaleString('ja-JP');
+                    invitationText += `<div>${startIdx + i}. ${dateStr} ${gathering.theme} - ${gathering.circle_name}</div>`;
                 }
                 
-                invitationText += "</div>";
                 post_keicho(invitationText, SPEAKER.AGENT, person);
             }
             
@@ -849,13 +696,13 @@ async function handleCheckGatherings() {
             let selectedGathering = null;
             
             // 参加予定の寄合からの選択
-            if (futureParticipatingGatherings.length > 0 && num <= futureParticipatingGatherings.length) {
-                selectedGathering = futureParticipatingGatherings[num - 1];
+            if (data.participatingGatherings && num <= data.participatingGatherings.length) {
+                selectedGathering = data.participatingGatherings[num - 1];
             } 
             // 招待中の寄合からの選択
-            else if (futureInvitedGatherings.length > 0 && num <= futureParticipatingGatherings.length + futureInvitedGatherings.length) {
-                const invitedIndex = num - (futureParticipatingGatherings.length + 1);
-                selectedGathering = futureInvitedGatherings[invitedIndex];
+            else if (data.invitedGatherings && num <= data.participatingGatherings.length + data.invitedGatherings.length) {
+                const invitedIndex = num - (data.participatingGatherings ? data.participatingGatherings.length + 1 : 1);
+                selectedGathering = data.invitedGatherings[invitedIndex];
             }
             
             if (selectedGathering) {
@@ -963,51 +810,15 @@ async function handleInvitationResponse() {
         
         if (response.ok) {
             const data = await response.json();
-            const now = new Date();
             
-            // 未来の招待のみフィルタリング
-            const futureInvitations = data.invitations ? 
-                data.invitations.filter(inv => new Date(inv.datetime) > now) : [];
-            
-            if (futureInvitations.length > 0) {
-                let invitationText = "<div style='background-color:#fff7e6; padding:12px; border-radius:10px; border-left:4px solid #fa8c16; margin-bottom:15px;'>";
-                invitationText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#fa8c16;'>📨 未回答の寄合招待</div>";
-                
-                for (let i = 0; i < futureInvitations.length; i++) {
-                    const invitation = futureInvitations[i];
-                    const invitationDate = new Date(invitation.datetime);
-                    const dateStr = invitationDate.toLocaleString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'long',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    
-                    // 残り時間の計算
-                    const diffTime = invitationDate - now;
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    let timeLeftStr = "";
-                    
-                    if (diffDays > 0) {
-                        timeLeftStr = `(あと ${diffDays}日 ${diffHours}時間)`;
-                    } else if (diffHours > 0) {
-                        timeLeftStr = `(あと ${diffHours}時間)`;
-                    } else {
-                        const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-                        timeLeftStr = `(あと ${diffMinutes}分)`;
-                    }
-                    
-                    invitationText += `<div style='background-color:white; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #d9d9d9;'>`;
-                    invitationText += `<div style='font-weight:bold; margin-bottom:5px;'>${i + 1}. ${invitation.theme}</div>`;
-                    invitationText += `<div style='color:#444; margin-bottom:3px;'>📍 ${invitation.circle_name}</div>`;
-                    invitationText += `<div style='color:#666;'>🕒 ${dateStr} <span style='color:#fa8c16;'>${timeLeftStr}</span></div>`;
-                    invitationText += `</div>`;
+            if (data.invitations && data.invitations.length > 0) {
+                let invitationText = "<div>【未回答の寄合招待】</div>";
+                for (let i = 0; i < data.invitations.length; i++) {
+                    const invitation = data.invitations[i];
+                    const dateStr = new Date(invitation.datetime).toLocaleString('ja-JP');
+                    invitationText += `<div>${i + 1}. ${dateStr} ${invitation.theme} - ${invitation.circle_name}</div>`;
                 }
                 
-                invitationText += "</div>";
                 post_keicho(invitationText, SPEAKER.AGENT, person);
                 
                 const answer = await miku_ask("どの招待に返信しますか？ 番号でお答えください。（「やめる」で中止できます）", false, "guide_normal");
@@ -1019,42 +830,17 @@ async function handleInvitationResponse() {
                 
                 const num = parseInt(answer.match(/\d+/) || ["0"][0]);
                 
-                if (num >= 1 && num <= futureInvitations.length) {
-                    const selectedInvitation = futureInvitations[num - 1];
+                if (num >= 1 && num <= data.invitations.length) {
+                    const selectedInvitation = data.invitations[num - 1];
                     
-                    // 招待の詳細表示
-                    let detailText = "<div style='background-color:#fff7e6; padding:12px; border-radius:10px; border-left:4px solid #fa8c16; margin-bottom:15px;'>";
-                    detailText += "<div style='font-size:18px; font-weight:bold; margin-bottom:10px; color:#fa8c16;'>📨 招待の詳細</div>";
-                    detailText += `<div style='background-color:white; padding:15px; border-radius:8px; border:1px solid #d9d9d9;'>`;
-                    detailText += `<div style='font-size:18px; font-weight:bold; margin-bottom:8px;'>${selectedInvitation.theme}</div>`;
-                    detailText += `<div style='color:#444; margin-bottom:5px;'>📍 ${selectedInvitation.circle_name}</div>`;
-                    detailText += `<div style='color:#666; margin-bottom:15px;'>🕒 ${new Date(selectedInvitation.datetime).toLocaleString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'long',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}</div>`;
-                    
-                    detailText += `<div style='margin-top:10px;'>`;
-                    detailText += `<span style='display:inline-block; padding:8px 15px; background-color:#52c41a; color:white; border-radius:5px; margin-right:10px; font-weight:bold;'>参加する</span>`;
-                    detailText += `<span style='display:inline-block; padding:8px 15px; background-color:#f5222d; color:white; border-radius:5px; margin-right:10px; font-weight:bold;'>参加しない</span>`;
-                    detailText += `<span style='display:inline-block; padding:8px 15px; background-color:#d9d9d9; color:#666; border-radius:5px; font-weight:bold;'>後で決める</span>`;
-                    detailText += `</div>`;
-                    
-                    detailText += `</div>`;
-                    detailText += "</div>";
-                    post_keicho(detailText, SPEAKER.AGENT, person);
-                    
-                    const responseAnswer = await miku_ask("この招待にどう返信しますか？「参加する」と言うと参加予定に追加されます。「参加しない」または「後で決める」をお選びいただくこともできます。", false, "guide_normal");
+                    const responseAnswer = await miku_ask("この招待に返信しますか？ 「参加する」「参加しない」「後で決める」からお選びください。", false, "guide_normal");
                     
                     if (/参加する/.test(responseAnswer)) {
                         await respondToInvitation(selectedInvitation.id, 'accepted');
                     } else if (/参加しない/.test(responseAnswer)) {
                         await respondToInvitation(selectedInvitation.id, 'declined');
                     } else {
-                        await miku_say("後で返信することにしました。招待は「未回答」のままになります。", "greeting");
+                        await miku_say("後で返信することにしました。", "greeting");
                     }
                 } else {
                     await miku_say("選択された招待がありませんでした。", "idle_think");
@@ -1098,46 +884,13 @@ async function respondToInvitation(invitationId, status) {
         }
         
         if (response.ok) {
-            let resultText;
-            let statusColor;
-            let statusIcon;
-            
             if (status === 'accepted') {
-                resultText = "招待を承諾しました！";
-                statusColor = "#52c41a";
-                statusIcon = "✅";
-            } else {
-                resultText = "招待を辞退しました";
-                statusColor = "#f5222d";
-                statusIcon = "❌";
-            }
-            
-            let feedbackText = "<div style='background-color:#f9f9f9; padding:15px; border-radius:10px; text-align:center; margin-bottom:15px;'>";
-            feedbackText += `<div style='font-size:24px; color:${statusColor}; margin-bottom:10px;'>${statusIcon}</div>`;
-            feedbackText += `<div style='font-size:18px; font-weight:bold; color:${statusColor}; margin-bottom:5px;'>${resultText}</div>`;
-            
-            if (status === 'accepted') {
-                feedbackText += "<div style='color:#666;'>参加者リストに追加されました</div>";
-                feedbackText += "<div style='margin-top:10px; font-style:italic; color:#888;'>寄合の詳細は「寄合一覧」で確認できます</div>";
-            } else {
-                feedbackText += "<div style='color:#666;'>主催者に通知されます</div>";
-            }
-            
-            feedbackText += "</div>";
-            post_keicho(feedbackText, SPEAKER.AGENT, person);
-            
-            // 招待をチェックして通知状態を更新
-            window.hasUnreadInvitations = false;
-            window.unreadInvitationsCount = 0;
-            window.invitations = window.invitations.filter(inv => inv.id !== invitationId);
-            
-            // メッセージ
-            if (status === 'accepted') {
-                await miku_say("招待を承諾しました。寄合に参加できるようになりました。", "greeting");
+                await miku_say("招待を承諾しました。参加者リストに追加されました。", "greeting");
             } else {
                 await miku_say("招待を辞退しました。主催者に通知されます。", "greeting");
             }
             
+            // 招待をチェックして通知状態を更新
             await checkCircleNotifications();
         } else {
             const data = await response.json();
