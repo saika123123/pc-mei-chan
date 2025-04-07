@@ -240,29 +240,52 @@ async function notifyUpcomingGatherings() {
                 // 参加を促す
                 if (upcoming.length === 1) {
                     await miku_say(`まもなく「${upcoming[0].theme}」の寄合が始まります。`, "greeting");
-                    const answer = await miku_ask("参加情報を表示しますか？（はい/いいえ）");
 
-                    if (/はい|参加|する/.test(answer)) {
-                        await displayGatheringInfo(upcoming[0].id);
+                    let validResponse = false;
+
+                    while (!validResponse) {
+                        const answer = await miku_ask("参加情報を表示しますか？（はい/いいえ）");
+
+                        if (/はい|参加|する|見る|表示/.test(answer)) {
+                            validResponse = true;
+                            await displayGatheringInfo(upcoming[0].id);
+                        }
+                        else if (/いいえ|参加しない|いや|やめる|後で/.test(answer)) {
+                            validResponse = true;
+                            await miku_say("わかりました。また後でご案内します。", "greeting");
+                        }
+                        else {
+                            await miku_say("「はい」か「いいえ」でお答えください。", "idle_think");
+                        }
                     }
                 } else {
                     await miku_say("まもなく複数の寄合が始まります。参加情報を表示しますか？", "greeting");
-                    const answer = await miku_ask("はい/いいえ、または寄合の番号を教えてください（1, 2, ...）");
 
-                    if (/やめる|中止|キャンセル|いいえ|no/.test(answer)) {
-                        await miku_say("わかりました。また後でご案内します。", "greeting");
-                    } else if (/はい|参加|する/.test(answer)) {
-                        // 全ての寄合情報を表示
-                        for (const gathering of upcoming) {
-                            await displayGatheringInfo(gathering.id);
+                    let validResponse = false;
+
+                    while (!validResponse) {
+                        const answer = await miku_ask("はい/いいえ、または寄合の番号を教えてください（1, 2, ...）");
+
+                        if (/いいえ|参加しない|いや|やめる|後で|no/.test(answer)) {
+                            validResponse = true;
+                            await miku_say("わかりました。また後でご案内します。", "greeting");
                         }
-                    } else {
-                        // 番号を解析
-                        const num = parseInt(answer.match(/\d+/) || ["0"][0]);
-                        if (num >= 1 && num <= upcoming.length) {
-                            await displayGatheringInfo(upcoming[num - 1].id);
-                        } else {
-                            await miku_say("有効な番号が選択されませんでした。また後でご案内します。", "greeting");
+                        else if (/はい|参加|する|見る|表示|yes/.test(answer)) {
+                            validResponse = true;
+                            // 全ての寄合情報を表示
+                            for (const gathering of upcoming) {
+                                await displayGatheringInfo(gathering.id);
+                            }
+                        }
+                        else {
+                            // 番号を解析
+                            const num = parseInt(answer.match(/\d+/) || ["0"][0]);
+                            if (num >= 1 && num <= upcoming.length) {
+                                validResponse = true;
+                                await displayGatheringInfo(upcoming[num - 1].id);
+                            } else {
+                                await miku_say(`1から${upcoming.length}の番号、または「はい」「いいえ」でお答えください。`, "idle_think");
+                            }
                         }
                     }
                 }
