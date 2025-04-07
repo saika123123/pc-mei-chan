@@ -116,8 +116,6 @@ function put_restart_button() {
 //---------- 以下サービス連携 ----------//
 // 連携したサービスをセットしていく
 function setService() {
-    // service.js の setService 関数内に以下を追加
-    addService("ビデオ会議サービス", "会議", "ビデオ会議の作成、参加、通知の確認", async function () { await videochat() });
     // つぶやきダイアリー
     addService("つぶやきダイアリー", "日記", "過去の対話内容の振り返り", async function () { await diary(); });
 
@@ -161,5 +159,8 @@ function setService() {
         addService("らくらく 動画 サービス", "らくらく 動画", "らくらく動画サービスの実行", async function () { await rakudo() });
     }
 
-    
+        // ビデオ会議サービス
+    // if (videochatFlag) {
+        addService("ビデオ会議サービス", "会議", "ビデオ会議サービスの実行", async function () { await videochat() });
+    // }
 }

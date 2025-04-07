@@ -109,14 +109,6 @@ function refreshAt(h, m) {
 async function initialize() {
     //ここにアプリ固有の処理を書く
 
-
-    if (typeof autoStartMeeting === 'function') {
-        setInterval(autoStartMeeting, 60000);
-    } else {
-        console.warn('autoStartMeeting function is not defined');
-    }
-
-
     //MMD作成
     mmd = new MMD("localhost:8080", "localhost:39390");
 
@@ -144,8 +136,8 @@ async function initialize() {
     }
 
     // ビデオ会議サービスのユーザ情報をセット
-    videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { videochatFlag = false });
-    if (videochatFlag) {
+    videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { chatFlag = false });
+    if (chatFlag) {
         chatId = videoMeetingPreference.preferences.id;
     }
 
@@ -214,15 +206,6 @@ async function initialize() {
 
     // カレンダーのリマインド
     await calCheckEvt();
-
-    // keicho.js の initialize 関数内に以下を追加（他の類似の処理の近くに）
-
-// ビデオ会議サービスのユーザ情報をセット
-videoMeetingPreference = await getVideoMeetingPreference(uid).catch(function () { videochatFlag = false });
-if (videochatFlag) {
-    videochatId = videoMeetingPreference.preferences.id;
-}
-
 }
 
 // コールバック関数
@@ -697,7 +680,7 @@ async function keicho(str, motion) {
                 await end_keicho("またお話ししてくださいね", "bye");
                 return;
             }
-	    if (answer.length == 0) {
+            if (answer.length == 0) {
                 //str = "すみません．よく聞き取れませんでした．";
                 continue;
             }
@@ -723,10 +706,10 @@ async function keicho(str, motion) {
             }
         }
 
-	if (answer.length == 0) {
-	    str = "すみません．よく聞き取れませんでした．";
-	    continue;
-	}
+        if (answer.length == 0) {
+            str = "すみません．よく聞き取れませんでした．";
+            continue;
+        }
 
         // キーワードの判定
         if (/終わり$|やめる$/.test(answer)) {
@@ -787,7 +770,7 @@ async function keicho(str, motion) {
             } else if (/調べたい/.test(answer) || (/調べ物/.test(answer) && /したい/.test(answer))) {
                 str = "調べ物をしたいときは，私に「検索」と言って下さい";
                 continue;
-            } else if (/チャットGPT/.test(answer) || (/教えて/.test(answer))|| (/調べ物/.test(answer)|| (/調べたい/.test(answer)))) {
+            } else if (/チャットGPT/.test(answer) || (/教えて/.test(answer)) || (/調べ物/.test(answer) || (/調べたい/.test(answer)))) {
                 str = "調べものをしたいときは，私に「チャットGPT」と言って下さい";
                 continue;
             } else if (/天気は$/.test(answer) || /天気は何/.test(answer) || /天気を教えて/.test(answer)) {
