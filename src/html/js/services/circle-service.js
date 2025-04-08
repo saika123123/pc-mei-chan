@@ -774,7 +774,7 @@ async function handleCreateGathering() {
             // 利用できないことを伝える
             
             // 代替方法を提案
-            await miku_say("ブラウザで直接「寄合作成」ページをご利用ください。", "greeting");
+            await miku_say("こちらのボタンを押すと寄合を作成できます！", "greeting");
             
             // ブラウザでの寄合作成ページへのリンク
             const alternativeMessage = `<div style="text-align:center;margin:15px;">
