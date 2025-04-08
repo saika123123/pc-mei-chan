@@ -935,41 +935,30 @@ async function handleCreateGathering() {
                         console.log("JSON形式のリクエスト:", JSON.stringify(requestBody));
 
                         try {
-                            // 寄合作成リクエスト
                             const createResponse = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Authorization': `Bearer ${token}`
                                 },
-                                body: requestJSON
+                                body: JSON.stringify(requestBody)
                             });
 
-                            console.log("レスポンスステータス:", createResponse.status); // レスポンスコードをログ出力
-
-                            const responseText = await createResponse.text();
-                            console.log("レスポンス全文:", responseText);
+                            console.log("レスポンスステータス:", createResponse.status);
 
                             if (createResponse.ok) {
-                                try {
-                                    const responseData = JSON.parse(responseText);
-                                    console.log("作成成功レスポンス:", responseData);
-                                } catch (e) {
-                                    console.log("JSONパース失敗、テキストのまま表示:", responseText);
-                                }
                                 await miku_say(`「${theme}」寄合を作成しました！メンバーに招待が送信されます。`, "greeting");
                             } else {
-                                // エラー時のレスポンスを詳細に確認
-                                console.error("寄合作成エラーレスポンス:", responseText);
-
-                                let errorMessage = "寄合作成に失敗しました";
+                                // エラー時の処理
                                 try {
-                                    const errorData = JSON.parse(responseText);
-                                    errorMessage += `: ${errorData.message || "サーバーエラー"}`;
+                                    const errorData = await createResponse.json();
+                                    await miku_say(`寄合作成に失敗しました: ${errorData.message || "サーバーエラー"}`, "idle_think");
                                 } catch (e) {
-                                    errorMessage += `: ステータスコード ${createResponse.status}`;
+                                    // JSONとして解析できない場合
+                                    const responseText = await createResponse.text();
+                                    await miku_say(`寄合作成に失敗しました: ステータスコード ${createResponse.status}`, "idle_think");
+                                    console.error("寄合作成エラーレスポンス:", responseText);
                                 }
-                                await miku_say(errorMessage, "idle_think");
                             }
                         } catch (fetchError) {
                             console.error("Fetch実行エラー:", fetchError);
