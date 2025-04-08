@@ -756,6 +756,7 @@ async function displayCircleDetails(circleId) {
 // 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成の処理 - 対話内で行うよう修正
+// 寄合作成の処理 - 対話内で行うよう修正
 async function handleCreateGathering() {
     try {
         const token = localStorage.getItem('token');
@@ -788,7 +789,7 @@ async function handleCreateGathering() {
                 // サークル選択
                 let validCircleSelection = false;
                 let selectedCircle = null;
-                
+
                 while (!validCircleSelection) {
                     const circleAnswer = await miku_ask("どのサークルの寄合を作成しますか？ 番号でお答えください。(やめる場合は「やめる」と言ってください)");
 
@@ -813,10 +814,10 @@ async function handleCreateGathering() {
                 // テーマ入力
                 let theme = "";
                 let validTheme = false;
-                
+
                 while (!validTheme) {
                     theme = await miku_ask("寄合のテーマを教えてください。");
-                    
+
                     if (!theme || theme.length < 2) {
                         await miku_say("テーマが短すぎます。もう少し詳しく教えてください。", "idle_think");
                     } else {
@@ -826,14 +827,14 @@ async function handleCreateGathering() {
 
                 // 日時入力
                 await miku_say("では、開催日時を決めましょう。", "smile");
-                
+
                 let dateAnswer = "";
                 let validDate = false;
                 let year = 0, month = 0, day = 0;
-                
+
                 while (!validDate) {
                     dateAnswer = await miku_ask("開催日を教えてください（例: 明日、5月10日など）");
-                    
+
                     // 日付の解析
                     const now = new Date();
                     year = now.getFullYear();
@@ -862,10 +863,10 @@ async function handleCreateGathering() {
                 let timeAnswer = "";
                 let validTime = false;
                 let hour = 0;
-                
+
                 while (!validTime) {
                     timeAnswer = await miku_ask("開始時間を教えてください（例: 14時、午後2時など）");
-                    
+
                     const timeMatch = timeAnswer.match(/(\d+)時/);
                     if (timeMatch) {
                         hour = parseInt(timeMatch[1]);
@@ -881,10 +882,19 @@ async function handleCreateGathering() {
                 // 詳細入力
                 const details = await miku_ask("寄合の詳細を教えてください（任意）");
 
-                // 日時をフォーマットする - 標準のISOStringを使用
+                // 日時部分の処理をさらに修正
                 const gatheringDate = new Date(year, month, day, hour, 0);
-                const formattedDate = gatheringDate.toISOString();
-                
+
+                // 日時文字列を手動でフォーマット
+                const formattedYear = gatheringDate.getFullYear();
+                const formattedMonth = String(gatheringDate.getMonth() + 1).padStart(2, '0');
+                const formattedDay = String(gatheringDate.getDate()).padStart(2, '0');
+                const formattedHour = String(gatheringDate.getHours()).padStart(2, '0');
+                const formattedMinute = '00'; // 分は常に00
+
+                // APIが期待する形式に合わせて日時を構築 - シンプルな形式
+                const formattedDate = `${formattedYear}-${formattedMonth}-${formattedDay}T${formattedHour}:${formattedMinute}`;
+
                 console.log("フォーマット済み日時:", formattedDate); // デバッグ用
 
                 // 確認画面には読みやすい形式で表示
@@ -907,23 +917,25 @@ async function handleCreateGathering() {
                 post_keicho(confirmStr, SPEAKER.AGENT, person);
 
                 let validConfirm = false;
-                
+
                 while (!validConfirm) {
                     const confirmAnswer = await miku_ask("この内容で寄合を作成してよろしいですか？（はい/いいえ）");
 
                     if (/はい|よい|良い|OK|作成|する/.test(confirmAnswer)) {
                         validConfirm = true;
-                        
-                        // リクエストボディを修正
+
+                        // リクエストボディを修正 - シンプルな構造に
                         const requestBody = {
                             circleId: selectedCircle.id,
                             theme: theme,
                             datetime: formattedDate,
-                            details: details || "" // nullの場合に空文字を設定
+                            details: details || ""
                         };
-                        
-                        console.log("寄合作成リクエスト:", requestBody); // デバッグログ
-                        
+
+                        // 念のため、送信時にJSONの整形を確認
+                        const requestJSON = JSON.stringify(requestBody);
+                        console.log("JSON形式のリクエスト:", requestJSON);
+
                         try {
                             // 寄合作成リクエスト
                             const createResponse = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
@@ -932,14 +944,14 @@ async function handleCreateGathering() {
                                     'Content-Type': 'application/json',
                                     'Authorization': `Bearer ${token}`
                                 },
-                                body: JSON.stringify(requestBody)
+                                body: requestJSON
                             });
 
                             console.log("レスポンスステータス:", createResponse.status); // レスポンスコードをログ出力
-                            
+
                             const responseText = await createResponse.text();
                             console.log("レスポンス全文:", responseText);
-                            
+
                             if (createResponse.ok) {
                                 try {
                                     const responseData = JSON.parse(responseText);
@@ -951,7 +963,7 @@ async function handleCreateGathering() {
                             } else {
                                 // エラー時のレスポンスを詳細に確認
                                 console.error("寄合作成エラーレスポンス:", responseText);
-                                
+
                                 let errorMessage = "寄合作成に失敗しました";
                                 try {
                                     const errorData = JSON.parse(responseText);
