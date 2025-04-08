@@ -926,15 +926,13 @@ async function handleCreateGathering() {
 
                         // リクエストボディを修正 - シンプルな構造に
                         const requestBody = {
-                            circleId: selectedCircle.id,
+                            circleId: parseInt(selectedCircle.id), // 数値型に明示的に変換
                             theme: theme,
-                            datetime: formattedDate,
+                            datetime: `${formattedYear}-${formattedMonth}-${formattedDay}T${formattedHour}:${formattedMinute}:00.000Z`, // 標準的なISO 8601形式
                             details: details || ""
                         };
 
-                        // 念のため、送信時にJSONの整形を確認
-                        const requestJSON = JSON.stringify(requestBody);
-                        console.log("JSON形式のリクエスト:", requestJSON);
+                        console.log("JSON形式のリクエスト:", JSON.stringify(requestBody));
 
                         try {
                             // 寄合作成リクエスト
