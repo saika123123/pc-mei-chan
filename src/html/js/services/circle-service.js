@@ -754,6 +754,7 @@ async function displayCircleDetails(circleId) {
 // 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成の処理 - 対話内で行うよう修正
+// 寄合作成の処理 - 対話内で行うよう修正
 async function handleCreateGathering() {
     try {
         const token = localStorage.getItem('token');
@@ -879,14 +880,24 @@ async function handleCreateGathering() {
                 // 詳細入力
                 const details = await miku_ask("寄合の詳細を教えてください（任意）");
 
-                // 日時をフォーマット - ここを修正
+                // 日時をフォーマットする部分を修正
                 const gatheringDate = new Date(year, month, day, hour, 0);
 
-                // ISO形式で正確なフォーマットを指定
-                // APIのリクエスト形式に合わせる
-                const formattedDate = gatheringDate.toISOString();
+                // APIが期待する形式：YYYY-MM-DDThh:mm:ss
+                // JavaScriptのタイムゾーン処理による問題を避けるため、
+                // 手動でフォーマットを構築する
+                const formattedYear = gatheringDate.getFullYear();
+                const formattedMonth = String(gatheringDate.getMonth() + 1).padStart(2, '0');
+                const formattedDay = String(gatheringDate.getDate()).padStart(2, '0');
+                const formattedHour = String(gatheringDate.getHours()).padStart(2, '0');
+                const formattedMinute = String(gatheringDate.getMinutes()).padStart(2, '0');
 
-                // 確認
+                // フォーマット: "2025-04-15T14:00:00+09:00" (日本時間)
+                const formattedDate = `${formattedYear}-${formattedMonth}-${formattedDay}T${formattedHour}:${formattedMinute}:00+09:00`;
+
+                console.log("フォーマット済み日時:", formattedDate); // デバッグ用
+
+                // 確認画面には読みやすい形式で表示
                 const confirmStr = `<div style="background-color:#e8f5e9;padding:15px;border-radius:10px;margin:10px 0;">
                                    <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">📝 寄合内容の確認</div>
                                    <div style="padding:10px;background-color:white;border-radius:8px;">
@@ -921,31 +932,42 @@ async function handleCreateGathering() {
                             details: details || "" // nullの場合に空文字を設定
                         };
 
-                        console.log("寄合作成リクエスト:", requestBody); // デバッグログ
+                        console.log("寄合作成リクエスト:", JSON.stringify(requestBody)); // デバッグログを強化
 
-                        // 寄合作成リクエスト
-                        const createResponse = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(requestBody)
-                        });
+                        try {
+                            // 寄合作成リクエスト
+                            const createResponse = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/gatherings', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify(requestBody)
+                            });
 
-                        if (createResponse.ok) {
-                            await miku_say(`「${theme}」寄合を作成しました！メンバーに招待が送信されます。`, "greeting");
-                        } else {
-                            // エラー時のレスポンスを詳細に確認
-                            let errorMessage = "寄合作成に失敗しました";
-                            try {
-                                const errorData = await createResponse.json();
-                                console.error("寄合作成エラー:", errorData);
-                                errorMessage += `: ${errorData.message || "不明なエラー"}`;
-                            } catch (e) {
-                                console.error("寄合作成レスポンス解析エラー:", e);
+                            console.log("レスポンスステータス:", createResponse.status); // レスポンスコードをログ出力
+
+                            if (createResponse.ok) {
+                                const responseData = await createResponse.json();
+                                console.log("作成成功レスポンス:", responseData);
+                                await miku_say(`「${theme}」寄合を作成しました！メンバーに招待が送信されます。`, "greeting");
+                            } else {
+                                // エラー時のレスポンスを詳細に確認
+                                const responseText = await createResponse.text();
+                                console.error("寄合作成エラーレスポンス:", responseText);
+
+                                let errorMessage = "寄合作成に失敗しました";
+                                try {
+                                    const errorData = JSON.parse(responseText);
+                                    errorMessage += `: ${errorData.message || "サーバーエラー"}`;
+                                } catch (e) {
+                                    errorMessage += `: ステータスコード ${createResponse.status}`;
+                                }
+                                await miku_say(errorMessage, "idle_think");
                             }
-                            await miku_say(errorMessage, "idle_think");
+                        } catch (fetchError) {
+                            console.error("Fetch実行エラー:", fetchError);
+                            await miku_say(`寄合作成中にエラーが発生しました: ${fetchError.message}`, "idle_think");
                         }
                     } else if (/いいえ|違う|キャンセル|やめる/.test(confirmAnswer)) {
                         validConfirm = true;
@@ -961,8 +983,8 @@ async function handleCreateGathering() {
             await miku_say("サークル情報の取得に失敗しました。", "idle_think");
         }
     } catch (error) {
-        console.error('寄合作成処理中にエラーが発生しました:', error);
-        await miku_say("寄合作成処理中にエラーが発生しました。", "idle_think");
+        console.error('寄合作成処理全体のエラー:', error);
+        await miku_say(`寄合作成処理中にエラーが発生しました: ${error.message}`, "idle_think");
     }
 }
 
