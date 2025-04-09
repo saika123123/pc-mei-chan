@@ -84,7 +84,7 @@ async function checkUpcomingGatherings() {
             const upcoming = data.upcomingGatherings.filter(gathering => {
                 const gatheringTime = new Date(gathering.datetime);
                 const diffMinutes = (gatheringTime - now) / (1000 * 60);
-                return diffMinutes <= 30 && diffMinutes >= 0;
+                return diffMinutes <= 10 && diffMinutes >= -5;
             });
 
             return upcoming.length > 0;
@@ -215,6 +215,7 @@ async function notifyUpcomingGatherings() {
         if (response.ok) {
             const data = await response.json();
             // 30分以内に開始する寄合のみフィルタリング
+            // 10分以内、5分後までをフィルタリングするように変更すべき？
             const now = new Date();
             const upcoming = data.upcomingGatherings.filter(gathering => {
                 const gatheringTime = new Date(gathering.datetime);
@@ -751,11 +752,6 @@ async function displayCircleDetails(circleId) {
     }
 }
 
-// 寄合作成の処理 - 対話内で行うよう修正
-// 寄合作成の処理 - 対話内で行うよう修正
-// 寄合作成の処理 - 対話内で行うよう修正
-// 寄合作成の処理 - 対話内で行うよう修正
-// 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成の処理 - 対話内で行うよう修正
 // 寄合作成機能が現在利用できないことを簡潔に伝える
 async function handleCreateGathering() {
