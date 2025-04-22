@@ -30,8 +30,93 @@ async function handleCircleService() {
         await notifyUpcomingGatherings();
     }
 
+    // 招待も予定の寄合もなく、1週間以上参加していない場合は寄合を提案
+    if (!hasUnreadInvitations && !hasUpcomingGatherings) {
+        // 参加履歴をチェック
+        const needsSuggestion = await checkInactiveParticipation();
+
+        if (needsSuggestion) {
+            await miku_say("最近、サークルの寄合に参加されていないようですね。参加できる寄合を探してみましょうか？", "smile");
+
+            const answer = await miku_ask("「はい」か「いいえ」でお答えください。");
+
+            if (/はい|探す|参加|みたい/.test(answer)) {
+                await miku_say("利用可能なサークルの寄合を表示します！", "greeting");
+                // 参加可能な寄合リストを表示する処理
+                await showAvailableGatherings();
+            } else {
+                await miku_say("わかりました。また参加したくなったらいつでも「サークル」と話しかけてくださいね。", "greeting");
+            }
+        }
+    }
+
     // メインメニューを表示
     await showServiceMainMenu();
+}
+
+// 参加可能な寄合を表示する関数
+async function showAvailableGatherings() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/available-gatherings', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const availableGatherings = data.availableGatherings;
+
+            if (availableGatherings && availableGatherings.length > 0) {
+                let gatheringsStr = `<div style="background-color:#e3f2fd;padding:15px;border-radius:10px;margin:10px 0;">
+                                     <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+                                     🌸 参加可能な寄合 (${availableGatherings.length}件)</div>`;
+
+                for (let i = 0; i < availableGatherings.length; i++) {
+                    const gathering = availableGatherings[i];
+                    const gatheringTime = new Date(gathering.datetime);
+                    const circleInfo = gathering.circle_name || "サークル名未設定";
+
+                    gatheringsStr += `<div style="padding:10px;background-color:white;border-radius:8px;margin-bottom:10px;">
+                                    <div style="font-size:16px;font-weight:bold;margin-bottom:5px;">
+                                      ${i + 1}. ${gathering.theme}
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                      <span style="color:#666;">${circleInfo}</span>
+                                      <span style="font-weight:bold;">${gatheringTime.toLocaleString('ja-JP')}</span>
+                                    </div>
+                                  </div>`;
+                }
+
+                gatheringsStr += `</div>`;
+                post_keicho(gatheringsStr, SPEAKER.AGENT, person);
+
+                const answer = await miku_ask("参加したい寄合はありますか？番号で教えてください。参加しない場合は「やめる」と言ってください。");
+
+                if (/やめる|参加しない/.test(answer)) {
+                    await miku_say("わかりました。またいつでもご参加ください。", "greeting");
+                    return;
+                }
+
+                // 番号を解析して参加処理
+                const num = parseInt(answer.match(/\d+/) || ["0"][0]);
+                if (num >= 1 && num <= availableGatherings.length) {
+                    const selectedGathering = availableGatherings[num - 1];
+                    await respondToInvitation(selectedGathering.id, 'accepted');
+                } else {
+                    await miku_say("有効な番号を選択できませんでした。また改めて「サークル」と話しかけてください。", "idle_think");
+                }
+            } else {
+                await miku_say("現在参加可能な寄合はありません。新しいサークルに参加すると、寄合の招待が届くかもしれませんよ。", "smile");
+            }
+        } else {
+            await miku_say("寄合情報の取得に失敗しました。", "idle_think");
+        }
+    } catch (error) {
+        console.error('寄合情報取得中にエラーが発生しました:', error);
+        await miku_say("寄合情報の取得中にエラーが発生しました。", "idle_think");
+    }
 }
 
 // 未読の招待をチェック
@@ -766,12 +851,12 @@ async function handleCreateGathering() {
         if (response.ok) {
             // サークル情報の表示
             const data = await response.json();
-            
+
             // 利用できないことを伝える
-            
+
             // 代替方法を提案
             await miku_say("こちらのボタンを押すと寄合を作成できます！", "greeting");
-            
+
             // ブラウザでの寄合作成ページへのリンク
             const alternativeMessage = `<div style="text-align:center;margin:15px;">
                 <a href="https://es4.eedept.kobe-u.ac.jp/online-circle/create-gathering" 
@@ -781,9 +866,9 @@ async function handleCreateGathering() {
                     ブラウザで寄合を作成する
                 </a>
             </div>`;
-            
+
             post_keicho(alternativeMessage, SPEAKER.AGENT, person);
-            
+
             return;
         } else {
             await miku_say("サークル情報の取得に失敗しました。", "idle_think");
@@ -1122,6 +1207,73 @@ async function checkCircleNotifications() {
         }
     }
 }
+
+// checkInactiveParticipation 関数の追加 - ユーザーの寄合参加状況をチェック
+async function checkInactiveParticipation() {
+    try {
+        // 他のサービスが実行中・会話中は通知しない
+        if (serviceFlag || talking) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) return false;
+
+        // 参加履歴を取得
+        const response = await fetch('https://es4.eedept.kobe-u.ac.jp/online-circle/api/participation-history', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const lastParticipation = data.lastParticipationDate;
+
+            if (lastParticipation) {
+                const lastDate = new Date(lastParticipation);
+                const now = new Date();
+                const diffTime = Math.abs(now - lastDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // 1週間以上参加していない場合
+                if (diffDays >= 7) {
+                    // 寄合の提案をする
+                    suggestParticipation();
+                    return true;
+                }
+            } else {
+                // 参加履歴がない場合も提案する
+                suggestParticipation();
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('参加履歴チェック中にエラーが発生しました:', error);
+        return false;
+    }
+}
+
+// suggestParticipation 関数 - 寄合参加を提案するメッセージを表示
+async function suggestParticipation() {
+    // 会話中でない場合のみメッセージを表示
+    if (!talking) {
+        const message = "<div style='background-color:#e8f5e9;padding:12px;border-radius:8px;border-left:4px solid #4caf50;margin:10px 0;'>" +
+            "<div style='font-weight:bold;display:flex;align-items:center;'>" +
+            "<span style='font-size:1.5em;margin-right:8px;'>🌸</span>" +
+            "最近、オンラインサークルの寄合に参加されていませんね" +
+            "</div>" +
+            "<div style='margin-top:8px;'>「サークル」と話しかけると、近日の寄合を確認できます。みんなとの交流を楽しみましょう！</div>" +
+            "</div>";
+        post_text(message);
+    }
+}
+
+// 定期的なチェック機能を設定 - 1日に1回チェック
+const checkInactivityInterval = 24 * 60 * 60 * 1000; // 24時間
+setInterval(checkInactiveParticipation, checkInactivityInterval);
+
+// 初回起動時にもチェックを実行
+setTimeout(checkInactiveParticipation, 15000); // ページロード15秒後
 
 // サービスに登録
 apps.push(circleService);
