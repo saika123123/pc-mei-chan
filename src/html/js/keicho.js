@@ -369,6 +369,23 @@ async function start_scenario(num) {
     talking = true;
     $("#status").html("");
 
+    // ここで参加履歴チェックを追加
+    if (num === 0) { // 「メイちゃんと話す」から始まった場合
+        const needsParticipationSuggestion = await checkInactiveParticipation();
+        if (needsParticipationSuggestion) {
+            // 寄合参加提案を表示
+            await miku_say("お久しぶりです。最近、サークルの寄合に参加されていないようですね。", "greeting");
+            const ans = await miku_ask("参加できる寄合を探してみますか？ (はい/いいえ)");
+            
+            if (/はい|探す|参加/.test(ans)) {
+                await suggestParticipation(); 
+                // 通常の会話に戻る
+                await keicho("他に何かお話ししたいことはありますか？", "smile");
+                return;
+            }
+        }
+    }
+
     switch (num) {
         // default
         case 0:
