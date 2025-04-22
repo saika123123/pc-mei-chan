@@ -206,6 +206,17 @@ async function initialize() {
 
     // カレンダーのリマインド
     await calCheckEvt();
+
+    // ここに追加: 寄合参加チェックの定期実行を設定
+    setInterval(async function() {
+        // 他のサービスや会話中でなければ
+        if (!serviceFlag && !talking) {
+            const needsParticipationSuggestion = await checkInactiveParticipation();
+            if (needsParticipationSuggestion) {
+                await suggestParticipation();
+            }
+        }
+    }, 60 * 60 * 1000); // 1時間ごと
 }
 
 // コールバック関数
